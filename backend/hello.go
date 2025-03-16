@@ -1,8 +1,7 @@
-package helloo
+package backend
 
 import "fmt"
 
-
-func HelloWorld() {
+func (a *App)  HelloWorld() {
     fmt.Println("Hello, World")
 }

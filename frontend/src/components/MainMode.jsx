@@ -13,6 +13,11 @@ export default function MainMode({ setMode }) {
     <div>
       <CssBaseline />
       <Menu />
+
+
+
+
+      
       <Box sx={{ p: 20, bgcolor: "green" }}>
         <Typography variant="h4">Main Mode</Typography>
         {/* Add your component JSX here */}

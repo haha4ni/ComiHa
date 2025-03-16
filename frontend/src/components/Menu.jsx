@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Box, IconButton } from "@mui/material";
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
@@ -7,34 +7,42 @@ import {
     Shutdown
   } from "../../wailsjs/go/main/App";
 
+import { WindowMinimise, WindowToggleMaximise } from "../../wailsjs/runtime/runtime";
 
 export default function Menu() {
-
-    // function greet() {
-    //     Greet(name).then(updateResultText);
-    // }
-
   const handleMinimize = () => {
-    // Minimize window logic here
+    WindowMinimise(); // 最小化窗口
   };
 
   const handleFullscreen = () => {
-    // Fullscreen window logic here
+    WindowToggleMaximise(); // 切換最大化/還原
   };
-
+  
   const handleClose = () => {
     Shutdown(); // Call the shutdown method from the Go backend
   };
 
   return (
-    <Box sx={{ position: "fixed", top: 0, width: "100%", display: "flex", justifyContent: "flex-end", p: 0.5, bgcolor: "grey", height: 40 }}>
-      <IconButton size="small" sx={{ p: 0.3 }} onClick={handleMinimize}>
+    <Box
+      sx={{
+        position: "fixed",
+        top: 0,
+        width: "100%",
+        display: "flex",
+        justifyContent: "flex-end",
+        p: 0.5,
+        bgcolor: "grey",
+        height: 40,
+        "--wails-draggable": "drag", // 讓整個元件可拖動
+      }}
+    >
+      <IconButton size="small" sx={{ p: 0.3, mx: 0.5 }} onClick={handleMinimize}>
         <MinimizeIcon fontSize="small" />
       </IconButton>
-      <IconButton size="small" sx={{ p: 0.3 }} onClick={handleFullscreen}>
+      <IconButton size="small" sx={{ p: 0.3, mx: 0.5 }} onClick={handleFullscreen}>
         <FullscreenIcon fontSize="small" />
       </IconButton>
-      <IconButton size="small" sx={{ p: 0.3 }} onClick={handleClose}>
+      <IconButton size="small" sx={{ p: 0.3, mx: 0.5 }} onClick={handleClose}>
         <CloseIcon fontSize="small" />
       </IconButton>
     </Box>

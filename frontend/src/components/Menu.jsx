@@ -26,11 +26,12 @@ export default function Menu() {
     <Box
       sx={{
         position: "fixed",
+        zIndex: (theme) => theme.zIndex.drawer + 1 ,
         top: 0,
         width: "100%",
+
         display: "flex",
         justifyContent: "flex-end",
-        p: 0.5,
         bgcolor: "grey",
         height: 40,
         "--wails-draggable": "drag", // 讓整個元件可拖動

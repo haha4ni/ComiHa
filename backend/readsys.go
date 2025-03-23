@@ -54,7 +54,7 @@ func (a *App) ReadCover(zipPath string) ([]ImageData, error) {
     fmt.Println("進入READ2")
 	// 按照字串排序檔名
 	sort.Strings(keys)
-	fmt.Println(keys)
+	// fmt.Println(keys)
     
 	// 依序讀取圖片，並存入結果
 	// for _, k := range keys {

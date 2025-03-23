@@ -6,21 +6,30 @@ import logo from "../photo.jpeg";
 import {
   NowPath,
   ReadCover,
+  GetFileList,
 } from "../../wailsjs/go/main/App";
 import ImageBoxList from "./ImageBoxList"; // Import ImageBoxList
 
 export default function MainMode({ setMode }) {
   const [state, setState] = useState(null);
   const [currentPath, setCurrentPath] = useState(".");
-  const [images, setImages] = useState([logo, logo]); // Convert images to useState
+  const [images, setImages] = useState([]); // Convert images to useState with an empty array
+  const [imageNames, setImageNames] = useState([]); // Add imageNames state
 
   useEffect(() => {
-    ReadNowPath(); // Call ReadNowPath at the beginning
-    console.log("目錄路徑currentPath", currentPath); // Log 讀取的目錄路徑
-    const fullPath = `${currentPath}\\comic\\結緣甘神神社 1.zip`
-    ReadImage(fullPath);
     // Add your side-effect logic here
   }, []);
+
+  const temptemp = async () => {
+    await ReadNowPath(); // Call ReadNowPath at the beginning
+    console.log("目錄路徑currentPath", currentPath); // Log 讀取的目錄路徑
+    // const fullPath = `${currentPath}\\comic\\結緣甘神神社 1.zip`
+    const filelist = await GetFileList(`${currentPath}\\comic`);
+    console.log("filelist", filelist); // Log 讀取的目錄路徑
+
+    // Use map to call ReadImage for each filename in filelist
+    filelist.map(filename => ReadImage(`${currentPath}\\comic\\${filename}`));
+  };
 
   const ReadNowPath = async () => {
     try {
@@ -41,22 +50,14 @@ export default function MainMode({ setMode }) {
       console.log("圖片", img); // Log 讀取的目錄路徑
 
       // Convert the first three FileBitmap values to base64 and add to images state
-      const newImages = img.slice(0, 3).map(item => `data:image/png;base64,${item.FileBitmap}`);
+      const newImages = img.map(item => `data:image/png;base64,${item.FileBitmap}`);
       setImages(prevImages => [...prevImages, ...newImages]);
+      setImageNames(prevNames => [...prevNames, path.split("\\").pop()]); // Add to imageNames state
 
     } catch (error) {
       console.error("Failed to select path:", error);
     }
   };
-
-  const mainContent = (
-    <>
-      <Button variant="contained" onClick={() => setMode('book')}>Switch to Book Mode</Button>
-      {/* <Button variant="contained" onClick={fetchCurrentPath}>Fetch Current Path</Button> */}
-      <Typography variant="body1">{currentPath}</Typography>
-      <ImageBoxList images={images} />
-    </>
-  );
 
   return (
     <Box>
@@ -66,17 +67,21 @@ export default function MainMode({ setMode }) {
         <SimpleList />
         <Box
           sx={{
-            bgcolor: "red",
+            bgcolor: "white",
             display: "flex",
             mt: 5,
             flexWrap: "wrap",
             alignItems: "flex-start",
             alignContent: "flex-start",
             height: "calc(100vh - 40px)", // 設定固定高度
+            width: "100%",
             overflowY: "auto", // 讓內容超出時可滾動
           }}
         >
-          {mainContent}
+          <Button variant="contained" onClick={() => setMode('book')}>Switch to Book Mode</Button>
+          <Button variant="contained" onClick={temptemp}>Switch to Book Mode</Button>
+          <Typography variant="body1">{currentPath}</Typography>
+          <ImageBoxList imageNames={imageNames} images={images} />
         </Box>
       </Box>
     </Box>

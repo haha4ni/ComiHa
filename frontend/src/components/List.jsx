@@ -1,7 +1,6 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
-import AppBar from "@mui/material/AppBar";
 import CssBaseline from "@mui/material/CssBaseline";
 import Toolbar from "@mui/material/Toolbar";
 import List from "@mui/material/List";
@@ -42,7 +41,7 @@ export default function SimpleDrawer() {
       <Toolbar variant='dense' disableGutters sx={{ minHeight: 40, height: 40 }}/>
       <Box sx={{ overflow: "auto" }}>
         <List>
-          {["Item 1", "Item 2", "Item 3"].map((text, index) => (
+          {["全部書籍", "Item 2", "Item 3"].map((text, index) => (
             <ListItem key={text} disablePadding>
               <ListItemButton onClick={handleDrawerClose}>
                 <ListItemIcon>

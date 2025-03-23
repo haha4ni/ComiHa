@@ -32,7 +32,7 @@ export default function Menu() {
 
         display: "flex",
         justifyContent: "flex-end",
-        bgcolor: "grey",
+        // bgcolor: "grey",
         height: 40,
         "--wails-draggable": "drag", // 讓整個元件可拖動
       }}

@@ -19,13 +19,13 @@ func (a *App) NowPath() (string, error) {
     return path, err
 }
 
-type ImageData struct {
+type ImageDataTemp struct {
 	FileName  string
 	FileBitmap []byte
 }
 
 // 讀取 ZIP 並取得Cover(第一張圖片)
-func (a *App) ReadCover(zipPath string) ([]ImageData, error) {
+func (a *App) ReadCover(zipPath string) ([]ImageDataTemp, error) {
     fmt.Println("G@進入READ:",zipPath)
 	r, err := zip.OpenReader(zipPath)
 	if err != nil {
@@ -33,7 +33,7 @@ func (a *App) ReadCover(zipPath string) ([]ImageData, error) {
 	}
 	defer r.Close()
 
-	var images []ImageData
+	var images []ImageDataTemp
 
 	// 先將圖片名稱存入 slice
 	fileMap := make(map[string]*zip.File)
@@ -51,7 +51,7 @@ func (a *App) ReadCover(zipPath string) ([]ImageData, error) {
 		keys = append(keys, base)
 		fileMap[base] = f
 	}
-    fmt.Println("進入READ2")
+
 	// 按照字串排序檔名
 	sort.Strings(keys)
 	// fmt.Println(keys)
@@ -75,7 +75,7 @@ func (a *App) ReadCover(zipPath string) ([]ImageData, error) {
     //     }
 
 	// 	// 存入結果
-	// 	images = append(images, ImageData{
+	// 	images = append(images, ImageDataTemp{
 	// 		FileName:  f.Name,
 	// 		FileBitmap: data,
 	// 	})
@@ -98,7 +98,7 @@ func (a *App) ReadCover(zipPath string) ([]ImageData, error) {
 	}
 
 	// 存入結果
-	images = append(images, ImageData{
+	images = append(images, ImageDataTemp{
 		FileName:  f.Name,
 		FileBitmap: data,
 	})

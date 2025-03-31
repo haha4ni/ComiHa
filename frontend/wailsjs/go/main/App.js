@@ -6,10 +6,6 @@ export function GetBookListAll() {
   return window['go']['main']['App']['GetBookListAll']();
 }
 
-export function GetFileList(arg1) {
-  return window['go']['main']['App']['GetFileList'](arg1);
-}
-
 export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }

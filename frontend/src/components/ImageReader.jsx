@@ -1,4 +1,4 @@
-import { NowPath, GetFileList, ReadCover } from "../../wailsjs/go/main/App";
+import { NowPath, ReadCover } from "../../wailsjs/go/main/App";
 
 export const ReadImage = async (bookinfo, setImages, setImageNames) => {
   try {

@@ -20,7 +20,7 @@ export default function MainMode({ setMode }) {
   }, []);
 
   const temptemp = async () => {
-    // await ScanBookAll();
+    await ScanBookAll();
 
     // const path = await NowPath();
     // if (path) {

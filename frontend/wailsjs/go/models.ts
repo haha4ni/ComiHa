@@ -16,6 +16,7 @@ export namespace backend {
 	}
 	export class BookInfo {
 	    bookname: string;
+	    booknumber: string;
 	    filename: string;
 	    sha: string;
 	    timestamp: number;
@@ -28,6 +29,7 @@ export namespace backend {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.bookname = source["bookname"];
+	        this.booknumber = source["booknumber"];
 	        this.filename = source["filename"];
 	        this.sha = source["sha"];
 	        this.timestamp = source["timestamp"];

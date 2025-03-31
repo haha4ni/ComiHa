@@ -4,8 +4,6 @@ import {backend} from '../models';
 
 export function GetBookListAll():Promise<Array<backend.BookInfo>>;
 
-export function GetFileList(arg1:string):Promise<Array<string>>;
-
 export function Greet(arg1:string):Promise<string>;
 
 export function HelloWorld():Promise<void>;

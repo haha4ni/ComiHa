@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"go.etcd.io/bbolt"
+
+	"ComiHa/backend/debug"
 )
 
 type ImageData struct {
@@ -22,6 +24,7 @@ type ImageData struct {
 
 type BookInfo struct {
 	BookName  string      `json:"bookname"`
+	BookNumber string	  `json:"booknumber"`
 	FileName  string      `json:"filename"`
 	SHA       string      `json:"sha"`
 	Timestamp int64       `json:"timestamp"`
@@ -155,7 +158,7 @@ func AddBook(zipPath string) {
 		log.Fatal("存入 BoltDB 失敗:", err)
 	}
 
-	fmt.Println("成功存入 BoltDB:", bookInfo)
+	// fmt.Println("成功存入 BoltDB:", bookInfo) //todo
 
 
 	// 從 BoltDB 讀取剛剛存入的第一個 BookInfo
@@ -168,11 +171,11 @@ func AddBook(zipPath string) {
 	fmt.Println("從 BoltDB 讀取到的第一個 BookInfo:")
 	fmt.Printf("SHA: %s\n", loadedBook.SHA)
 	fmt.Printf("BookName: %s\n", loadedBook.BookName)
-	fmt.Printf("Timestamp: %d\n", loadedBook.Timestamp)
-	fmt.Println("Images:")
-	for _, img := range loadedBook.ImageData {
-		fmt.Printf("  - %s (%d bytes)\n", img.FileName, img.Size)
-	}
+	// fmt.Printf("Timestamp: %d\n", loadedBook.Timestamp)
+	// fmt.Println("Images:")
+	// for _, img := range loadedBook.ImageData {
+	// 	fmt.Printf("  - %s (%d bytes)\n", img.FileName, img.Size)
+	// }
 
 
 	// 刪除第一個 BookInfo
@@ -184,18 +187,20 @@ func AddBook(zipPath string) {
 }
 
 
-func (a *App) ScanBookAll() {
-	// Correct the method call to use a pointer receiver
-	fmt.Println("@@ScanBookAll")
-	pathList, err := a.GetFileList(".\\comic")
-	if err != nil {
-		fmt.Println("讀取Path內容失敗:", err)
-	}
-	fmt.Println("@@path:", pathList)
+/////////////////////////////////////////////////////////////////////////////////////////////
+// API
 
-	for _, path := range pathList{
-		fmt.Println("@@path:", path)
-		path = ".\\comic\\" + path
+func (a *App) ScanBookAll() {
+	debug.DebugInfo("Func:ScanBookAll()")
+
+	fileNameList, err := GetFileList(".\\comic")
+	if err != nil {
+		debug.DebugInfo("讀取Path內容失敗:", err)
+	}
+
+	for _, fileName := range fileNameList {
+		debug.DebugInfo("fileName:",fileName)
+		path := ".\\comic\\" + fileName
 		AddBook(path)
 	}
 }
@@ -228,6 +233,6 @@ func (a *App) GetBookListAll() (bookList []BookInfo) {
 	if err != nil {
 		log.Fatal("讀取所有 BookInfo 失敗:", err)
 	}
-	fmt.Println("bookList:", bookList)
+	// fmt.Println("bookList:", bookList) //todo
 	return bookList
 }

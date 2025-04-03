@@ -56,31 +56,6 @@ func (a *App) ReadCover(zipPath string) ([]ImageDataTemp, error) {
 	sort.Strings(keys)
 	// fmt.Println(keys)
     
-	// 依序讀取圖片，並存入結果
-	// for _, k := range keys {
-	// 	f := fileMap[k]
-
-    //     // 打開f檔案
-	// 	rc, err := f.Open()
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	defer rc.Close()
-
-    //     // 讀取檔案內容
-    //     data, err := io.ReadAll(rc)
-    //     if err != nil {
-    //         fmt.Println("讀取檔案內容失敗:", err)
-    //         return nil, err
-    //     }
-
-	// 	// 存入結果
-	// 	images = append(images, ImageDataTemp{
-	// 		FileName:  f.Name,
-	// 		FileBitmap: data,
-	// 	})
-	// }
-
 	f := fileMap[keys[0]]
 
 	// 打開f檔案
@@ -105,3 +80,7 @@ func (a *App) ReadCover(zipPath string) ([]ImageDataTemp, error) {
 
 	return images, nil
 }
+
+// func (a *App) GetBookPage(filePath string, page []int64) (*BookInfo, error) {
+// 	fmt.Println("G@進入READ:")
+// }

@@ -15,6 +15,7 @@ export default function MainMode({ setMode }) {
   const [showBookInfo, setShowBookInfo] = useState(false); // Add showBookInfo state
   const [bookinfo, setBookinfo] = useState({ title: "Default Book", author: "Unknown" }); // Initialize with default values
 
+
   useEffect(() => {
     // Add your side-effect logic here
   }, []);
@@ -33,8 +34,8 @@ export default function MainMode({ setMode }) {
     const booklist = await GetBookListAll();
     console.log("booklist", booklist); // Log 讀取的目錄路徑
 
-    const filenames = booklist.map((book) => book.filename); // Extract filenames
-    console.log("filenames", filenames); // Log filenames array
+    // const filenames = booklist.map((book) => book.filename); // Extract filenames
+    // console.log("filenames", filenames); // Log filenames array
 
     await processImages(booklist, setImages, setImageNames);
     console.log("imageNames:", imageNames);

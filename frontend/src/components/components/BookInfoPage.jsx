@@ -55,6 +55,7 @@ export default function BookInfoPage({ bookinfo }) {
           )}
           <Box sx={{ textAlign: "left" }}>
             <Typography variant="h6">{bookinfo.bookname}</Typography>
+            <Typography variant="h6">{bookinfo.booknumber}</Typography>
             <Typography variant="body1">Author: {bookinfo.author}</Typography>
           </Box>
         </Box>

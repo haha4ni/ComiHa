@@ -2,6 +2,7 @@ export namespace backend {
 	
 	export class ImageData {
 	    filename: string;
+	    fileindex: number;
 	    size: number;
 	
 	    static createFrom(source: any = {}) {
@@ -11,6 +12,7 @@ export namespace backend {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.filename = source["filename"];
+	        this.fileindex = source["fileindex"];
 	        this.size = source["size"];
 	    }
 	}

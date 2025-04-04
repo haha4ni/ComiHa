@@ -14,4 +14,6 @@ export function ReadCover(arg1:string):Promise<Array<backend.ImageDataTemp>>;
 
 export function ScanBookAll():Promise<void>;
 
+export function ScraperInfo(arg1:string,arg2:string):Promise<backend.BookInfo>;
+
 export function Shutdown():Promise<void>;

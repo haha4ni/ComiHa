@@ -26,6 +26,10 @@ export function ScanBookAll() {
   return window['go']['main']['App']['ScanBookAll']();
 }
 
+export function ScraperInfo(arg1, arg2) {
+  return window['go']['main']['App']['ScraperInfo'](arg1, arg2);
+}
+
 export function Shutdown() {
   return window['go']['main']['App']['Shutdown']();
 }

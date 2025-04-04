@@ -1,5 +1,33 @@
 export namespace backend {
 	
+	export class Metadata {
+	    title: string;
+	    volume: string;
+	    author: string;
+	    tags: string[];
+	    publisher: string;
+	    release_date: string;
+	    page_count: string;
+	    epub_format: string;
+	    description: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Metadata(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.title = source["title"];
+	        this.volume = source["volume"];
+	        this.author = source["author"];
+	        this.tags = source["tags"];
+	        this.publisher = source["publisher"];
+	        this.release_date = source["release_date"];
+	        this.page_count = source["page_count"];
+	        this.epub_format = source["epub_format"];
+	        this.description = source["description"];
+	    }
+	}
 	export class ImageData {
 	    filename: string;
 	    fileindex: number;
@@ -23,6 +51,7 @@ export namespace backend {
 	    sha: string;
 	    timestamp: number;
 	    imagedata: ImageData[];
+	    metadata: Metadata;
 	
 	    static createFrom(source: any = {}) {
 	        return new BookInfo(source);
@@ -36,6 +65,7 @@ export namespace backend {
 	        this.sha = source["sha"];
 	        this.timestamp = source["timestamp"];
 	        this.imagedata = this.convertValues(source["imagedata"], ImageData);
+	        this.metadata = this.convertValues(source["metadata"], Metadata);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

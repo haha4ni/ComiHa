@@ -18,7 +18,7 @@ const ImageBoxList = ({ booklist, images }) => { // Remove onImageClick prop
               setShowBookInfo(true); // Switch to the book info page
             }}
           />
-          <Typography variant="body2">{booklist[index].filename}</Typography>
+          <Typography variant="body2">{booklist[index].bookname} {booklist[index].booknumber}</Typography>
         </Box>
       ))}
       <Button 

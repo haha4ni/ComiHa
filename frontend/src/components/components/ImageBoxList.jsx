@@ -1,9 +1,9 @@
-import React, { useContext } from "react";
+import React from "react";
 import { Box, Typography, Avatar, Button } from "@mui/material";
-import { ShowBookInfoContext } from "../context/ShowBookInfoContext"; // Import context
+import useBookStore from "../../store/useBookStore";
 
-const ImageBoxList = ({ booklist, images }) => { // Remove onImageClick prop
-  const { showBookInfo, setShowBookInfo, bookinfo, setBookinfo } = useContext(ShowBookInfoContext); // Use context
+const ImageBoxList = ({ booklist, images }) => {
+  const { setShowBookInfo, setBookinfo } = useBookStore();
 
   return (
     <>
@@ -14,8 +14,8 @@ const ImageBoxList = ({ booklist, images }) => { // Remove onImageClick prop
             alt={`Drawer Image ${index}`} 
             sx={{ width: 215, height: 320, borderRadius: '8px 8px 0 0' }} 
             onClick={() => {
-              setBookinfo(booklist[index]); // Set bookinfo with the clicked book
-              setShowBookInfo(true); // Switch to the book info page
+              setBookinfo(booklist[index]);
+              setShowBookInfo(true);
             }}
           />
           <Typography variant="body2">{booklist[index].bookname} {booklist[index].booknumber}</Typography>
@@ -23,7 +23,7 @@ const ImageBoxList = ({ booklist, images }) => { // Remove onImageClick prop
       ))}
       <Button 
         variant="contained" 
-        onClick={() => setShowBookInfo(!showBookInfo)} // Toggle showBookInfo
+        onClick={() => setShowBookInfo(!useBookStore.getState().showBookInfo)}
         sx={{ mt: 2 }}
       >
         Toggle Book Info

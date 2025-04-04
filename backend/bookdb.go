@@ -21,53 +21,38 @@ import (
 	"ComiHa/backend/debug"
 )
 
-type ImageData struct {
-	FileName string `json:"filename"`
-	FileIndex int64 `json:"fileindex"`
-	FileSize     int64  `json:"size"`
-}
-
-type BookInfo struct {
-	BookName  string      `json:"bookname"`
-	BookNumber string	  `json:"booknumber"`
-	FileName  string      `json:"filename"`
-	SHA       string      `json:"sha"`
-	Timestamp int64       `json:"timestamp"`
-	ImageData []ImageData `json:"imagedata"`
-}
-
 // 存入 BookInfo 到 BoltDB
 func SaveBookInfo(db *bbolt.DB, book BookInfo) error {
-    err := db.Update(func(tx *bbolt.Tx) error {
-        // 獲取或創建名為 "bookinfo" 的 Bucket
-        bucket, err := tx.CreateBucketIfNotExists([]byte("bookinfo"))
-        if err != nil {
-            return fmt.Errorf("failed to create or get bucket: %w", err)
-        }
+	err := db.Update(func(tx *bbolt.Tx) error {
+		// 獲取或創建名為 "bookinfo" 的 Bucket
+		bucket, err := tx.CreateBucketIfNotExists([]byte("bookinfo"))
+		if err != nil {
+			return fmt.Errorf("failed to create or get bucket: %w", err)
+		}
 
-        // 將 BookInfo 結構轉換為 JSON 格式
-        data, err := json.Marshal(book)
-        if err != nil {
-            return fmt.Errorf("failed to marshal book info: %w", err)
-        }
+		// 將 BookInfo 結構轉換為 JSON 格式
+		data, err := json.Marshal(book)
+		if err != nil {
+			return fmt.Errorf("failed to marshal book info: %w", err)
+		}
 
-        // 構建 Key，包含 BookName 與 BookNumber
-        key := fmt.Sprintf("%s_%s", book.BookName, book.BookNumber)
-        // 將資料存入 Bucket
-        err = bucket.Put([]byte(key), data)
-        if err != nil {
-            return fmt.Errorf("failed to save book info: %w", err)
-        }
+		// 構建 Key，包含 BookName 與 BookNumber
+		key := fmt.Sprintf("%s_%s", book.BookName, book.BookNumber)
+		// 將資料存入 Bucket
+		err = bucket.Put([]byte(key), data)
+		if err != nil {
+			return fmt.Errorf("failed to save book info: %w", err)
+		}
 
-        return nil
-    })
+		return nil
+	})
 
-    // 檢查是否有錯誤
-    if err != nil {
-        return fmt.Errorf("failed to save book info in database: %w", err)
-    }
+	// 檢查是否有錯誤
+	if err != nil {
+		return fmt.Errorf("failed to save book info in database: %w", err)
+	}
 
-    return nil
+	return nil
 }
 
 // 從 BoltDB 讀取 BookInfo
@@ -104,6 +89,7 @@ func DeleteBookInfo(db *bbolt.DB, bookname string) error {
 		return bucket.Delete([]byte(bookname))
 	})
 }
+
 func parseBookName(fileName string) (string, string) {
 	// 移除副檔名
 	baseName := strings.TrimSuffix(filepath.Base(fileName), filepath.Ext(fileName))
@@ -113,11 +99,15 @@ func parseBookName(fileName string) (string, string) {
 	matches := re.FindStringSubmatch(baseName)
 
 	if len(matches) == 3 {
-		return strings.TrimSpace(matches[1]), matches[2]
+		// 移除數字部分的前導零
+		number := strings.TrimLeft(matches[2], "0")
+		if number == "" {
+			number = "0" // 如果全部是零，保留一個零
+		}
+		return strings.TrimSpace(matches[1]), number
 	}
 	return baseName, ""
 }
-
 
 // 解析 ZIP 檔，取得檔案資訊
 func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
@@ -131,9 +121,9 @@ func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
 	for index, file := range zipReader.File {
 		if filepath.Ext(file.Name) == ".png" || filepath.Ext(file.Name) == ".jpg" { // 處理 PNG 和 JPG
 			images = append(images, ImageData{
-				FileName: file.Name,
+				FileName:  file.Name,
 				FileIndex: int64(index),
-				FileSize:     int64(file.UncompressedSize64),
+				FileSize:  int64(file.UncompressedSize64),
 			})
 		}
 	}
@@ -148,10 +138,10 @@ func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
 		return nil, err
 	}
 
-    // 按照 FileName 重新排序
-    sort.Slice(images, func(i, j int) bool {
-        return naturalLess(images[i].FileName, images[j].FileName)
-    })
+	// 按照 FileName 重新排序
+	sort.Slice(images, func(i, j int) bool {
+		return naturalLess(images[i].FileName, images[j].FileName)
+	})
 
 	// 解析書名與集數
 	bookName, bookNumber := parseBookName(zipPath)
@@ -159,10 +149,10 @@ func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
 	bookInfo := &BookInfo{
 		BookName:   bookName,
 		BookNumber: bookNumber,
-		FileName:  zipPath,
-		SHA:       sha,
-		Timestamp: time.Now().Unix(),
-		ImageData: images,
+		FileName:   zipPath,
+		SHA:        sha,
+		Timestamp:  time.Now().Unix(),
+		ImageData:  images,
 	}
 
 	return bookInfo, nil
@@ -170,18 +160,18 @@ func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
 
 // 自然排序函数
 func naturalLess(a, b string) bool {
-    re := regexp.MustCompile(`\d+`)
-    aMatches := re.FindAllString(a, -1)
-    bMatches := re.FindAllString(b, -1)
+	re := regexp.MustCompile(`\d+`)
+	aMatches := re.FindAllString(a, -1)
+	bMatches := re.FindAllString(b, -1)
 
-    for i := 0; i < len(aMatches) && i < len(bMatches); i++ {
-        aNum, _ := strconv.Atoi(aMatches[i]) // 将字符串转换为整数
-        bNum, _ := strconv.Atoi(bMatches[i]) // 将字符串转换为整数
-        if aNum != bNum {
-            return aNum < bNum
-        }
-    }
-    return a < b
+	for i := 0; i < len(aMatches) && i < len(bMatches); i++ {
+		aNum, _ := strconv.Atoi(aMatches[i]) // 将字符串转换为整数
+		bNum, _ := strconv.Atoi(bMatches[i]) // 将字符串转换为整数
+		if aNum != bNum {
+			return aNum < bNum
+		}
+	}
+	return a < b
 }
 
 // 生成檔案的 SHA256
@@ -200,6 +190,40 @@ func generateSHA256(filePath string) (string, error) {
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
+func AddBookInfo(bookInfo BookInfo) error {
+	// 開啟 BoltDB
+	db, err := bbolt.Open("data.db", 0600, nil)
+	if err != nil {
+		return fmt.Errorf("failed to open database: %w", err)
+	}
+	defer db.Close()
+
+	// 存入 BookInfo 到 BoltDB
+	err = SaveBookInfo(db, bookInfo)
+	if err != nil {
+		return fmt.Errorf("failed to save book info: %w", err)
+	}
+
+	return nil
+}
+
+func GetBookInfo(bookName string) (*BookInfo, error) {
+	// 開啟 BoltDB
+	db, err := bbolt.Open("data.db", 0600, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database: %w", err)
+	}
+	defer db.Close()
+
+	// 從 BoltDB 讀取 BookInfo
+	bookInfo, err := LoadBookInfo(db, bookName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load book info: %w", err)
+	}
+
+	return bookInfo, nil
+}
+
 func AddBook(bookPath string) {
 	// 解析 ZIP 檔案
 	bookInfo, err := AnalyzeZipFile(bookPath)
@@ -214,22 +238,30 @@ func AddBook(bookPath string) {
 	}
 	defer db.Close()
 
-	// 存入第一個 BookInfo 到 BoltDB
+	// 構建 Key，包含 BookName 與 BookNumber
+	key := fmt.Sprintf("%s_%s", bookInfo.BookName, bookInfo.BookNumber)
+
+	// 先檢查是否已存在相同 SHA 的書籍
+	existingBook, err := LoadBookInfo(db, key)
+	if err == nil && existingBook.SHA == bookInfo.SHA {
+		fmt.Printf("書籍已存在且 SHA 相同，跳過保存: %s\n", bookInfo.BookName)
+		return
+	}
+
+	// 存入 BookInfo 到 BoltDB
 	err = SaveBookInfo(db, *bookInfo)
 	if err != nil {
 		log.Fatal("存入 BoltDB 失敗:", err)
 	}
 
-	// 構建 Key，包含 BookName 與 BookNumber
-	key := fmt.Sprintf("%s_%s", bookInfo.BookName, bookInfo.BookNumber)
-	// 從 BoltDB 讀取剛剛存入的第一個 BookInfo
+	// 從 BoltDB 讀取剛剛存入的 BookInfo
 	loadedBook, err := LoadBookInfo(db, key)
 	if err != nil {
 		log.Fatal("讀取失敗:", err)
 	}
 
 	// 顯示讀取結果
-	fmt.Println("從 BoltDB 讀取到的第一個 BookInfo:")
+	fmt.Println("從 BoltDB 讀取到的 BookInfo:")
 	fmt.Printf("SHA: %s\n", loadedBook.SHA)
 	fmt.Printf("BookName: %s\n", loadedBook.BookName)
 	fmt.Printf("Timestamp: %d\n", loadedBook.Timestamp)
@@ -237,16 +269,7 @@ func AddBook(bookPath string) {
 	// for _, img := range loadedBook.ImageData {
 	// 	fmt.Printf("  - %s (%d bytes)\n", img.FileName, img.FileSize)
 	// }
-
-
-	// 刪除第一個 BookInfo
-	// err = DeleteBookInfo(db, bookInfo.BookName)
-	// if err != nil {
-	// 	log.Fatal("刪除失敗:", err)
-	// }
-	// fmt.Println("成功刪除 BookInfo:", bookInfo.BookName)
 }
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // API
@@ -261,7 +284,7 @@ func (a *App) ScanBookAll() {
 	}
 
 	for _, fileName := range fileNameList {
-		debug.DebugInfo("fileName:",fileName)
+		debug.DebugInfo("fileName:", fileName)
 		filePath := scanPath + "\\" + fileName
 		AddBook(filePath)
 	}

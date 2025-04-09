@@ -2,14 +2,32 @@ export namespace backend {
 	
 	export class Metadata {
 	    title: string;
+	    series: string;
+	    number: string;
 	    volume: string;
-	    author: string;
-	    tags: string[];
+	    alternateSeries: string;
+	    alternateNumber: string;
+	    storyArc: string;
+	    year: string;
+	    month: string;
+	    day: string;
+	    seriesGroup: string;
+	    summary: string;
+	    notes: string;
+	    writer: string;
 	    publisher: string;
-	    release_date: string;
-	    page_count: string;
-	    epub_format: string;
-	    description: string;
+	    imprint: string;
+	    genre: string;
+	    web: string;
+	    pageCount: number;
+	    languageISO: string;
+	    format: string;
+	    ageRating: string;
+	    manga: string;
+	    characters: string;
+	    teams: string;
+	    locations: string;
+	    scanInformation: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Metadata(source);
@@ -18,14 +36,32 @@ export namespace backend {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.title = source["title"];
+	        this.series = source["series"];
+	        this.number = source["number"];
 	        this.volume = source["volume"];
-	        this.author = source["author"];
-	        this.tags = source["tags"];
+	        this.alternateSeries = source["alternateSeries"];
+	        this.alternateNumber = source["alternateNumber"];
+	        this.storyArc = source["storyArc"];
+	        this.year = source["year"];
+	        this.month = source["month"];
+	        this.day = source["day"];
+	        this.seriesGroup = source["seriesGroup"];
+	        this.summary = source["summary"];
+	        this.notes = source["notes"];
+	        this.writer = source["writer"];
 	        this.publisher = source["publisher"];
-	        this.release_date = source["release_date"];
-	        this.page_count = source["page_count"];
-	        this.epub_format = source["epub_format"];
-	        this.description = source["description"];
+	        this.imprint = source["imprint"];
+	        this.genre = source["genre"];
+	        this.web = source["web"];
+	        this.pageCount = source["pageCount"];
+	        this.languageISO = source["languageISO"];
+	        this.format = source["format"];
+	        this.ageRating = source["ageRating"];
+	        this.manga = source["manga"];
+	        this.characters = source["characters"];
+	        this.teams = source["teams"];
+	        this.locations = source["locations"];
+	        this.scanInformation = source["scanInformation"];
 	    }
 	}
 	export class ImageData {

@@ -85,7 +85,7 @@ func FindBookURL(bookName string) (string, error) {
 	return finalURL, nil
 }
 
-func FindBookDetails(seriesURL string, targetVolume string) (string, error) {
+func FindBookDetails(seriesURL string, targetNumber string) (string, error) {
 	c := colly.NewCollector()
 
 	// 設定 User-Agent 和 Referer
@@ -111,8 +111,8 @@ func FindBookDetails(seriesURL string, targetVolume string) (string, error) {
 
 		log.Println("找到鏈接:", href, "標題:", bookTitle)
 
-		// 檢查書名是否包含目標卷數 (targetVolume)，例如 "(6)"
-		if strings.Contains(bookTitle, "("+targetVolume+")") {
+		// 檢查書名是否包含目標編號 (targetNumber)，例如 "(6)"
+		if strings.Contains(bookTitle, "("+targetNumber+")") {
 			bookURL = href
 			log.Println("找到符合的書籍:", bookTitle, "網址:", bookURL)
 		}
@@ -126,7 +126,7 @@ func FindBookDetails(seriesURL string, targetVolume string) (string, error) {
 	}
 
 	if bookURL == "" {
-		return "", fmt.Errorf("未找到符合卷數 (%s) 的書籍", targetVolume)
+		return "", fmt.Errorf("未找到符合編號 (%s) 的書籍", targetNumber)
 	}
 
 	// 返回完整書籍詳細頁面 URL
@@ -165,9 +165,9 @@ func FindBookInfo(bookURL string) (*BookInfo, error) {
 		// 取得所有作者
 		e.ForEach(".writer_data dd a", func(i int, el *colly.HTMLElement) {
 			if i > 0 {
-				bookInfo.Metadata.Author += ", " // 多個作者時用逗號分隔
+				bookInfo.Metadata.Writer += ", " // 多個作者時用逗號分隔
 			}
-			bookInfo.Metadata.Author += strings.TrimSpace(strings.ReplaceAll(el.Text, "\n", " "))
+			bookInfo.Metadata.Writer += strings.TrimSpace(strings.ReplaceAll(el.Text, "\n", " "))
 		})
 
 		// 取得所有類型標籤
@@ -178,24 +178,25 @@ func FindBookInfo(bookURL string) (*BookInfo, error) {
 			switch label {
 			case "類型標籤：":
 				el.ForEach("a", func(_ int, tag *colly.HTMLElement) {
-					bookInfo.Metadata.Tags = append(bookInfo.Metadata.Tags, tag.Text)
+					bookInfo.Metadata.Genre = strings.Join(append(strings.Split(bookInfo.Metadata.Genre, ", "), tag.Text), ", ")
 				})
 			case "出版社：":
 				bookInfo.Metadata.Publisher = value
 			case "發售日：":
-				bookInfo.Metadata.ReleaseDate = value
-			case "頁數：":
-				bookInfo.Metadata.PageCount = value
-			case "EPUB格式：":
-				bookInfo.Metadata.EPUBFormat = value
+				// Parse the date string
+				if date, err := time.Parse("2006/01/02", value); err == nil {
+					bookInfo.Metadata.Year = date.Format("2006")
+					bookInfo.Metadata.Month = date.Format("01")
+					bookInfo.Metadata.Day = date.Format("02")
+				}
 			}
 		})
 	})
 
 	// 抓取內容簡介
 	c.OnHTML(".product-introduction-container", func(e *colly.HTMLElement) {
-		bookInfo.Metadata.Description = strings.TrimSpace(e.Text)
-		log.Println("內容簡介:", bookInfo.Metadata.Description)
+		bookInfo.Metadata.Summary = strings.TrimSpace(e.Text)
+		log.Println("內容簡介:", bookInfo.Metadata.Summary)
 	})
 
 	// 開始抓取該書籍的詳細頁面
@@ -209,7 +210,7 @@ func FindBookInfo(bookURL string) (*BookInfo, error) {
 }
 
 func (a *App) ScraperInfo(title string, volume string) (*BookInfo, error) {
-	debug.DebugInfo("ScraperInfo()")
+	debug.DebugInfo("ScraperInfo()", volume)
 
 	var bookInfo BookInfo
 	bookInfo.Metadata = Metadata{} // 初始化 Metadata 結構
@@ -231,13 +232,13 @@ func (a *App) ScraperInfo(title string, volume string) (*BookInfo, error) {
 	}
 	fmt.Println("#找到的書籍網址:", seriesURL)
 
-	// 查詢該系列的指定書籍
+	fmt.Println("#查詢該系列的指定書籍:", volume)
 	bookURL, err := FindBookDetails(seriesURL, volume)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("找到的書籍詳細頁面網址:", bookURL)
 
+	fmt.Println("找到的書籍詳細頁面網址:", bookURL)
 	bookInfoPtr, err := FindBookInfo(bookURL)
 	if err != nil {
 		log.Fatal(err)
@@ -248,16 +249,16 @@ func (a *App) ScraperInfo(title string, volume string) (*BookInfo, error) {
 		bookInfo.Metadata = bookInfoPtr.Metadata
 	}
 
-	bookInfo.Metadata.Title = title
-	bookInfo.Metadata.Volume = volume
+	bookInfo.Metadata.Series = title
+	bookInfo.Metadata.Number = volume
 
 	// 存入 BoltDB
-	log.Println("💾 嘗試存入 BoltDB:", bookInfo.Metadata.Title, bookInfo.Metadata.Volume)
+	log.Println("💾 嘗試存入 BoltDB:", bookInfo.Metadata.Series, bookInfo.Metadata.Number)
 	err = AddBookInfo(bookInfo)
 	if err != nil {
 		log.Println("❌ 存入 BoltDB 失敗:", err)
 	} else {
-		log.Println("✅ 成功存入 BoltDB 快取:", bookInfo.Metadata.Title, bookInfo.Metadata.Volume)
+		log.Println("✅ 成功存入 BoltDB 快取:", bookInfo.Metadata.Series, bookInfo.Metadata.Number)
 	}
 
 	return &bookInfo, nil

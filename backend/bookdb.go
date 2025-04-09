@@ -322,7 +322,7 @@ func (a *App) GetBookListAll() (bookList []BookInfo) {
 	return bookList
 }
 
-func (a *App) GetBookInfo(filePath string) (*BookInfo, error) {
+func (a *App) GetBookInfo(bookName string) (*BookInfo, error) {
 	// 開啟 BoltDB
 	db, err := bbolt.Open("data.db", 0600, nil)
 	if err != nil {
@@ -330,24 +330,12 @@ func (a *App) GetBookInfo(filePath string) (*BookInfo, error) {
 	}
 	defer db.Close()
 
-	// 讀取指定的 BookInfo
-	var book BookInfo
-	err = db.View(func(tx *bbolt.Tx) error {
-		bucket := tx.Bucket([]byte("bookinfo"))
-		if bucket == nil {
-			return fmt.Errorf("bucket not found")
-		}
-
-		data := bucket.Get([]byte(filepath.Base(filePath)))
-		if data == nil {
-			return fmt.Errorf("bookinfo not found for file: %s", filePath)
-		}
-
-		return json.Unmarshal(data, &book)
-	})
-
+	// 從 BoltDB 讀取 BookInfo
+	bookInfo, err := LoadBookInfo(db, bookName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to load book info: %w", err)
 	}
-	return &book, nil
+
+	return bookInfo, nil
+
 }

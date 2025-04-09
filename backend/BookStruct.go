@@ -6,16 +6,50 @@ type ImageData struct {
 	FileSize  int64  `json:"size"`
 }
 type Metadata struct {
-	Title       string   `json:"title"`        // 書籍標題
-	Volume      string   `json:"volume"`       // 卷數或集數
-	Author      string   `json:"author"`       // 作者
-	Tags        []string `json:"tags"`         // 標籤
-	Publisher   string   `json:"publisher"`    // 出版社
-	ReleaseDate string   `json:"release_date"` // 發行日期
-	PageCount   string   `json:"page_count"`   // 頁數
-	EPUBFormat  string   `json:"epub_format"`  // EPUB 格式
-	Description string   `json:"description"`  // 書籍描述
+	Title           string `xml:"Title"             json:"title"`           // 暫時用不到
+	Series          string `xml:"Series"            json:"series"`          // 系列名稱（例如作品名稱）
+	Number          string `xml:"Number"            json:"number"`          // 單集編號（通常是本集是第幾話/冊）
+	Volume          string `xml:"Volume"            json:"volume"`          // 卷號（可與 Number 有區別） (manga用不到)
+	AlternateSeries string `xml:"AlternateSeries"   json:"alternateSeries"` // 系列的替代名稱（如果有）
+	AlternateNumber string `xml:"AlternateNumber"   json:"alternateNumber"` // 替代的單集編號（例如日文原版號碼）
+	StoryArc        string `xml:"StoryArc"          json:"storyArc"`        // 故事主軸名稱（如果有）
+	Year            string `xml:"Year"              json:"year"`
+	Month           string `xml:"Month"             json:"month"`
+	Day             string `xml:"Day"               json:"day"`
+	SeriesGroup     string `xml:"SeriesGroup"       json:"seriesGroup"`     // 同系列作品的群組標記
+	Summary         string `xml:"Summary"           json:"summary"`         // 劇情簡介
+	Notes           string `xml:"Notes"             json:"notes"`           // 備註說明
+	Writer          string `xml:"Writer"            json:"writer"`          // 作者（或腳本作者）
+	Publisher       string `xml:"Publisher"         json:"publisher"`       // 出版社
+	Imprint         string `xml:"Imprint"           json:"imprint"`         // 出版品牌（如少年Jump等）
+	Genre           string `xml:"Genre"             json:"genre"`           // 類型（多個可用逗號分隔，如 Action, Drama）
+	Web             string `xml:"Web"               json:"web"`             // 官方網站或相關連結
+	PageCount       int    `xml:"PageCount"         json:"pageCount"`       // 頁數總數（通常是圖片頁數）
+	LanguageISO     string `xml:"LanguageISO"       json:"languageISO"`     // 語言代碼（例如 en、ja、zh 等）
+	Format          string `xml:"Format"            json:"format"`          // 書籍格式（如 Tankoubon、Webtoon 等）
+	AgeRating       string `xml:"AgeRating"         json:"ageRating"`       // 年齡分級（如 PG、18+）
+	Manga           string `xml:"Manga"             json:"manga"`           // 是否為漫畫（"Yes" 或空）
+	Characters      string `xml:"Characters"        json:"characters"`      // 登場角色（逗號分隔）
+	Teams           string `xml:"Teams"             json:"teams"`           // 團體或小隊（如果適用）
+	Locations       string `xml:"Locations"         json:"locations"`       // 地點（出現過的場景）
+	ScanInformation string `xml:"ScanInformation"   json:"scanInformation"` // 掃描相關資訊（如版本、掃圖者等）
 }
+
+// type ComicInfo struct {
+// 	Pages             Pages    `xml:"Pages"`             // 每一頁的資訊
+// }
+
+// // Pages 包含所有頁面
+// type Pages struct {
+// 	PageList []Page `xml:"Page"` // 多個頁面資訊
+// }
+
+// // Page 表示一頁圖像的屬性
+// type Page struct {
+// 	Image     int    `xml:"Image,attr"`               // 該圖像在圖檔列表中的索引（0 為第一張）
+// 	Type      string `xml:"Type,attr,omitempty"`      // 頁面類型（如 FrontCover 封面、內頁）
+// 	ImageSize int    `xml:"ImageSize,attr"`           // 該圖像的位元組大小（byte）
+// }
 
 type BookInfo struct {
 	BookName   string      `json:"bookname"`

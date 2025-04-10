@@ -144,7 +144,8 @@ func FindBookInfo(bookURL string) (*BookInfo, error) {
 	c := colly.NewCollector()
 
 	var bookInfo BookInfo
-	bookInfo.Metadata = Metadata{} // 初始化 Metadata 結構
+	bookInfo.Metadata = Metadata{}       // 初始化 Metadata 結構
+	bookInfo.Metadata.LanguageISO = "zh" // 設置默認語言為中文
 
 	// 設定 User-Agent 和 Referer
 	c.OnRequest(func(r *colly.Request) {
@@ -183,11 +184,21 @@ func FindBookInfo(bookURL string) (*BookInfo, error) {
 			case "出版社：":
 				bookInfo.Metadata.Publisher = value
 			case "發售日：":
-				// Parse the date string
-				if date, err := time.Parse("2006/01/02", value); err == nil {
+				// Parse the date string in format "2023年 04月 07日"
+				log.Println("日期解析:", value)
+				// 移除所有換行符和多余空格
+				dateStr := strings.ReplaceAll(value, "\n", "")
+				dateStr = strings.ReplaceAll(dateStr, " ", "")
+				dateStr = strings.ReplaceAll(dateStr, "年", "-")
+				dateStr = strings.ReplaceAll(dateStr, "月", "-")
+				dateStr = strings.ReplaceAll(dateStr, "日", "")
+				log.Println("處理後的日期字串:", dateStr)
+				if date, err := time.Parse("2006-01-02", dateStr); err == nil {
 					bookInfo.Metadata.Year = date.Format("2006")
 					bookInfo.Metadata.Month = date.Format("01")
 					bookInfo.Metadata.Day = date.Format("02")
+				} else {
+					log.Println("日期解析錯誤:", err)
 				}
 			}
 		})
@@ -246,7 +257,28 @@ func (a *App) ScraperInfo(title string, volume string) (*BookInfo, error) {
 
 	// 合併新爬取的資料
 	if bookInfoPtr != nil {
-		bookInfo.Metadata = bookInfoPtr.Metadata
+		// 只覆蓋非空白的資料
+		if bookInfoPtr.Metadata.Writer != "" {
+			bookInfo.Metadata.Writer = bookInfoPtr.Metadata.Writer
+		}
+		if bookInfoPtr.Metadata.Genre != "" {
+			bookInfo.Metadata.Genre = bookInfoPtr.Metadata.Genre
+		}
+		if bookInfoPtr.Metadata.Publisher != "" {
+			bookInfo.Metadata.Publisher = bookInfoPtr.Metadata.Publisher
+		}
+		if bookInfoPtr.Metadata.Year != "" {
+			bookInfo.Metadata.Year = bookInfoPtr.Metadata.Year
+		}
+		if bookInfoPtr.Metadata.Month != "" {
+			bookInfo.Metadata.Month = bookInfoPtr.Metadata.Month
+		}
+		if bookInfoPtr.Metadata.Day != "" {
+			bookInfo.Metadata.Day = bookInfoPtr.Metadata.Day
+		}
+		if bookInfoPtr.Metadata.Summary != "" {
+			bookInfo.Metadata.Summary = bookInfoPtr.Metadata.Summary
+		}
 	}
 
 	bookInfo.Metadata.Series = title
@@ -260,6 +292,10 @@ func (a *App) ScraperInfo(title string, volume string) (*BookInfo, error) {
 	} else {
 		log.Println("✅ 成功存入 BoltDB 快取:", bookInfo.Metadata.Series, bookInfo.Metadata.Number)
 	}
+
+	WriteComicInfo(bookInfo)
+
+	WriteComicInfoToZipWith7z(bookInfo)
 
 	return &bookInfo, nil
 }

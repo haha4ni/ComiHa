@@ -9,8 +9,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"os/exec"
-	"path/filepath"
 )
 
 // WriteComicInfo writes the BookInfo struct to a ComicInfo.xml file

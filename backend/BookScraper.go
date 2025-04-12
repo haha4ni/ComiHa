@@ -295,7 +295,5 @@ func (a *App) ScraperInfo(title string, volume string) (*BookInfo, error) {
 
 	WriteComicInfo(bookInfo)
 
-	WriteComicInfoToZipWith7z(bookInfo)
-
 	return &bookInfo, nil
 }

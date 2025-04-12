@@ -110,3 +110,26 @@ func (db *DB) GetAllData(bucketName string, data interface{}) error {
 		return nil
 	})
 }
+
+// GetAllKeys retrieves all keys from a bucket
+func (db *DB) GetAllKeys(bucketName string) ([]string, error) {
+	var keys []string
+
+	err := db.View(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket([]byte(bucketName))
+		if bucket == nil {
+			return fmt.Errorf("bucket not found")
+		}
+
+		return bucket.ForEach(func(k, _ []byte) error {
+			keys = append(keys, string(k))
+			return nil
+		})
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return keys, nil
+}

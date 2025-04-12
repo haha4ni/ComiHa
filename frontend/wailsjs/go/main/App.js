@@ -18,6 +18,18 @@ export function GetBookPages(arg1, arg2) {
   return window['go']['main']['App']['GetBookPages'](arg1, arg2);
 }
 
+export function GetSeriesInfoByKey(arg1) {
+  return window['go']['main']['App']['GetSeriesInfoByKey'](arg1);
+}
+
+export function GetSeriesKeyListAll() {
+  return window['go']['main']['App']['GetSeriesKeyListAll']();
+}
+
+export function GetSeriesListAll() {
+  return window['go']['main']['App']['GetSeriesListAll']();
+}
+
 export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }

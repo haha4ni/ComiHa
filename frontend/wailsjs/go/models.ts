@@ -157,6 +157,19 @@ export namespace backend {
 	        this.FileBitmap = source["FileBitmap"];
 	    }
 	}
+	
+	export class SeriesInfo {
+	    bookinfokeys: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new SeriesInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.bookinfokeys = source["bookinfokeys"];
+	    }
+	}
 
 }
 

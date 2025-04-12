@@ -10,6 +10,12 @@ export function GetBookPage(arg1:string,arg2:number):Promise<backend.ImageDataTe
 
 export function GetBookPages(arg1:string,arg2:Array<number>):Promise<Array<backend.ImageDataTemp>>;
 
+export function GetSeriesInfoByKey(arg1:string):Promise<backend.SeriesInfo>;
+
+export function GetSeriesKeyListAll():Promise<Array<string>>;
+
+export function GetSeriesListAll():Promise<Array<backend.SeriesInfo>>;
+
 export function Greet(arg1:string):Promise<string>;
 
 export function NowPath():Promise<string>;

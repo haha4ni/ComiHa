@@ -246,3 +246,30 @@ func (a *App) GetBookInfo(bookName string) (*BookInfo, error) {
 
 	return bookInfo, nil
 }
+
+func (a *App) GetSeriesListAll() (seriesinfoList []SeriesInfo) {
+	// 讀取所有 BookInfo
+	err := globalDB.GetAllData("seriesinfo", &seriesinfoList)
+	if err != nil {
+		log.Fatal("讀取所有 seriesinfo 失敗:", err)
+	}
+	return seriesinfoList
+}
+
+func (a *App) GetSeriesKeyListAll() (serieskeyList []string) {
+	// 讀取所有 BookInfo
+	serieskeyList, err := globalDB.GetAllKeys("seriesinfo")
+	if err != nil {
+		log.Fatal("讀取所有 serieskey 失敗:", err)
+	}
+	return serieskeyList
+}
+
+func (a *App) GetSeriesInfoByKey(seriesKey string) (*SeriesInfo, error) {
+	var seriesInfo SeriesInfo
+	err := globalDB.LoadData("seriesinfo", seriesKey, &seriesInfo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load series info: %w", err)
+	}
+	return &seriesInfo, nil
+}

@@ -1,10 +1,8 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
-import CssBaseline from "@mui/material/CssBaseline";
 import Toolbar from "@mui/material/Toolbar";
 import List from "@mui/material/List";
-import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -12,10 +10,15 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import InboxIcon from "@mui/icons-material/MoveToInbox";
 import MailIcon from "@mui/icons-material/Mail";
+import HomeIcon from '@mui/icons-material/Home';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
+import { useNavigate } from "react-router-dom";
 
 const drawerWidth = 240;
 
 export default function SimpleDrawer() {
+  const navigate = useNavigate();
   const [open, setOpen] = React.useState(true);
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -41,11 +44,41 @@ export default function SimpleDrawer() {
       <Toolbar variant='dense' disableGutters sx={{ minHeight: 40, height: 40 }}/>
       <Box sx={{ overflow: "auto" }}>
         <List>
-          {["全部書籍", "Item 2", "Item 3"].map((text, index) => (
+          {["首頁", "全部書籍", "全部系列", "＜"].map((text, index) => (
             <ListItem key={text} disablePadding>
-              <ListItemButton onClick={handleDrawerClose}>
+              <ListItemButton onClick={() => {
+                switch(index) {
+                  case 0:
+                    navigate("/");
+                    break;
+                  case 1:
+                    navigate("/bookinfo");
+                    break;
+                  case 2:
+                    navigate("/seriesinfo");
+                    break;
+                  case 3:
+                    handleDrawerClose();
+                    break;
+                  default:
+                    handleDrawerClose();
+                }
+              }}>
                 <ListItemIcon>
-                  {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                  {(() => {
+                    switch(index) {
+                      case 0:
+                        return <HomeIcon />;
+                      case 1:
+                        return <LibraryBooksIcon />;
+                      case 2:
+                        return <InboxIcon />;
+                      case 3:
+                        return <ArrowBackIcon />;
+                      default:
+                        return <MailIcon />;
+                    }
+                  })()}
                 </ListItemIcon>
                 <ListItemText primary={text} />
               </ListItemButton>

@@ -4,6 +4,16 @@ import (
 	"encoding/xml"
 )
 
+type BookInfo struct {
+	BookName   string      `json:"bookname"`
+	BookNumber string      `json:"booknumber"`
+	FileName   string      `json:"filename"`
+	SHA        string      `json:"sha"`
+	Timestamp  int64       `json:"timestamp"`
+	ImageData  []ImageData `json:"imagedata"`
+	Metadata   Metadata    `json:"metadata"` // 書籍元數據
+}
+
 type ImageData struct {
 	FileName  string `json:"filename"`
 	FileIndex int64  `json:"fileindex"`
@@ -40,28 +50,6 @@ type Metadata struct {
 	ScanInformation string   `xml:"ScanInformation"   json:"scanInformation"` // 掃描相關資訊（如版本、掃圖者等）
 }
 
-// type ComicInfo struct {
-// 	Pages             Pages    `xml:"Pages"`             // 每一頁的資訊
-// }
-
-// // Pages 包含所有頁面
-// type Pages struct {
-// 	PageList []Page `xml:"Page"` // 多個頁面資訊
-// }
-
-// // Page 表示一頁圖像的屬性
-// type Page struct {
-// 	Image     int    `xml:"Image,attr"`               // 該圖像在圖檔列表中的索引（0 為第一張）
-// 	Type      string `xml:"Type,attr,omitempty"`      // 頁面類型（如 FrontCover 封面、內頁）
-// 	ImageSize int    `xml:"ImageSize,attr"`           // 該圖像的位元組大小（byte）
-// }
-
-type BookInfo struct {
-	BookName   string      `json:"bookname"`
-	BookNumber string      `json:"booknumber"`
-	FileName   string      `json:"filename"`
-	SHA        string      `json:"sha"`
-	Timestamp  int64       `json:"timestamp"`
-	ImageData  []ImageData `json:"imagedata"`
-	Metadata   Metadata    `json:"metadata"` // 書籍元數據
+type SeriesInfo struct {
+	BookInfoKeys []string `json:"bookinfokeys"`
 }

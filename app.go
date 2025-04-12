@@ -4,6 +4,7 @@ import (
 	"ComiHa/backend"
 	"context"
 	"fmt"
+	"log"
 )
 
 // App struct
@@ -20,6 +21,11 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.Ctx = ctx
+
+	// Initialize database
+	if err := backend.InitializeDB(); err != nil {
+		log.Fatal("Failed to initialize database:", err)
+	}
 }
 
 // Greet returns a greeting for the given name

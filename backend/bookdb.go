@@ -15,16 +15,58 @@ import (
 	"ComiHa/backend/gadget"
 )
 
+// Global database connection
+var globalDB *db.DB
+
+// InitializeDB initializes the global database connection
+func InitializeDB() error {
+	var err error
+	globalDB, err = db.NewDB("data.db")
+	return err
+}
+
+// CloseDB closes the global database connection
+func CloseDB() error {
+	if globalDB != nil {
+		return globalDB.Close()
+	}
+	return nil
+}
+
+// ///////////////////////////////////////////////////////////////////////////////////////
+func SaveSeriesInfo(book BookInfo) error {
+	key := book.BookName
+	var seriesInfo SeriesInfo
+
+	// Load existing data
+	err := globalDB.LoadData("seriesinfo", key, &seriesInfo)
+	if err != nil {
+		// If bucket doesn't exist or key not found, initialize empty seriesInfo
+		seriesInfo = SeriesInfo{
+			BookInfoKeys: []string{},
+		}
+	}
+
+	// Append new key
+	newKey := fmt.Sprintf("%s_%s", book.BookName, book.BookNumber)
+	seriesInfo.BookInfoKeys = append(seriesInfo.BookInfoKeys, newKey)
+
+	// Sort the keys
+	sort.Strings(seriesInfo.BookInfoKeys)
+
+	return globalDB.SaveData("seriesinfo", key, seriesInfo)
+}
+
 // 存入 BookInfo 到 BoltDB
-func SaveBookInfo(db *db.DB, book BookInfo) error {
+func SaveBookInfo(book BookInfo) error {
 	key := fmt.Sprintf("%s_%s", book.BookName, book.BookNumber)
-	return db.SaveData("bookinfo", key, book)
+	return globalDB.SaveData("bookinfo", key, book)
 }
 
 // 從 BoltDB 讀取 BookInfo
-func LoadBookInfo(db *db.DB, bookname string) (*BookInfo, error) {
+func LoadBookInfo(bookname string) (*BookInfo, error) {
 	var book BookInfo
-	err := db.LoadData("bookinfo", bookname, &book)
+	err := globalDB.LoadData("bookinfo", bookname, &book)
 	if err != nil {
 		return nil, err
 	}
@@ -32,8 +74,8 @@ func LoadBookInfo(db *db.DB, bookname string) (*BookInfo, error) {
 }
 
 // 根據 BookName 刪除 BookInfo
-func DeleteBookInfo(db *db.DB, bookname string) error {
-	return db.DeleteData("bookinfo", bookname)
+func DeleteBookInfo(bookname string) error {
+	return globalDB.DeleteData("bookinfo", bookname)
 }
 
 func parseBookName(fileName string) (string, string) {
@@ -105,15 +147,8 @@ func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
 }
 
 func AddBookInfo(bookInfo BookInfo) error {
-	// 開啟 BoltDB
-	db, err := db.NewDB("data.db")
-	if err != nil {
-		return fmt.Errorf("failed to open database: %w", err)
-	}
-	defer db.Close()
-
 	// 存入 BookInfo 到 BoltDB
-	err = SaveBookInfo(db, bookInfo)
+	err := SaveBookInfo(bookInfo)
 	if err != nil {
 		return fmt.Errorf("failed to save book info: %w", err)
 	}
@@ -122,15 +157,8 @@ func AddBookInfo(bookInfo BookInfo) error {
 }
 
 func GetBookInfo(bookName string) (*BookInfo, error) {
-	// 開啟 BoltDB
-	db, err := db.NewDB("data.db")
-	if err != nil {
-		return nil, fmt.Errorf("failed to open database: %w", err)
-	}
-	defer db.Close()
-
 	// 從 BoltDB 讀取 BookInfo
-	bookInfo, err := LoadBookInfo(db, bookName)
+	bookInfo, err := LoadBookInfo(bookName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load book info: %w", err)
 	}
@@ -145,31 +173,30 @@ func AddBook(bookPath string) {
 		log.Fatal("解析失敗:", err)
 	}
 
-	// 開啟 BoltDB
-	db, err := db.NewDB("data.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
 	// 構建 Key，包含 BookName 與 BookNumber
 	key := fmt.Sprintf("%s_%s", bookInfo.BookName, bookInfo.BookNumber)
 
 	// 先檢查是否已存在相同 SHA 的書籍
-	existingBook, err := LoadBookInfo(db, key)
+	existingBook, err := LoadBookInfo(key)
 	if err == nil && existingBook.SHA == bookInfo.SHA {
 		fmt.Printf("書籍已存在且 SHA 相同，跳過保存: %s\n", bookInfo.BookName)
 		return
 	}
 
 	// 存入 BookInfo 到 BoltDB
-	err = SaveBookInfo(db, *bookInfo)
+	err = SaveBookInfo(*bookInfo)
 	if err != nil {
 		log.Fatal("存入 BoltDB 失敗:", err)
 	}
 
+	// Save series info
+	err = SaveSeriesInfo(*bookInfo)
+	if err != nil {
+		log.Fatal("存入系列資訊失敗:", err)
+	}
+
 	// 從 BoltDB 讀取剛剛存入的 BookInfo
-	loadedBook, err := LoadBookInfo(db, key)
+	loadedBook, err := LoadBookInfo(key)
 	if err != nil {
 		log.Fatal("讀取失敗:", err)
 	}
@@ -202,15 +229,8 @@ func (a *App) ScanBookAll() {
 }
 
 func (a *App) GetBookListAll() (bookList []BookInfo) {
-	// 開啟 BoltDB
-	db, err := db.NewDB("data.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
 	// 讀取所有 BookInfo
-	err = db.GetAllData("bookinfo", &bookList)
+	err := globalDB.GetAllData("bookinfo", &bookList)
 	if err != nil {
 		log.Fatal("讀取所有 BookInfo 失敗:", err)
 	}
@@ -218,15 +238,8 @@ func (a *App) GetBookListAll() (bookList []BookInfo) {
 }
 
 func (a *App) GetBookInfo(bookName string) (*BookInfo, error) {
-	// 開啟 BoltDB
-	db, err := db.NewDB("data.db")
-	if err != nil {
-		return nil, fmt.Errorf("failed to open database: %w", err)
-	}
-	defer db.Close()
-
 	// 從 BoltDB 讀取 BookInfo
-	bookInfo, err := LoadBookInfo(db, bookName)
+	bookInfo, err := LoadBookInfo(bookName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load book info: %w", err)
 	}

@@ -4,12 +4,16 @@ import MainMode from "./components/MainMode";
 import BookMode from "./components/BookMode";
 import BookInfoPage from "./components/components/BookInfoPage";
 import BookReadPage from "./components/components/BookReadPage";
+import ImageBoxList from "./components/components/ImageBoxList";
 
 export default function App() {
     return (
         <Router>
             <Routes>
                 <Route path="/" element={<MainMode />}>
+                    <Route path="series" element={<ImageBoxList mode="series" />} />
+                    <Route path="bookinfo" element={<ImageBoxList mode="bookinfo" />} />
+                    <Route path="bookinfo/:bookname/:booknumber" element={<BookInfoPage />} />
                     <Route path="bookinfo/:bookname/:booknumber" element={<BookInfoPage />} />
                     <Route path="bookinfo/:bookname/:booknumber/:page" element={<BookReadPage />} />
                 </Route>

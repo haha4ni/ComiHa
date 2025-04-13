@@ -1,16 +1,16 @@
 import React, { useState } from "react";
-import { Box, Typography, Avatar, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { Box, Typography, Avatar, Button } from "@mui/material";
 import {
   ScanBookAll,
   GetBookListAll,
   ReadCover,
+  GetBookInfo,
   GetSeriesKeyListAll,
-  GetSeriesListAll,
   GetSeriesInfoByKey
 } from "../../../wailsjs/go/main/App";
 
-const ImageBoxList = () => {
+const ImageBoxList = ({ mode }) => {
   const [images, setImages] = useState([]);
   const [booklist, setBooklist] = useState([]);
   const navigate = useNavigate();
@@ -31,28 +31,51 @@ const ImageBoxList = () => {
   };
 
   const ShowSeriesinfoList = async () => {
-    const seriesList = await GetSeriesKeyListAll();
-    for (const series of seriesList) {
-      console.log("series", series);
+    try {
+      const seriesList = await GetSeriesKeyListAll();
+      if (!seriesList || !Array.isArray(seriesList)) {
+        console.error("Invalid series list received:", seriesList);
+        return;
+      }
+      for (const series of seriesList) {
+        console.log("series", series);
         const seriesInfo = await GetSeriesInfoByKey(series);
         console.log("seriesInfo", seriesInfo.bookinfokeys);
+        const bookinfo = await GetBookInfo(seriesInfo.bookinfokeys[0]);
+        console.log("bookinfo", bookinfo);
+        setBooklist((booklist) => [...booklist, bookinfo]);
+        try {
+          const path = bookinfo.filename;
+          const img = await ReadCover(path);
+          const newImages = img.map(
+            (item) => `data:image/png;base64,${item.FileBitmap}`
+          );
+          setImages((prevImages) => [...prevImages, ...newImages]);
+        } catch (error) {
+          console.error("Failed to process image:", error);
+        }
+      }
+    } catch (error) {
+      console.error("Error in ShowSeriesinfoList:", error);
     }
   };
 
   const handleGetBooks = async () => {
-    await ScanBookAll();
-    const booklist = await GetBookListAll();
-
-    setBooklist(booklist);
-    await processImages(booklist);
-    await ShowSeriesinfoList();
+    if (mode === "series") {
+      await ShowSeriesinfoList();
+    } else if (mode === "bookinfo") {
+      await ScanBookAll();
+      const booklist = await GetBookListAll();
+      setBooklist(booklist);
+      await processImages(booklist);
+    }
   };
 
   return (
     <Box sx={{ width: "100%", display: "flex", flexDirection: "column" }}>
       <Box sx={{ display: "block" }}>
         <Button variant="contained" onClick={handleGetBooks} sx={{ mb: 2 }}>
-          Get Book
+          {mode === "series" ? "Get Series" : "Get Book"}
         </Button>
       </Box>
       <Box sx={{ display: "flex", flexWrap: "wrap" }}>
@@ -72,15 +95,18 @@ const ImageBoxList = () => {
               alt={`Drawer Image ${index}`}
               sx={{ width: 215, height: 320, borderRadius: "8px 8px 0 0" }}
               onClick={() => {
-                const book = booklist[index];
-                navigate(
-                  `/bookinfo/${encodeURIComponent(book.bookname
-                  )}/${encodeURIComponent(book.booknumber)}`
-                );
+                if (mode === "bookinfo") {
+                  const book = booklist[index];
+                  navigate(
+                    `/bookinfo/${encodeURIComponent(book.bookname)}/${encodeURIComponent(book.booknumber)}`
+                  );
+                }
               }}
             />
             <Typography variant="body2">
-              {booklist[index]?.bookname} {booklist[index]?.booknumber}
+              {mode === "bookinfo"
+                ? `${booklist[index]?.bookname} ${booklist[index]?.booknumber}`
+                : "Series Info"}
             </Typography>
           </Box>
         ))}

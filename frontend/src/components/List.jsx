@@ -55,7 +55,7 @@ export default function SimpleDrawer() {
                     navigate("/bookinfo");
                     break;
                   case 2:
-                    navigate("/seriesinfo");
+                    navigate("/series");
                     break;
                   case 3:
                     handleDrawerClose();

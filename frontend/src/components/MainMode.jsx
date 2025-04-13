@@ -9,7 +9,7 @@ export default function MainMode() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isBookInfoRoute = location.pathname.includes('/bookinfo/');
+  // const isBookInfoRoute = location.pathname.includes('/bookinfo/');
 
   return (
     <Box>
@@ -34,7 +34,7 @@ export default function MainMode() {
             Switch to Book Mode
           </Button>
           <Box sx={{ width: "100%", display: "flex", flexWrap: "wrap" }}>
-            {isBookInfoRoute ? <Outlet /> : <ImageBoxList />}
+            <Outlet />
           </Box>
         </Box>
       </Box>

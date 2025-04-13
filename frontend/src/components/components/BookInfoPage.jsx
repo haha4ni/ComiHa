@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Avatar, Button, TextField } from "@mui/material";
-import { ReadCover, ScraperInfo, GetBookPage } from "../../../wailsjs/go/main/App";
 import { useNavigate, useParams } from "react-router-dom";
-import useBookStore from "../../store/useBookStore";
+import { Box, Typography, Avatar, Button, TextField } from "@mui/material";
+import { ReadCover, ScraperInfo, GetBookPage, GetBookInfo } from "../../../wailsjs/go/main/App";
 
 export default function BookInfoPage() {
   const [bookCover, setBookCover] = useState(null);
   const [Thumbnails, setThumbnails] = useState([]);
+  const [bookinfo, setBookinfo] = useState(null);
   const navigate = useNavigate();
   const { bookname, booknumber } = useParams();
-  const { bookinfo } = useBookStore();
 
   const handleSwitchMode = async () => {
     try {
       console.log("Current bookinfo:", bookinfo);
-      const newBookInfo = await ScraperInfo(bookname ,booknumber);
+      const newBookInfo = await ScraperInfo(bookname, booknumber);
       console.log("New bookinfo:", newBookInfo);
+      setBookinfo(newBookInfo);
     } catch (error) {
       console.error("Error fetching book info:", error);
     }
@@ -38,15 +38,24 @@ export default function BookInfoPage() {
   };
 
   useEffect(() => {
-    if (bookinfo?.filename) {
-      ReadCover(bookinfo.filename).then((img) => {
-        const cover = img.map(
-          (item) => `data:image/png;base64,${item.FileBitmap}`
-        );
-        setBookCover(cover[0]); // Assuming only one cover image is returned
-      });
-    }
-  }, [bookinfo]);
+    const fetchBookInfo = async () => {
+      try {
+        const bookInfoResult = await GetBookInfo(bookname + "_" + booknumber);
+        setBookinfo(bookInfoResult);
+        if (bookInfoResult?.filename) {
+          const img = await ReadCover(bookInfoResult.filename);
+          const cover = img.map(
+            (item) => `data:image/png;base64,${item.FileBitmap}`
+          );
+          setBookCover(cover[0]); // Assuming only one cover image is returned
+        }
+      } catch (error) {
+        console.error("Error fetching book info:", error);
+      }
+    };
+
+    fetchBookInfo();
+  }, [bookname, booknumber]);
 
   return (
     <Box
@@ -66,18 +75,16 @@ export default function BookInfoPage() {
         GetBookPages
       </Button>
       
-      {/* <Typography variant="h4">Book Information</Typography> */}
-      {/* Render bookinfo content here */}
       {bookinfo && (
         <Box
           sx={{
             display: "flex",
             flexWrap: "wrap",
             gap: 2,
-            backgroundColor: "#f5f5f5", // ✅ 設定背景顏色為淺灰色
-            borderRadius: "10px", // ✅ 設定圓角
-            padding: 2, // ✅ 內邊距，讓內容不貼邊
-            width: "100%", // ✅ 確保子容器寬度為 100%
+            backgroundColor: "#f5f5f5",
+            borderRadius: "10px",
+            padding: 2,
+            width: "100%",
           }}
         >
           {bookCover && (
@@ -86,23 +93,23 @@ export default function BookInfoPage() {
               alt={`${bookinfo.bookname} cover`}
               onClick={() => navigate(`/bookinfo/${bookname}/${booknumber}/0`)}
               sx={{
-                width: "auto", // ✅ 自動調整寬度以保持比例
-                height: "50vh", // ✅ 最大高度改為視窗的一半
-                borderRadius: "10px", // ✅ 設定圖片圓角
+                width: "auto",
+                height: "50vh",
+                borderRadius: "10px",
                 maxWidth: "100%",
                 aspectRatio: "215 / 320",
                 objectFit: "cover",
                 margin: "5px",
-                flex: "0 0 auto", // 防止圖片被壓縮
-                cursor: 'pointer', // ✅ 添加指針游標樣式表示可點擊
+                flex: "0 0 auto",
+                cursor: 'pointer',
               }}
             />
           )}
           <Box sx={{
             textAlign: "left",
             flex: "1 1 auto",
-            minWidth: 0, // 防止內容溢出
-            marginLeft: "10px" // 添加左邊距
+            minWidth: 0,
+            marginLeft: "10px"
           }}>
             <Typography variant="h6">{bookinfo.metadata?.series || bookinfo.bookname}</Typography>
             <Typography variant="body1">集數: {bookinfo.metadata?.volume || bookinfo.booknumber}</Typography>
@@ -133,7 +140,7 @@ export default function BookInfoPage() {
           width: "100%",
         }}
       >
-        <Typography variant="h6">{bookinfo.metadata?.series || bookinfo.bookname}</Typography>
+        <Typography variant="h6">{bookinfo?.metadata?.series}</Typography>
       </Box>
 
       {/* Thumbnails Grid */}

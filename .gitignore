@@ -3,3 +3,4 @@ node_modules
 frontend/dist
 comic/
 *.db
+*.ComicInfo.xml

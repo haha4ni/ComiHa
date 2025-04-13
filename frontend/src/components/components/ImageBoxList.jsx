@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Box, Typography, Avatar, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import useBookStore from "../../store/useBookStore";
 import {
   ScanBookAll,
   GetBookListAll,
@@ -15,7 +14,6 @@ const ImageBoxList = () => {
   const [images, setImages] = useState([]);
   const [booklist, setBooklist] = useState([]);
   const navigate = useNavigate();
-  const { setBookinfo } = useBookStore();
 
   const processImages = async (booklist) => {
     for (const bookinfo of booklist) {
@@ -37,11 +35,12 @@ const ImageBoxList = () => {
     for (const series of seriesList) {
       console.log("series", series);
         const seriesInfo = await GetSeriesInfoByKey(series);
+        console.log("seriesInfo", seriesInfo.bookinfokeys);
     }
   };
 
   const handleGetBooks = async () => {
-    // await ScanBookAll();
+    await ScanBookAll();
     const booklist = await GetBookListAll();
 
     setBooklist(booklist);
@@ -74,10 +73,8 @@ const ImageBoxList = () => {
               sx={{ width: 215, height: 320, borderRadius: "8px 8px 0 0" }}
               onClick={() => {
                 const book = booklist[index];
-                setBookinfo(book);
                 navigate(
-                  `/bookinfo/${encodeURIComponent(
-                    book.bookname
+                  `/bookinfo/${encodeURIComponent(book.bookname
                   )}/${encodeURIComponent(book.booknumber)}`
                 );
               }}

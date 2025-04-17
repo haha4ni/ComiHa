@@ -1,25 +1,32 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Box, Typography, Avatar, Button, TextField } from "@mui/material";
-import { ReadCover, GetBookPage, GetBookInfo } from "../../../wailsjs/go/main/App";
+import {
+  ReadCover,
+  GetBookPage,
+  GetBookInfo,
+  GetSeriesInfoByKey,
+} from "../../../wailsjs/go/main/App";
 
 export default function SeriesInfoInfoPage() {
   const [bookCover, setBookCover] = useState(null);
   const [Thumbnails, setThumbnails] = useState([]);
   const [bookinfo, setBookinfo] = useState(null);
+  const [seriesinfo, setSeriesinfo] = useState(null);
   const navigate = useNavigate();
   const { seriesname, bookname, booknumber } = useParams();
 
   const handleGetBookPages = async () => {
     try {
-      const pages = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-      for (const page of pages) {
-        const result = await GetBookPage(bookname + "_" + booknumber, page);
-        setThumbnails(prev => {
-          const newThumbnails = [...prev];
-          newThumbnails[page] = result;
-          return newThumbnails;
-        });
+        const fetchedSeriesInfo = await GetSeriesInfoByKey(seriesname);
+        setSeriesinfo(fetchedSeriesInfo);
+      for (const key of fetchedSeriesInfo.bookinfokeys) {
+        const seriesInfoResult = await GetBookInfo(key);
+        console.log("@@@seriesInfoResult.filename:", seriesInfoResult.filename);
+        const result = await ReadCover(seriesInfoResult.filename);
+        console.log("@@@result:", result);
+        setThumbnails((prevImages) => [...prevImages, ...result]);
+        console.log("@@@Thumbnails:", Thumbnails);
       }
     } catch (error) {
       console.error("Error fetching book pages:", error);
@@ -29,7 +36,8 @@ export default function SeriesInfoInfoPage() {
   useEffect(() => {
     const fetchSeriesInfo = async () => {
       try {
-        const seriesInfoResult = await GetBookInfo(seriesname);
+        const seriesinfo = await GetSeriesInfoByKey(seriesname);
+        const seriesInfoResult = await GetBookInfo(seriesinfo.bookinfokeys[0]);
         setBookinfo(seriesInfoResult);
         if (seriesInfoResult?.filename) {
           const img = await ReadCover(seriesInfoResult.filename);
@@ -57,10 +65,14 @@ export default function SeriesInfoInfoPage() {
       <Button variant="contained" onClick={() => navigate("/")} sx={{ mb: 2 }}>
         Back to Home
       </Button>
-      <Button variant="contained" onClick={handleGetBookPages} sx={{ mb: 2, ml: 2 }}>
+      <Button
+        variant="contained"
+        onClick={handleGetBookPages}
+        sx={{ mb: 2, ml: 2 }}
+      >
         GetBookPages
       </Button>
-      
+
       {bookinfo && (
         <Box
           sx={{
@@ -87,19 +99,24 @@ export default function SeriesInfoInfoPage() {
                 objectFit: "cover",
                 margin: "5px",
                 flex: "0 0 auto",
-                cursor: 'pointer',
+                cursor: "pointer",
               }}
             />
           )}
-          <Box sx={{
-            textAlign: "left",
-            flex: "1 1 auto",
-            minWidth: 0,
-            marginLeft: "10px"
-          }}>
-            <Typography variant="h6">{bookinfo.metadata?.series || bookinfo.bookname}</Typography>
-            <Typography variant="body1">集數: {bookinfo.metadata?.volume || bookinfo.booknumber}</Typography>
-            <Typography variant="body1">作者: {bookinfo.metadata?.writer}</Typography>
+          <Box
+            sx={{
+              textAlign: "left",
+              flex: "1 1 auto",
+              minWidth: 0,
+              marginLeft: "10px",
+            }}
+          >
+            <Typography variant="h6">
+              {bookinfo.metadata?.series || bookinfo.bookname}
+            </Typography>
+            <Typography variant="body1">
+              作者: {bookinfo.metadata?.writer}
+            </Typography>
             <Typography sx={{ mt: 2 }}>內容簡介:</Typography>
             <TextField
               fullWidth
@@ -151,7 +168,7 @@ export default function SeriesInfoInfoPage() {
           >
             <img
               src={`data:image/png;base64,${thumbnail.FileBitmap}`}
-              alt={`Page ${index + 1}`}
+              alt={`${index + 1}`}
               style={{
                 width: "100%",
                 height: "auto",
@@ -159,7 +176,7 @@ export default function SeriesInfoInfoPage() {
                 objectFit: "cover",
               }}
             />
-            <Typography variant="caption">Page {index + 1}</Typography>
+            <Typography variant="caption">{seriesinfo.bookinfokeys[index]}</Typography>
           </Box>
         ))}
       </Box>

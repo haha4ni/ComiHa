@@ -43,6 +43,7 @@ func SaveSeriesInfo(book BookInfo) error {
 	if err != nil {
 		// If bucket doesn't exist or key not found, initialize empty seriesInfo
 		seriesInfo = SeriesInfo{
+			SeriesName: key,
 			BookInfoKeys: []string{},
 		}
 	}

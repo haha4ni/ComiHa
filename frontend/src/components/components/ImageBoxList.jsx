@@ -13,6 +13,7 @@ import {
 const ImageBoxList = ({ mode }) => {
   const [images, setImages] = useState([]);
   const [booklist, setBooklist] = useState([]);
+  const [serieslist, setSerieslist] = useState([]);
   const navigate = useNavigate();
 
   const processImages = async (booklist) => {
@@ -43,7 +44,7 @@ const ImageBoxList = ({ mode }) => {
         console.log("seriesInfo", seriesInfo.bookinfokeys);
         const bookinfo = await GetBookInfo(seriesInfo.bookinfokeys[0]);
         console.log("bookinfo", bookinfo);
-        setBooklist((booklist) => [...booklist, bookinfo]);
+        setSerieslist((serieslist) => [...serieslist, seriesInfo]);
         try {
           const path = bookinfo.filename;
           const img = await ReadCover(path);
@@ -101,12 +102,18 @@ const ImageBoxList = ({ mode }) => {
                     `/bookinfo/${encodeURIComponent(book.bookname)}/${encodeURIComponent(book.booknumber)}`
                   );
                 }
+                else if (mode === "series") {
+                  const series = serieslist[index];
+                  navigate(
+                    `/seriesinfo/${encodeURIComponent(series.seriesname)}`
+                  );
+                }
               }}
             />
             <Typography variant="body2">
               {mode === "bookinfo"
                 ? `${booklist[index]?.bookname} ${booklist[index]?.booknumber}`
-                : "Series Info"}
+                : `${serieslist[index]?.seriesname}`}
             </Typography>
           </Box>
         ))}

@@ -51,5 +51,6 @@ type Metadata struct {
 }
 
 type SeriesInfo struct {
+	SeriesName string `json:"seriesname"`
 	BookInfoKeys []string `json:"bookinfokeys"`
 }

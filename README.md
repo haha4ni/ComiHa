@@ -1,6 +1,7 @@
-# README
-
-![My Skills](https://go-skill-icons.vercel.app/api/icons?i=wails,react,golang)
+<h1 align="left">
+  <img src="/build/appicon.png?raw=true" width="50" height="50" style="vertical-align: middle;" />
+  ComiHa
+</h1>
 
 ## TODO list
 

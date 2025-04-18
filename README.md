@@ -1,9 +1,9 @@
-<h1 align="left">
-  <img src="/build/appicon.png?raw=true" width="50" height="50" style="vertical-align: middle;" />
+<h1 align="left" style="display: flex; align-items: center; gap: 10px;">
+  <img src="/build/appicon.png?raw=true" width="42" height="42" style="vertical-align: middle;" />
   ComiHa
 </h1>
 
-## TODO list
+### TODO list
 
 #### Short-term
 - UI

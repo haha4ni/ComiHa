@@ -5,7 +5,7 @@ import {
   ScanBookAll,
   GetBookListAll,
   ReadCover,
-  GetBookInfo,
+  GetBookInfoByKey,
   GetSeriesKeyListAll,
   GetSeriesInfoByKey
 } from "../../../wailsjs/go/main/App";
@@ -42,7 +42,7 @@ const ImageBoxList = ({ mode }) => {
         console.log("series", series);
         const seriesInfo = await GetSeriesInfoByKey(series);
         console.log("seriesInfo", seriesInfo.bookinfokeys);
-        const bookinfo = await GetBookInfo(seriesInfo.bookinfokeys[0]);
+        const bookinfo = await GetBookInfoByKey(seriesInfo.bookinfokeys[0]);
         console.log("bookinfo", bookinfo);
         setSerieslist((serieslist) => [...serieslist, seriesInfo]);
         try {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Box, Typography, Avatar, Button, TextField } from "@mui/material";
-import { ReadCover, ScraperInfo, GetBookPage, GetBookInfo } from "../../../wailsjs/go/main/App";
+import { ReadCover, ScraperInfo, GetBookPage, GetBookInfoByKey } from "../../../wailsjs/go/main/App";
 
 export default function BookInfoPage() {
   const [bookCover, setBookCover] = useState(null);
@@ -40,7 +40,7 @@ export default function BookInfoPage() {
   useEffect(() => {
     const fetchBookInfo = async () => {
       try {
-        const bookInfoResult = await GetBookInfo(bookname + "_" + booknumber);
+        const bookInfoResult = await GetBookInfoByKey(bookname + "_" + booknumber);
         setBookinfo(bookInfoResult);
         if (bookInfoResult?.filename) {
           const img = await ReadCover(bookInfoResult.filename);

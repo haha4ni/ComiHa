@@ -238,7 +238,7 @@ func (a *App) GetBookListAll() (bookList []BookInfo) {
 	return bookList
 }
 
-func (a *App) GetBookInfo(key string) (*BookInfo, error) {
+func (a *App) GetBookInfoByKey(key string) (*BookInfo, error) {
 	// 從 BoltDB 讀取 BookInfo
 	bookInfo, err := LoadBookInfo(key)
 	if err != nil {

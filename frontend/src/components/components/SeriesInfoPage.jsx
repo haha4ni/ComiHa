@@ -3,8 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Box, Typography, Avatar, Button, TextField } from "@mui/material";
 import {
   ReadCover,
-  GetBookPage,
-  GetBookInfo,
+  GetBookInfoByKey,
   GetSeriesInfoByKey,
 } from "../../../wailsjs/go/main/App";
 
@@ -21,7 +20,7 @@ export default function SeriesInfoInfoPage() {
         const fetchedSeriesInfo = await GetSeriesInfoByKey(seriesname);
         setSeriesinfo(fetchedSeriesInfo);
       for (const key of fetchedSeriesInfo.bookinfokeys) {
-        const seriesInfoResult = await GetBookInfo(key);
+        const seriesInfoResult = await GetBookInfoByKey(key);
         console.log("@@@seriesInfoResult.filename:", seriesInfoResult.filename);
         const result = await ReadCover(seriesInfoResult.filename);
         console.log("@@@result:", result);
@@ -37,7 +36,7 @@ export default function SeriesInfoInfoPage() {
     const fetchSeriesInfo = async () => {
       try {
         const seriesinfo = await GetSeriesInfoByKey(seriesname);
-        const seriesInfoResult = await GetBookInfo(seriesinfo.bookinfokeys[0]);
+        const seriesInfoResult = await GetBookInfoByKey(seriesinfo.bookinfokeys[0]);
         setBookinfo(seriesInfoResult);
         if (seriesInfoResult?.filename) {
           const img = await ReadCover(seriesInfoResult.filename);
@@ -53,6 +52,41 @@ export default function SeriesInfoInfoPage() {
 
     fetchSeriesInfo();
   }, [seriesname]);
+
+  const renderThumbnails = () => {
+    return Thumbnails.map((thumbnail, index) => (
+      <Box
+        key={index}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 1,
+        }}
+      >
+        <Avatar
+          src={`data:image/png;base64,${thumbnail.FileBitmap}`}
+          alt={`${index + 1}`}
+          onClick={() => {
+            const handleNavigation = async () => {
+              const book = await GetBookInfoByKey(seriesinfo.bookinfokeys[index]);
+              navigate(
+                `/bookinfo/${encodeURIComponent(book.bookname)}/${encodeURIComponent(book.booknumber)}`
+              );
+            };
+            handleNavigation();
+          }}
+          sx={{
+            width: "100%",
+            height: "auto",
+            borderRadius: "8px",
+            objectFit: "cover",
+          }}
+        />
+        <Typography variant="caption">{seriesinfo.bookinfokeys[index]}</Typography>
+      </Box>
+    ));
+  };
 
   return (
     <Box
@@ -156,29 +190,7 @@ export default function SeriesInfoInfoPage() {
           padding: 2,
         }}
       >
-        {Thumbnails.map((thumbnail, index) => (
-          <Box
-            key={index}
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 1,
-            }}
-          >
-            <img
-              src={`data:image/png;base64,${thumbnail.FileBitmap}`}
-              alt={`${index + 1}`}
-              style={{
-                width: "100%",
-                height: "auto",
-                borderRadius: "8px",
-                objectFit: "cover",
-              }}
-            />
-            <Typography variant="caption">{seriesinfo.bookinfokeys[index]}</Typography>
-          </Box>
-        ))}
+        {renderThumbnails()}
       </Box>
     </Box>
   );

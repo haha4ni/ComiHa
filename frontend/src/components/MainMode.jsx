@@ -1,27 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { Box, CssBaseline, Typography, Button } from "@mui/material";
-import { useNavigate, Outlet, useLocation } from "react-router-dom";
-import Menu from "./Menu";
+import React from "react";
+import { Outlet } from "react-router-dom";
+import { Box, CssBaseline} from "@mui/material";
+import WindowMenu from "./WindowMenu";
 import SimpleList from "./List";
-import ImageBoxList from "./components/ImageBoxList";
+import Appbar from "./Appbar";
 
 export default function MainMode() {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // const isBookInfoRoute = location.pathname.includes('/bookinfo/');
-
   return (
     <Box>
       <CssBaseline />
-      <Menu />
+      <WindowMenu />
+      <Appbar />
       <Box sx={{ display: "flex" }}>
         <SimpleList />
         <Box
           sx={{
             bgcolor: "white",
             display: "flex",
-            mt: 5,
+            mt: 5, // appbar高度
             flexWrap: "wrap",
             alignItems: "flex-start",
             alignContent: "flex-start",
@@ -30,9 +26,6 @@ export default function MainMode() {
             overflowY: "auto",
           }}
         >
-          <Button variant="contained" onClick={() => navigate("/book")}>
-            Switch to Book Mode
-          </Button>
           <Box sx={{ width: "100%", display: "flex", flexWrap: "wrap" }}>
             <Outlet />
           </Box>

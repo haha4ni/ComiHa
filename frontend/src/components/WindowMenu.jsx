@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Box, IconButton } from "@mui/material";
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
@@ -9,7 +9,7 @@ import {
 
 import { WindowMinimise, WindowToggleMaximise } from "../../wailsjs/runtime/runtime";
 
-export default function Menu() {
+export default function WindowMenu() {
   const handleMinimize = () => {
     WindowMinimise(); // 最小化窗口
   };
@@ -26,9 +26,10 @@ export default function Menu() {
     <Box
       sx={{
         position: "fixed",
-        zIndex: (theme) => theme.zIndex.drawer + 1 ,
+        zIndex: (theme) => theme.zIndex.drawer + 10 ,
         top: 0,
-        width: "100%",
+        width: "30%", // Change width to 50%
+        right: 0, // Align to the right
 
         display: "flex",
         justifyContent: "flex-end",

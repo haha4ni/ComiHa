@@ -30,6 +30,7 @@ export default function SimpleDrawer() {
   return (
     <Drawer
       sx={{
+        zIndex: (theme) => theme.zIndex.drawer + 0 ,
         width: drawerWidth,
         flexShrink: 0,
         "& .MuiDrawer-paper": {

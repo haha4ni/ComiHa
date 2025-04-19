@@ -2,27 +2,24 @@ import React from "react";
 import { Box, AppBar, Toolbar, Typography, IconButton } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 
-export default function Appbar() {
-  const handleMenuClick = () => {
-    console.log("Menu icon clicked");
-  };
-
+export default function Appbar({ onMenuClick }) {
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
+        color="default" // Set AppBar to white
+        elevation={0} // Remove shadow
         sx={{
           position: "fixed",
           zIndex: (theme) => theme.zIndex.drawer + 9,
           height: "45px", // Reduced height
         }}
       >
-        <Toolbar variant="dense">
+        <Toolbar variant="dense" >
           <IconButton
             edge="start"
-            color="inherit"
             aria-label="menu"
-            sx={{ mr: 2 }}
-            onClick={handleMenuClick}
+            sx={{ ml: -2,mr: 2}}
+            onClick={onMenuClick} // Use the passed prop
           >
             <MenuIcon />
           </IconButton>

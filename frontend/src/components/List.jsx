@@ -17,15 +17,8 @@ import { useNavigate } from "react-router-dom";
 
 const drawerWidth = 240;
 
-export default function SimpleDrawer() {
+export default function SimpleDrawer({ open, onToggle }) {
   const navigate = useNavigate();
-  const [open, setOpen] = React.useState(true);
-  const handleDrawerOpen = () => {
-    setOpen(true);
-  };
-  const handleDrawerClose = () => {
-    setOpen(false);
-  };
 
   return (
     <Drawer
@@ -59,10 +52,10 @@ export default function SimpleDrawer() {
                     navigate("/series");
                     break;
                   case 3:
-                    handleDrawerClose();
+                    onToggle();
                     break;
                   default:
-                    handleDrawerClose();
+                    onToggle();
                 }
               }}>
                 <ListItemIcon>

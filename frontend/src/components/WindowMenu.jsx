@@ -3,6 +3,7 @@ import { Box, IconButton } from "@mui/material";
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import CloseIcon from '@mui/icons-material/Close';
+import { pink } from '@mui/material/colors';
 import {
     Shutdown
   } from "../../wailsjs/go/main/App";
@@ -34,18 +35,18 @@ export default function WindowMenu() {
         display: "flex",
         justifyContent: "flex-end",
         // bgcolor: "grey",
-        height: 40,
+        height: 46,
         "--wails-draggable": "drag", // 讓整個元件可拖動
       }}
     >
-      <IconButton size="small" sx={{ p: 0.3, mx: 0.5 }} onClick={handleMinimize}>
-        <MinimizeIcon fontSize="small" />
+      <IconButton size="small" sx={{ p: 0.1, mx: 0.5 }} onClick={handleMinimize}>
+        <MinimizeIcon fontSize="small" sx={{ color: " " }} />
       </IconButton>
-      <IconButton size="small" sx={{ p: 0.3, mx: 0.5 }} onClick={handleFullscreen}>
-        <FullscreenIcon fontSize="small" />
+      <IconButton size="small" sx={{ p: 0.1, mx: 0.5 }} onClick={handleFullscreen}>
+        <FullscreenIcon fontSize="small" sx={{ color: " " }} />
       </IconButton>
-      <IconButton size="small" sx={{ p: 0.3, mx: 0.5 }} onClick={handleClose}>
-        <CloseIcon fontSize="small" />
+      <IconButton size="small" sx={{ p: 0.1, mx: 0.5 }} onClick={handleClose}>
+        <CloseIcon fontSize="small" sx={{ color: " " }} />
       </IconButton>
     </Box>
   );

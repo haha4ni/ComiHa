@@ -2,6 +2,7 @@ package backend
 
 import (
 	"archive/zip"
+	"encoding/xml"
 	"fmt"
 	"log"
 	"path/filepath"
@@ -106,9 +107,38 @@ func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
 	}
 	defer zipReader.Close()
 
+	var hasComicInfo bool
+	var metadata Metadata
+	var bookName, bookNumber string
+
+	// Check for ComicInfo.xml
+	for _, file := range zipReader.File {
+		if strings.EqualFold(file.Name, "ComicInfo.xml") {
+			hasComicInfo = true
+			fileReader, err := file.Open()
+			if err != nil {
+				return nil, fmt.Errorf("failed to open ComicInfo.xml: %w", err)
+			}
+			defer fileReader.Close()
+
+			err = xml.NewDecoder(fileReader).Decode(&metadata)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse ComicInfo.xml: %w", err)
+			}
+			bookName = metadata.Series
+			bookNumber = metadata.Number
+			break
+		}
+	}
+
+	// If no ComicInfo.xml, parse book name from file name
+	if !hasComicInfo {
+		bookName, bookNumber = parseBookName(zipPath)
+	}
+
 	var images []ImageData
 	for index, file := range zipReader.File {
-		if filepath.Ext(file.Name) == ".png" || filepath.Ext(file.Name) == ".jpg" { // 處理 PNG 和 JPG
+		if filepath.Ext(file.Name) == ".png" || filepath.Ext(file.Name) == ".jpg" {
 			images = append(images, ImageData{
 				FileName:  file.Name,
 				FileIndex: int64(index),
@@ -132,9 +162,6 @@ func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
 		return gadget.NaturalLess(images[i].FileName, images[j].FileName)
 	})
 
-	// 解析書名與集數
-	bookName, bookNumber := parseBookName(zipPath)
-
 	bookInfo := &BookInfo{
 		BookName:   bookName,
 		BookNumber: bookNumber,
@@ -144,47 +171,40 @@ func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
 		ImageData:  images,
 	}
 
-	return bookInfo, nil
-}
-
-func AddBookInfo(bookInfo BookInfo) error {
-	// 存入 BookInfo 到 BoltDB
-	err := SaveBookInfo(bookInfo)
-	if err != nil {
-		return fmt.Errorf("failed to save book info: %w", err)
-	}
-
-	return nil
-}
-
-func GetBookInfo(bookName string) (*BookInfo, error) {
-	// 從 BoltDB 讀取 BookInfo
-	bookInfo, err := LoadBookInfo(bookName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load book info: %w", err)
+	// Populate metadata if ComicInfo.xml exists
+	if hasComicInfo {
+		bookInfo.Metadata = metadata
 	}
 
 	return bookInfo, nil
 }
 
 func AddBook(bookPath string) {
-	// 解析 ZIP 檔案
+	// Generate SHA for quick comparison
+	sha, err := gadget.GenerateSHA256(bookPath)
+	if err != nil {
+		log.Fatal("生成 SHA 失敗:", err)
+	}
+
+	// Check if the book already exists by SHA
+	existingBooks := []BookInfo{}
+	err = globalDB.GetAllData("bookinfo", &existingBooks)
+	if err == nil {
+		for _, book := range existingBooks {
+			if book.SHA == sha {
+				fmt.Printf("書籍已存在且 SHA 相同，跳過保存: %s\n", book.BookName)
+				return
+			}
+		}
+	}
+
+	// Perform full analysis if SHA is not found
 	bookInfo, err := AnalyzeZipFile(bookPath)
 	if err != nil {
 		log.Fatal("解析失敗:", err)
 	}
 
-	// 構建 Key，包含 BookName 與 BookNumber
-	key := fmt.Sprintf("%s_%s", bookInfo.BookName, bookInfo.BookNumber)
-
-	// 先檢查是否已存在相同 SHA 的書籍
-	existingBook, err := LoadBookInfo(key)
-	if err == nil && existingBook.SHA == bookInfo.SHA {
-		fmt.Printf("書籍已存在且 SHA 相同，跳過保存: %s\n", bookInfo.BookName)
-		return
-	}
-
-	// 存入 BookInfo 到 BoltDB
+	// Save BookInfo to BoltDB
 	err = SaveBookInfo(*bookInfo)
 	if err != nil {
 		log.Fatal("存入 BoltDB 失敗:", err)
@@ -196,18 +216,7 @@ func AddBook(bookPath string) {
 		log.Fatal("存入系列資訊失敗:", err)
 	}
 
-	// 從 BoltDB 讀取剛剛存入的 BookInfo
-	loadedBook, err := LoadBookInfo(key)
-	if err != nil {
-		log.Fatal("讀取失敗:", err)
-	}
-
-	// 顯示讀取結果
-	fmt.Println("從 BoltDB 讀取到的 BookInfo:")
-	fmt.Printf("SHA: %s\n", loadedBook.SHA)
-	fmt.Printf("BookName: %s\n", loadedBook.BookName)
-	fmt.Printf("Timestamp: %d\n", loadedBook.Timestamp)
-	fmt.Println("Images:")
+	fmt.Printf("成功新增書籍: %s\n", bookInfo.BookName)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -229,6 +238,8 @@ func (a *App) ScanBookAll() {
 	}
 }
 
+///
+
 func (a *App) GetBookListAll() (bookList []BookInfo) {
 	// 讀取所有 BookInfo
 	err := globalDB.GetAllData("bookinfo", &bookList)
@@ -239,12 +250,16 @@ func (a *App) GetBookListAll() (bookList []BookInfo) {
 }
 
 func (a *App) GetBookInfoByKey(key string) (*BookInfo, error) {
+	// ...existing code...
+	return GetBookInfoByKey(key)
+}
+
+func GetBookInfoByKey(key string) (*BookInfo, error) {
 	// 從 BoltDB 讀取 BookInfo
 	bookInfo, err := LoadBookInfo(key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load book info: %w", err)
 	}
-
 	return bookInfo, nil
 }
 

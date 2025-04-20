@@ -227,7 +227,7 @@ func (a *App) ScraperInfo(title string, volume string) (*BookInfo, error) {
 	bookInfo.Metadata = Metadata{} // 初始化 Metadata 結構
 
 	// 先嘗試從 BoltDB 讀取
-	existingBook, err := GetBookInfo(title + "_" + volume)
+	existingBook, err := GetBookInfoByKey(title + "_" + volume)
 	if err == nil {
 		debug.DebugInfo("從 BoltDB 快取讀取:", existingBook)
 		// 保留快取資料
@@ -286,7 +286,7 @@ func (a *App) ScraperInfo(title string, volume string) (*BookInfo, error) {
 
 	// 存入 BoltDB
 	log.Println("💾 嘗試存入 BoltDB:", bookInfo.Metadata.Series, bookInfo.Metadata.Number)
-	err = AddBookInfo(bookInfo)
+	err = SaveBookInfo(bookInfo)
 	if err != nil {
 		log.Println("❌ 存入 BoltDB 失敗:", err)
 	} else {

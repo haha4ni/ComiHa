@@ -85,7 +85,7 @@ func (a *App) ReadCover(zipPath string) ([]ImageDataTemp, error) {
 
 func (a *App) GetBookPages(bookKey string, pages []int64) ([]ImageDataTemp, error) {
 	debug.DebugInfo("GetBookPages()")
-	bookInfo, err := GetBookInfo(bookKey)
+	bookInfo, err := GetBookInfoByKey(bookKey)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func (a *App) GetBookPages(bookKey string, pages []int64) ([]ImageDataTemp, erro
 
 func (a *App) GetBookPage(bookKey string, page int64) (ImageDataTemp, error) {
 	debug.DebugInfo("GetBookPage()")
-	bookInfo, err := GetBookInfo(bookKey)
+	bookInfo, err := GetBookInfoByKey(bookKey)
 	if err != nil {
 		return ImageDataTemp{}, err
 	}

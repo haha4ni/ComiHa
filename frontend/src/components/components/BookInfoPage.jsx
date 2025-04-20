@@ -65,9 +65,9 @@ export default function BookInfoPage() {
         margin: "0 auto",
       }}
     >
-      <Button variant="contained" onClick={() => navigate("/")} sx={{ mb: 2 }}>
+      {/* <Button variant="contained" onClick={() => navigate("/")} sx={{ mb: 2 }}>
         Back to Home
-      </Button>
+      </Button> */}
       <Button variant="contained" onClick={handleSwitchMode} sx={{ mb: 2, ml: 2 }}>
         ScraperInfo
       </Button>

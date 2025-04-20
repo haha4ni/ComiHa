@@ -10,8 +10,8 @@ type BookInfo struct {
 	FileName   string      `json:"filename"`
 	SHA        string      `json:"sha"`
 	Timestamp  int64       `json:"timestamp"`
-	ImageData  []ImageData `json:"imagedata"`
 	Metadata   Metadata    `json:"metadata"` // 書籍元數據
+	ImageData  []ImageData `json:"imagedata"`
 }
 
 type ImageData struct {
@@ -19,35 +19,46 @@ type ImageData struct {
 	FileIndex int64  `json:"fileindex"`
 	FileSize  int64  `json:"size"`
 }
+
+type Page struct {
+	Image       int    `xml:"Image,attr"       json:"image"`
+	ImageSize   int    `xml:"ImageSize,attr"   json:"imageSize"`
+	ImageWidth  int    `xml:"ImageWidth,attr"  json:"imageWidth"`
+	ImageHeight int    `xml:"ImageHeight,attr" json:"imageHeight"`
+	Type        string `xml:"Type,attr,omitempty"        json:"type,omitempty"`
+	Comment     string `xml:"Comment,attr,omitempty"     json:"comment,omitempty"`
+}
+
 type Metadata struct {
 	XMLName         xml.Name `xml:"ComicInfo"`
-	Title           string   `xml:"Title"             json:"title"`           // 暫時用不到
-	Series          string   `xml:"Series"            json:"series"`          // 系列名稱（例如作品名稱）
-	Number          string   `xml:"Number"            json:"number"`          // 單集編號（通常是本集是第幾話/冊）
-	Volume          string   `xml:"Volume"            json:"volume"`          // 卷號（可與 Number 有區別） (manga用不到)
-	AlternateSeries string   `xml:"AlternateSeries"   json:"alternateSeries"` // 系列的替代名稱（如果有）
-	AlternateNumber string   `xml:"AlternateNumber"   json:"alternateNumber"` // 替代的單集編號（例如日文原版號碼）
-	StoryArc        string   `xml:"StoryArc"          json:"storyArc"`        // 故事主軸名稱（如果有）
+	Title           string   `xml:"Title"             json:"title"`
+	Series          string   `xml:"Series"            json:"series"`
+	Number          string   `xml:"Number"            json:"number"`
+	Volume          string   `xml:"Volume"            json:"volume"`
+	AlternateSeries string   `xml:"AlternateSeries"   json:"alternateSeries"`
+	AlternateNumber string   `xml:"AlternateNumber"   json:"alternateNumber"`
+	StoryArc        string   `xml:"StoryArc"          json:"storyArc"`
 	Year            string   `xml:"Year"              json:"year"`
 	Month           string   `xml:"Month"             json:"month"`
 	Day             string   `xml:"Day"               json:"day"`
-	SeriesGroup     string   `xml:"SeriesGroup"       json:"seriesGroup"`     // 同系列作品的群組標記
-	Summary         string   `xml:"Summary"           json:"summary"`         // 劇情簡介
-	Notes           string   `xml:"Notes"             json:"notes"`           // 備註說明
-	Writer          string   `xml:"Writer"            json:"writer"`          // 作者（或腳本作者）
-	Publisher       string   `xml:"Publisher"         json:"publisher"`       // 出版社
-	Imprint         string   `xml:"Imprint"           json:"imprint"`         // 出版品牌（如少年Jump等）
-	Genre           string   `xml:"Genre"             json:"genre"`           // 類型（多個可用逗號分隔，如 Action, Drama）
-	Web             string   `xml:"Web"               json:"web"`             // 官方網站或相關連結
-	PageCount       int      `xml:"PageCount"         json:"pageCount"`       // 頁數總數（通常是圖片頁數）
-	LanguageISO     string   `xml:"LanguageISO"       json:"languageISO"`     // 語言代碼（例如 en、ja、zh 等）
-	Format          string   `xml:"Format"            json:"format"`          // 書籍格式（如 Tankoubon、Webtoon 等）
-	AgeRating       string   `xml:"AgeRating"         json:"ageRating"`       // 年齡分級（如 PG、18+）
-	Manga           string   `xml:"Manga"             json:"manga"`           // 是否為漫畫（"Yes" 或空）
-	Characters      string   `xml:"Characters"        json:"characters"`      // 登場角色（逗號分隔）
-	Teams           string   `xml:"Teams"             json:"teams"`           // 團體或小隊（如果適用）
-	Locations       string   `xml:"Locations"         json:"locations"`       // 地點（出現過的場景）
-	ScanInformation string   `xml:"ScanInformation"   json:"scanInformation"` // 掃描相關資訊（如版本、掃圖者等）
+	SeriesGroup     string   `xml:"SeriesGroup"       json:"seriesGroup"`
+	Summary         string   `xml:"Summary"           json:"summary"`
+	Notes           string   `xml:"Notes"             json:"notes"`
+	Writer          string   `xml:"Writer"            json:"writer"`
+	Publisher       string   `xml:"Publisher"         json:"publisher"`
+	Imprint         string   `xml:"Imprint"           json:"imprint"`
+	Genre           string   `xml:"Genre"             json:"genre"`
+	Web             string   `xml:"Web"               json:"web"`
+	PageCount       int      `xml:"PageCount"         json:"pageCount"`
+	LanguageISO     string   `xml:"LanguageISO"       json:"languageISO"`
+	Format          string   `xml:"Format"            json:"format"`
+	AgeRating       string   `xml:"AgeRating"         json:"ageRating"`
+	Manga           string   `xml:"Manga"             json:"manga"`
+	Characters      string   `xml:"Characters"        json:"characters"`
+	Teams           string   `xml:"Teams"             json:"teams"`
+	Locations       string   `xml:"Locations"         json:"locations"`
+	ScanInformation string   `xml:"ScanInformation"   json:"scanInformation"`
+	Pages           []Page   `xml:"Pages>Page"        json:"pages"`
 }
 
 type SeriesInfo struct {

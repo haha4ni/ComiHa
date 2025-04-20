@@ -96,9 +96,9 @@ export default function SeriesInfoInfoPage() {
         margin: "0 auto",
       }}
     >
-      <Button variant="contained" onClick={() => navigate("/")} sx={{ mb: 2 }}>
+      {/* <Button variant="contained" onClick={() => navigate("/")} sx={{ mb: 2 }}>
         Back to Home
-      </Button>
+      </Button> */}
       <Button
         variant="contained"
         onClick={handleGetBookPages}

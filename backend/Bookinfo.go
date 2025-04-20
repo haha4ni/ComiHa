@@ -2,8 +2,6 @@ package backend
 
 import (
 	"archive/zip"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -130,18 +128,6 @@ func WriteComicInfoToZip(bookInfo BookInfo) error {
 	}
 	log.Printf("Successfully closed zip writer")
 
-	// Calculate hash of the new zip file
-	log.Printf("Starting to calculate hash of new zip file")
-	hash, err := calculateFileHash(tmpZipPath)
-	if err != nil {
-		log.Printf("Error calculating hash: %v", err)
-		return fmt.Errorf("failed to calculate hash: %w", err)
-	}
-	log.Printf("Successfully calculated hash: %s", hash)
-
-	// Skip hash verification since we're adding ComicInfo.xml
-	log.Printf("Skipping hash verification as we're adding ComicInfo.xml")
-
 	// Atomically replace the original file with the new one
 	log.Printf("Starting to replace %s with new version", zipPath)
 
@@ -163,20 +149,4 @@ func WriteComicInfoToZip(bookInfo BookInfo) error {
 	}
 
 	return nil
-}
-
-// calculateFileHash calculates the SHA256 hash of a file
-func calculateFileHash(filePath string) (string, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	hash := sha256.New()
-	if _, err := io.Copy(hash, file); err != nil {
-		return "", err
-	}
-
-	return hex.EncodeToString(hash.Sum(nil)), nil
 }

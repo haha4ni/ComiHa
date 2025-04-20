@@ -1,5 +1,43 @@
 export namespace backend {
 	
+	export class ImageData {
+	    filename: string;
+	    fileindex: number;
+	    size: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new ImageData(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.filename = source["filename"];
+	        this.fileindex = source["fileindex"];
+	        this.size = source["size"];
+	    }
+	}
+	export class Page {
+	    image: number;
+	    imageSize: number;
+	    imageWidth: number;
+	    imageHeight: number;
+	    type?: string;
+	    comment?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Page(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.image = source["image"];
+	        this.imageSize = source["imageSize"];
+	        this.imageWidth = source["imageWidth"];
+	        this.imageHeight = source["imageHeight"];
+	        this.type = source["type"];
+	        this.comment = source["comment"];
+	    }
+	}
 	export class Metadata {
 	    XMLName: xml.Name;
 	    title: string;
@@ -29,6 +67,7 @@ export namespace backend {
 	    teams: string;
 	    locations: string;
 	    scanInformation: string;
+	    pages: Page[];
 	
 	    static createFrom(source: any = {}) {
 	        return new Metadata(source);
@@ -64,6 +103,7 @@ export namespace backend {
 	        this.teams = source["teams"];
 	        this.locations = source["locations"];
 	        this.scanInformation = source["scanInformation"];
+	        this.pages = this.convertValues(source["pages"], Page);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -84,30 +124,14 @@ export namespace backend {
 		    return a;
 		}
 	}
-	export class ImageData {
-	    filename: string;
-	    fileindex: number;
-	    size: number;
-	
-	    static createFrom(source: any = {}) {
-	        return new ImageData(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.filename = source["filename"];
-	        this.fileindex = source["fileindex"];
-	        this.size = source["size"];
-	    }
-	}
 	export class BookInfo {
 	    bookname: string;
 	    booknumber: string;
 	    filename: string;
 	    sha: string;
 	    timestamp: number;
-	    imagedata: ImageData[];
 	    metadata: Metadata;
+	    imagedata: ImageData[];
 	
 	    static createFrom(source: any = {}) {
 	        return new BookInfo(source);
@@ -120,8 +144,8 @@ export namespace backend {
 	        this.filename = source["filename"];
 	        this.sha = source["sha"];
 	        this.timestamp = source["timestamp"];
-	        this.imagedata = this.convertValues(source["imagedata"], ImageData);
 	        this.metadata = this.convertValues(source["metadata"], Metadata);
+	        this.imagedata = this.convertValues(source["imagedata"], ImageData);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -157,6 +181,7 @@ export namespace backend {
 	        this.FileBitmap = source["FileBitmap"];
 	    }
 	}
+	
 	
 	export class SeriesInfo {
 	    seriesname: string;

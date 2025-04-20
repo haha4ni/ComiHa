@@ -62,10 +62,10 @@ const ImageBoxList = ({ mode }) => {
   };
 
   const handleGetBooks = async () => {
+    await ScanBookAll();
     if (mode === "series") {
       await ShowSeriesinfoList();
     } else if (mode === "bookinfo") {
-      await ScanBookAll();
       const booklist = await GetBookListAll();
       setBooklist(booklist);
       await processImages(booklist);

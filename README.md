@@ -7,6 +7,7 @@
 
 #### Short-term
 - UI
+  - [X] 完善Menu bar
   - [ ] 完善選單
   - [ ] 設定頁
 - 系列頁

@@ -7,10 +7,14 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 )
 
 // WriteComicInfo writes the BookInfo struct to a ComicInfo.xml file
 func WriteComicInfo(bookInfo BookInfo) error {
+	// Log the entire bookInfo.Metadata
+	log.Printf("BookInfo Metadata: %+v", bookInfo.Metadata)
+
 	// Marshal the XML
 	xmlData, err := xml.MarshalIndent(bookInfo.Metadata, "", "  ")
 	if err != nil {
@@ -74,7 +78,7 @@ func WriteComicInfoToZip(bookInfo BookInfo) error {
 
 		// Create new file in zip
 		newFile, err := zipWriter.Create(file.Name)
-		if err != nil {
+		if (err != nil) {
 			log.Printf("Error creating file %s in zip: %v", file.Name, err)
 			return fmt.Errorf("failed to create file in zip: %w", err)
 		}
@@ -149,4 +153,32 @@ func WriteComicInfoToZip(bookInfo BookInfo) error {
 	}
 
 	return nil
+}
+
+// GetComicInfoFromZip extracts ComicInfo.xml metadata from a ZIP file.
+func GetComicInfoFromZip(zipPath string) (*Metadata, error) {
+	zipReader, err := zip.OpenReader(zipPath)
+	if err != nil {
+		return nil, fmt.Errorf("無法打開 ZIP 檔案: %w", err)
+	}
+	defer zipReader.Close()
+
+	for _, file := range zipReader.File {
+		if strings.EqualFold(file.Name, "ComicInfo.xml") {
+			fileReader, err := file.Open()
+			if err != nil {
+				return nil, fmt.Errorf("無法打開 ComicInfo.xml: %w", err)
+			}
+			defer fileReader.Close()
+
+			var metadata Metadata
+			err = xml.NewDecoder(fileReader).Decode(&metadata)
+			if err != nil {
+				return nil, fmt.Errorf("解析 ComicInfo.xml 失敗: %w", err)
+			}
+			return &metadata, nil
+		}
+	}
+
+	return nil, nil // No ComicInfo.xml found
 }

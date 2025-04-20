@@ -2,7 +2,6 @@ package backend
 
 import (
 	"archive/zip"
-	"encoding/xml"
 	"fmt"
 	"log"
 	"path/filepath"
@@ -101,40 +100,26 @@ func parseBookName(fileName string) (string, string) {
 
 // 解析 ZIP 檔，取得檔案資訊
 func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
+	var bookName, bookNumber string
+
+	// Retrieve ComicInfo.xml metadata
+	metadata, err := GetComicInfoFromZip(zipPath)
+	if err != nil {
+		fmt.Printf("讀取 ComicInfo.xml 失敗，將使用檔名解析: %v\n", err)
+		bookName, bookNumber = parseBookName(zipPath)
+	} else if metadata != nil && metadata.Series != "" && metadata.Number != "" {
+		bookName = metadata.Series
+		bookNumber = metadata.Number
+	} else {
+		fmt.Printf("讀取 ComicInfo.xml 書名未填寫，將使用檔名解析\n")
+		bookName, bookNumber = parseBookName(zipPath)
+	}
+
 	zipReader, err := zip.OpenReader(zipPath)
 	if err != nil {
 		return nil, err
 	}
 	defer zipReader.Close()
-
-	var hasComicInfo bool
-	var metadata Metadata
-	var bookName, bookNumber string
-
-	// Check for ComicInfo.xml
-	for _, file := range zipReader.File {
-		if strings.EqualFold(file.Name, "ComicInfo.xml") {
-			hasComicInfo = true
-			fileReader, err := file.Open()
-			if err != nil {
-				return nil, fmt.Errorf("failed to open ComicInfo.xml: %w", err)
-			}
-			defer fileReader.Close()
-
-			err = xml.NewDecoder(fileReader).Decode(&metadata)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse ComicInfo.xml: %w", err)
-			}
-			bookName = metadata.Series
-			bookNumber = metadata.Number
-			break
-		}
-	}
-
-	// If no ComicInfo.xml, parse book name from file name
-	if !hasComicInfo {
-		bookName, bookNumber = parseBookName(zipPath)
-	}
 
 	var images []ImageData
 	for index, file := range zipReader.File {
@@ -151,13 +136,13 @@ func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
 		return nil, fmt.Errorf("ZIP 檔內沒有圖片")
 	}
 
-	// 產生 SHA（使用檔案的二進位內容）
+	// Generate SHA (using the binary content of the file)
 	sha, err := gadget.GenerateSHA256(zipPath)
 	if err != nil {
 		return nil, err
 	}
 
-	// 按照 FileName 重新排序
+	// Sort images by file name
 	sort.Slice(images, func(i, j int) bool {
 		return gadget.NaturalLess(images[i].FileName, images[j].FileName)
 	})
@@ -172,51 +157,82 @@ func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
 	}
 
 	// Populate metadata if ComicInfo.xml exists
-	if hasComicInfo {
-		bookInfo.Metadata = metadata
+	if metadata != nil {
+		bookInfo.Metadata = *metadata
 	}
+
+	//如果metadata.pages是空的
+	//把images填進metadata裡面
+	if metadata != nil && len(metadata.Pages) == 0 {
+		fmt.Println("Metadata pages are empty, populating with image data...")
+		for i, img := range images {
+			metadata.Pages = append(metadata.Pages, Page{
+				Image:     i,
+				ImageSize: int(img.FileSize),
+			})
+		}
+		fmt.Printf("Populated metadata pages with %d images.\n", len(images))
+		// Reassign updated metadata back to bookInfo.Metadata
+		bookInfo.Metadata = *metadata
+	}
+	log.Printf("BookInfo Metadata: %+v", bookInfo.Metadata)
+	WriteComicInfo(*bookInfo)
 
 	return bookInfo, nil
 }
 
-func AddBook(bookPath string) {
+func AddBook(bookPath string) error {
+	// 比對現有的book Key其SHA是否相同
+
 	// Generate SHA for quick comparison
 	sha, err := gadget.GenerateSHA256(bookPath)
 	if err != nil {
-		log.Fatal("生成 SHA 失敗:", err)
+		return fmt.Errorf("生成 SHA 失敗: %w", err)
 	}
 
-	// Check if the book already exists by SHA
-	existingBooks := []BookInfo{}
-	err = globalDB.GetAllData("bookinfo", &existingBooks)
+	// Attempt to retrieve ComicInfo.xml metadata
+	metadata, err := GetComicInfoFromZip(bookPath)
+	if err != nil {
+		fmt.Printf("讀取 ComicInfo.xml 失敗，將使用檔名解析: %v\n", err)
+	}
+
+	var key string
+	if metadata != nil && metadata.Series != "" && metadata.Number != "" {
+		key = fmt.Sprintf("%s_%s", metadata.Series, metadata.Number)
+	} else {
+		bookName, bookNumber := parseBookName(bookPath)
+		key = fmt.Sprintf("%s_%s", bookName, bookNumber)
+	}
+
+	var dbBook BookInfo
+	err = globalDB.LoadData("bookinfo", key, &dbBook)
 	if err == nil {
-		for _, book := range existingBooks {
-			if book.SHA == sha {
-				fmt.Printf("書籍已存在且 SHA 相同，跳過保存: %s\n", book.BookName)
-				return
-			}
+		if dbBook.SHA == sha {
+			fmt.Printf("書籍已存在且 SHA 相同，跳過保存: %s\n", dbBook.BookName)
+			return nil
 		}
 	}
 
-	// Perform full analysis if SHA is not found
+	// Perform full ZIP analysis if the book is not found
 	bookInfo, err := AnalyzeZipFile(bookPath)
 	if err != nil {
-		log.Fatal("解析失敗:", err)
+		return fmt.Errorf("解析失敗: %w", err)
 	}
 
 	// Save BookInfo to BoltDB
 	err = SaveBookInfo(*bookInfo)
 	if err != nil {
-		log.Fatal("存入 BoltDB 失敗:", err)
+		return fmt.Errorf("存入 BoltDB 失敗: %w", err)
 	}
 
 	// Save series info
 	err = SaveSeriesInfo(*bookInfo)
 	if err != nil {
-		log.Fatal("存入系列資訊失敗:", err)
+		return fmt.Errorf("存入系列資訊失敗: %w", err)
 	}
 
 	fmt.Printf("成功新增書籍: %s\n", bookInfo.BookName)
+	return nil
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -225,16 +241,20 @@ func AddBook(bookPath string) {
 func (a *App) ScanBookAll() {
 	debug.DebugInfo("Func:ScanBookAll()")
 
-	scanPath := ".\\comic"
+	scanPath := ".\\comic" // TODO: 從設定檔讀取路徑
 	fileNameList, err := GetFileList(scanPath)
 	if err != nil {
-		debug.DebugInfo("讀取Path內容失敗:", err)
+		debug.DebugInfo("讀取漫畫路徑失敗:", err)
 	}
 
 	for _, fileName := range fileNameList {
-		debug.DebugInfo("fileName:", fileName)
 		filePath := scanPath + "\\" + fileName
-		AddBook(filePath)
+		debug.DebugInfo("讀取漫畫:", fileName)
+		err := AddBook(filePath)
+		if err != nil {
+			debug.DebugInfo("新增漫畫失敗:", err)
+			continue
+		}
 	}
 }
 
@@ -250,7 +270,6 @@ func (a *App) GetBookListAll() (bookList []BookInfo) {
 }
 
 func (a *App) GetBookInfoByKey(key string) (*BookInfo, error) {
-	// ...existing code...
 	return GetBookInfoByKey(key)
 }
 

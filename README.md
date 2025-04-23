@@ -6,6 +6,8 @@
 ### TODO list
 
 #### Short-term
+- 系統
+  - [ ] 支援epub 
 - UI
   - [X] 完善Menu bar
   - [ ] 完善選單

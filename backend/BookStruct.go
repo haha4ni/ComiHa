@@ -23,8 +23,8 @@ type ImageData struct {
 type Page struct {
 	Image       int    `xml:"Image,attr"       json:"image"`
 	ImageSize   int    `xml:"ImageSize,attr"   json:"imageSize"`
-	ImageWidth  int    `xml:"ImageWidth,attr"  json:"imageWidth"`
-	ImageHeight int    `xml:"ImageHeight,attr" json:"imageHeight"`
+	ImageWidth  int    `xml:"ImageWidth,omitempty"  json:"imageWidth"`
+	ImageHeight int    `xml:"ImageHeight,omitempty" json:"imageHeight"`
 	Type        string `xml:"Type,attr,omitempty"        json:"type,omitempty"`
 	Comment     string `xml:"Comment,attr,omitempty"     json:"comment,omitempty"`
 }

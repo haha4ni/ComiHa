@@ -53,3 +53,7 @@ export function ScraperInfo(arg1, arg2) {
 export function Shutdown() {
   return window['go']['main']['App']['Shutdown']();
 }
+
+export function WriteComicInfoToZip(arg1) {
+  return window['go']['main']['App']['WriteComicInfoToZip'](arg1);
+}

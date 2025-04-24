@@ -295,5 +295,11 @@ func (a *App) ScraperInfo(title string, volume string) (*BookInfo, error) {
 
 	WriteComicInfo(bookInfo)
 
+
 	return &bookInfo, nil
+}
+
+
+func (a *App) WriteComicInfoToZip(bookInfo BookInfo) {
+	WriteComicInfoToZip(bookInfo)
 }

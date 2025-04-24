@@ -175,7 +175,6 @@ func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
 		// Reassign updated metadata back to bookInfo.Metadata
 		bookInfo.Metadata = *metadata
 	}
-	log.Printf("BookInfo Metadata: %+v", bookInfo.Metadata)
 	WriteComicInfo(*bookInfo)
 
 	return bookInfo, nil

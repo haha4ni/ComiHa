@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -37,122 +38,65 @@ func WriteComicInfo(bookInfo BookInfo) error {
 
 // WriteComicInfoToZip reads the ComicInfo.xml file and writes it to the zip file with atomic replacement and hash verification
 func WriteComicInfoToZip(bookInfo BookInfo) error {
-	// Read the existing ComicInfo.xml file
+	fmt.Printf("WriteComicInfoToZip\n")
 	xmlPath := bookInfo.FileName + ".ComicInfo.xml"
-	xmlData, err := os.ReadFile(xmlPath)
-	if err != nil {
-		return fmt.Errorf("failed to read ComicInfo.xml: %w", err)
-	}
-
-	// Create temporary file
-	tmpZipPath := bookInfo.FileName + ".tmp"
 	zipPath := bookInfo.FileName
+	tmpZipPath := zipPath + ".tmp"
 
-	// Open the original zip file
-	zipReader, err := zip.OpenReader(zipPath)
-	if err != nil {
-		return fmt.Errorf("failed to open zip file: %w", err)
+	// Rename the file to ComicInfo.xml for insertion into the ZIP
+	tmpXmlPath := "ComicInfo.xml"
+	if err := os.Rename(xmlPath, tmpXmlPath); err != nil {
+		return fmt.Errorf("failed to rename XML file: %w", err)
 	}
-	defer zipReader.Close()
+	defer os.Remove(tmpXmlPath) // Ensure the temporary XML file is deleted after operation
 
-	// Create new zip file
-	newZipFile, err := os.Create(tmpZipPath)
-	if err != nil {
-		return fmt.Errorf("failed to create temporary zip file: %w", err)
-	}
-	defer newZipFile.Close()
-
-	// Create zip writer
-	zipWriter := zip.NewWriter(newZipFile)
-	defer zipWriter.Close()
-
-	// Copy all files from original zip to new zip
-	totalFiles := len(zipReader.File)
-	for i, file := range zipReader.File {
-		// Skip if it's already a ComicInfo.xml
-		if file.Name == "ComicInfo.xml" {
-			continue
-		}
-
-		log.Printf("Starting to process file: %s (%d/%d)", file.Name, i+1, totalFiles)
-
-		// Create new file in zip
-		newFile, err := zipWriter.Create(file.Name)
-		if (err != nil) {
-			log.Printf("Error creating file %s in zip: %v", file.Name, err)
-			return fmt.Errorf("failed to create file in zip: %w", err)
-		}
-
-		// Open file from original zip
-		fileReader, err := file.Open()
-		if err != nil {
-			log.Printf("Error opening file %s from zip: %v", file.Name, err)
-			return fmt.Errorf("failed to open file from zip: %w", err)
-		}
-
-		// Copy file contents with progress tracking
-		bytesCopied, err := io.Copy(newFile, fileReader)
-		if err != nil {
-			log.Printf("Error copying file %s contents: %v (copied %d bytes)", file.Name, err, bytesCopied)
-			fileReader.Close()
-			return fmt.Errorf("failed to copy file contents: %w", err)
-		}
-
-		// Close the file reader
-		if err := fileReader.Close(); err != nil {
-			log.Printf("Error closing file reader for %s: %v", file.Name, err)
-			return fmt.Errorf("failed to close file reader: %w", err)
-		}
-
-		log.Printf("Successfully copied %s (%d bytes)", file.Name, bytesCopied)
+	// 先複製一份 zip，避免寫壞原檔
+	if err := copyFile(zipPath, tmpZipPath); err != nil {
+		return fmt.Errorf("failed to copy zip: %w", err)
 	}
 
-	// Add ComicInfo.xml to the zip
-	log.Printf("Starting to add ComicInfo.xml to zip")
-	comicInfoFile, err := zipWriter.Create("ComicInfo.xml")
-	if err != nil {
-		log.Printf("Error creating ComicInfo.xml in zip: %v", err)
-		return fmt.Errorf("failed to create ComicInfo.xml in zip: %w", err)
+	fmt.Printf("cmd := exec.Command\n")
+	// 使用 7zr 更新 ComicInfo.xml 到 zip 檔
+	cmd := exec.Command("./7z/7za.exe", "u", tmpZipPath, tmpXmlPath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to update zip using 7zr: %w", err)
 	}
-	log.Printf("Successfully created ComicInfo.xml entry in zip")
+	fmt.Printf("cmd := exec.Command\n")
 
-	_, err = comicInfoFile.Write(xmlData)
-	if err != nil {
-		log.Printf("Error writing ComicInfo.xml to zip: %v", err)
-		return fmt.Errorf("failed to write ComicInfo.xml to zip: %w", err)
-	}
-	log.Printf("Successfully wrote ComicInfo.xml data to zip")
-
-	// Close zip writer to ensure all data is written
-	log.Printf("Closing zip writer")
-	err = zipWriter.Close()
-	if err != nil {
-		log.Printf("Error closing zip writer: %v", err)
-		return fmt.Errorf("failed to close zip writer: %w", err)
-	}
-	log.Printf("Successfully closed zip writer")
-
-	// Atomically replace the original file with the new one
-	log.Printf("Starting to replace %s with new version", zipPath)
-
-	zipWriter.Close()
-	newZipFile.Close()
-	zipReader.Close()
-	err = os.Rename(tmpZipPath, zipPath)
-	if err != nil {
-		// Remove temporary file if rename fails
-		os.Remove(tmpZipPath)
-		return fmt.Errorf("failed to replace original file: %w", err)
+	// 原子替換
+	if err := os.Rename(tmpZipPath, zipPath); err != nil {
+		return fmt.Errorf("failed to replace original zip: %w", err)
 	}
 
-	// Verify the file was replaced
-	if _, err := os.Stat(zipPath); err == nil {
-		log.Printf("Successfully replaced %s with new version", zipPath)
-	} else {
-		log.Printf("Warning: Could not verify replacement of %s", zipPath)
+	// 刪除原本的 XML 檔案
+	if err := os.Remove(xmlPath); err != nil {
+		return fmt.Errorf("failed to delete original XML file: %w", err)
 	}
 
 	return nil
+}
+
+// copyFile 複製 zip 檔用
+func copyFile(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	if _, err = io.Copy(out, in); err != nil {
+		return err
+	}
+	return out.Close()
 }
 
 // GetComicInfoFromZip extracts ComicInfo.xml metadata from a ZIP file.

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Box, Typography, Avatar, Button, TextField } from "@mui/material";
+import { Box, Typography, Avatar, Button, TextField, Tabs, Tab } from "@mui/material";
 import {
   ReadCover,
   GetBookInfoByKey,
@@ -12,6 +12,7 @@ export default function SeriesInfoInfoPage() {
   const [Thumbnails, setThumbnails] = useState([]);
   const [bookinfo, setBookinfo] = useState(null);
   const [seriesinfo, setSeriesinfo] = useState(null);
+  const [tabValue, setTabValue] = useState(0);
   const navigate = useNavigate();
   const { seriesname, bookname, booknumber } = useParams();
 
@@ -52,6 +53,10 @@ export default function SeriesInfoInfoPage() {
 
     fetchSeriesInfo();
   }, [seriesname]);
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
 
   const renderThumbnails = () => {
     return Thumbnails.map((thumbnail, index) => (
@@ -178,20 +183,45 @@ export default function SeriesInfoInfoPage() {
         <Typography variant="h6">{bookinfo?.metadata?.series}</Typography>
       </Box>
 
-      {/* Thumbnails Grid */}
-      <Box
-        sx={{
-          mt: 2,
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
-          gap: 2,
-          backgroundColor: "#f5f5f5",
-          borderRadius: "10px",
-          padding: 2,
-        }}
+      {/* Tabs and Thumbnails Grid */}
+      <Tabs
+        value={tabValue}
+        onChange={handleTabChange}
+        sx={{ mt: 2, backgroundColor: "#f5f5f5", borderRadius: "10px" }}
       >
-        {renderThumbnails()}
-      </Box>
+        <Tab label="卷" />
+        <Tab label="章" />
+      </Tabs>
+      {tabValue === 0 && (
+        <Box
+          sx={{
+            mt: 2,
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
+            gap: 2,
+            backgroundColor: "#f5f5f5",
+            borderRadius: "10px",
+            padding: 2,
+          }}
+        >
+          {renderThumbnails()}
+        </Box>
+      )}
+      {tabValue === 1 && (
+        <Box
+          sx={{
+            mt: 2,
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            backgroundColor: "#f5f5f5",
+            borderRadius: "10px",
+            padding: 2,
+          }}
+        >
+          <Typography variant="body1">章內容待實作</Typography>
+        </Box>
+      )}
     </Box>
   );
 }

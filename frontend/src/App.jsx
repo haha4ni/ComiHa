@@ -12,6 +12,7 @@ export default function App() {
         <Router>
             <Routes>
                 <Route path="/" element={<MainMode />}>
+                    <Route index element={<div>Welcome to MainMode!</div>} />
                     <Route path="series" element={<ImageBoxList mode="series" />} />
                     <Route path="seriesinfo/:seriesname" element={<SeriesInfoPage />} />
                     <Route path="bookinfo" element={<ImageBoxList mode="bookinfo" />} />

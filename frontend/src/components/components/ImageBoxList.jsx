@@ -57,17 +57,22 @@ export default function ImageBoxList({ mode }) {
         try {
           const seriesInfo = await GetSeriesInfoByKey(series);
           const bookinfo = await GetBookInfoByKey(seriesInfo.bookinfokeys[0]);
-          setSerieslist((serieslist) => [...serieslist, seriesInfo]);
-
           const img = await GetBookCoverByKey(bookinfo.bookname + "_" + bookinfo.booknumber);
           const newImage = `data:image/png;base64,${img.FileBitmap}`;
+
+          setSerieslist((prevSerieslist) => {
+            const updatedSerieslist = [...prevSerieslist];
+            updatedSerieslist[index] = seriesInfo; // Update the specific series
+            return updatedSerieslist;
+          });
+
           setImages((prevImages) => {
             const updatedImages = [...prevImages];
             updatedImages[index] = newImage; // Update the specific image
             return updatedImages;
           });
         } catch (error) {
-          console.error("Failed to process image:", error);
+          console.error("Failed to process series:", error);
         }
       });
     } catch (error) {

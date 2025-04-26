@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Box, Typography, Avatar, Button, TextField, Tabs, Tab } from "@mui/material";
+import { Box, Typography, Avatar, TextField, Tabs, Tab } from "@mui/material";
 import {
   ReadCover,
   GetBookInfoByKey,
   GetSeriesInfoByKey,
+  GetBookCoverByKey,
 } from "../../../wailsjs/go/main/App";
 
 export default function SeriesInfoInfoPage() {
@@ -15,23 +16,6 @@ export default function SeriesInfoInfoPage() {
   const [tabValue, setTabValue] = useState(0);
   const navigate = useNavigate();
   const { seriesname, bookname, booknumber } = useParams();
-
-  const handleGetBookPages = async () => {
-    try {
-        const fetchedSeriesInfo = await GetSeriesInfoByKey(seriesname);
-        setSeriesinfo(fetchedSeriesInfo);
-      for (const key of fetchedSeriesInfo.bookinfokeys) {
-        const seriesInfoResult = await GetBookInfoByKey(key);
-        console.log("@@@seriesInfoResult.filename:", seriesInfoResult.filename);
-        const result = await ReadCover(seriesInfoResult.filename);
-        console.log("@@@result:", result);
-        setThumbnails((prevImages) => [...prevImages, ...result]);
-        console.log("@@@Thumbnails:", Thumbnails);
-      }
-    } catch (error) {
-      console.error("Error fetching book pages:", error);
-    }
-  };
 
   useEffect(() => {
     const fetchSeriesInfo = async () => {
@@ -51,7 +35,25 @@ export default function SeriesInfoInfoPage() {
       }
     };
 
+    const fetchBookPages = async () => {
+      try {
+        const fetchedSeriesInfo = await GetSeriesInfoByKey(seriesname);
+        setSeriesinfo(fetchedSeriesInfo);
+
+        const thumbnails = [];
+        for (const key of fetchedSeriesInfo.bookinfokeys) {
+          const bookinfo = await GetBookInfoByKey(key);
+          const img = await GetBookCoverByKey(bookinfo.bookname + "_" + bookinfo.booknumber);
+          thumbnails.push(img);
+        }
+        setThumbnails(thumbnails);
+      } catch (error) {
+        console.error("Error fetching book pages:", error);
+      }
+    };
+
     fetchSeriesInfo();
+    fetchBookPages();
   }, [seriesname]);
 
   const handleTabChange = (event, newValue) => {
@@ -88,7 +90,7 @@ export default function SeriesInfoInfoPage() {
             objectFit: "cover",
           }}
         />
-        <Typography variant="caption">{seriesinfo.bookinfokeys[index]}</Typography>
+        <Typography variant="caption">{`卷 ${index+1}`}</Typography>
       </Box>
     ));
   };
@@ -101,17 +103,6 @@ export default function SeriesInfoInfoPage() {
         margin: "0 auto",
       }}
     >
-      {/* <Button variant="contained" onClick={() => navigate("/")} sx={{ mb: 2 }}>
-        Back to Home
-      </Button> */}
-      <Button
-        variant="contained"
-        onClick={handleGetBookPages}
-        sx={{ mb: 2, ml: 2 }}
-      >
-        GetBookPages
-      </Button>
-
       {bookinfo && (
         <Box
           sx={{
@@ -168,20 +159,6 @@ export default function SeriesInfoInfoPage() {
           </Box>
         </Box>
       )}
-      <Box
-        sx={{
-          mt: 2,
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 2,
-          backgroundColor: "#f5f5f5",
-          borderRadius: "10px",
-          padding: 2,
-          width: "100%",
-        }}
-      >
-        <Typography variant="h6">{bookinfo?.metadata?.series}</Typography>
-      </Box>
 
       {/* Tabs and Thumbnails Grid */}
       <Tabs

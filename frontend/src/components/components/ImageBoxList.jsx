@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Typography, Avatar, Button } from "@mui/material";
+import { Box, Typography, Avatar } from "@mui/material";
 import {
   ScanBookAll,
   GetBookListAll,
@@ -10,11 +10,33 @@ import {
   GetSeriesInfoByKey
 } from "../../../wailsjs/go/main/App";
 
-const ImageBoxList = ({ mode }) => {
+export default function ImageBoxList({ mode }) {
   const [images, setImages] = useState([]);
   const [booklist, setBooklist] = useState([]);
   const [serieslist, setSerieslist] = useState([]);
   const navigate = useNavigate();
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    const handleModeChange = async () => {
+      console.log("Effect triggered due to mode change");
+      setImages([]); // Reset images when mode changes
+      if (mode === "series") {
+        await ShowSeriesinfoList();
+      } else if (mode === "bookinfo") {
+        const booklist = await GetBookListAll();
+        setBooklist(booklist);
+        await processImages(booklist);
+      }
+    };
+
+    if (isFirstRender.current) {
+      console.log("Effect triggered when mode changes");
+      isFirstRender.current = false; // Mark as rendered
+    } else {
+      handleModeChange();
+    }
+  }, [mode]);
 
   const processImages = async (booklist) => {
     for (const bookinfo of booklist) {
@@ -39,11 +61,8 @@ const ImageBoxList = ({ mode }) => {
         return;
       }
       for (const series of seriesList) {
-        console.log("series", series);
         const seriesInfo = await GetSeriesInfoByKey(series);
-        console.log("seriesInfo", seriesInfo.bookinfokeys);
         const bookinfo = await GetBookInfoByKey(seriesInfo.bookinfokeys[0]);
-        console.log("bookinfo", bookinfo);
         setSerieslist((serieslist) => [...serieslist, seriesInfo]);
         try {
           const path = bookinfo.filename;
@@ -63,22 +82,10 @@ const ImageBoxList = ({ mode }) => {
 
   const handleGetBooks = async () => {
     await ScanBookAll();
-    if (mode === "series") {
-      await ShowSeriesinfoList();
-    } else if (mode === "bookinfo") {
-      const booklist = await GetBookListAll();
-      setBooklist(booklist);
-      await processImages(booklist);
-    }
   };
 
   return (
     <Box sx={{ width: "100%", display: "flex", flexDirection: "column" }}>
-      <Box sx={{ display: "block" }}>
-        <Button variant="contained" onClick={handleGetBooks} sx={{ mb: 2 }}>
-          {mode === "series" ? "Get Series" : "Get Book"}
-        </Button>
-      </Box>
       <Box sx={{ display: "flex", flexWrap: "wrap" }}>
         {images.map((image, index) => (
           <Box
@@ -120,6 +127,4 @@ const ImageBoxList = ({ mode }) => {
       </Box>
     </Box>
   );
-};
-
-export default ImageBoxList;
+}

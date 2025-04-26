@@ -237,6 +237,11 @@ func AddBook(bookPath string) error {
 /////////////////////////////////////////////////////////////////////////////////////////////
 // API
 
+type BookImageData struct {
+	FileName   string
+	FileBitmap []byte
+}
+
 func (a *App) ScanBookAll() {
 	debug.DebugInfo("Func:ScanBookAll()")
 
@@ -266,6 +271,10 @@ func (a *App) GetBookListAll() (bookList []BookInfo) {
 		log.Fatal("讀取所有 BookInfo 失敗:", err)
 	}
 	return bookList
+}
+
+func (a *App) GetBookCoverByKey(key string) (*BookImageData, error) {
+	return nil, nil
 }
 
 func (a *App) GetBookInfoByKey(key string) (*BookInfo, error) {

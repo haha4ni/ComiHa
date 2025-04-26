@@ -4,22 +4,11 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
-	"os"
 	"sort"
 	"strings"
 
 	"ComiHa/backend/debug"
 )
-
-func (a *App) NowPath() (string, error) {
-	path, err := os.Getwd()
-	if err != nil {
-		fmt.Println("❌ 無法取得當前目錄路徑:", err)
-		return "XX", err
-	}
-	fmt.Println("G@當前目錄路徑:", path)
-	return path, err
-}
 
 type ImageDataTemp struct {
 	FileName   string

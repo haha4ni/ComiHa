@@ -1,5 +1,19 @@
 export namespace backend {
 	
+	export class BookImageData {
+	    FileName: string;
+	    FileBitmap: number[];
+	
+	    static createFrom(source: any = {}) {
+	        return new BookImageData(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.FileName = source["FileName"];
+	        this.FileBitmap = source["FileBitmap"];
+	    }
+	}
 	export class ImageData {
 	    filename: string;
 	    fileindex: number;

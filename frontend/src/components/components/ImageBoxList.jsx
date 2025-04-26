@@ -16,44 +16,30 @@ export default function ImageBoxList({ mode }) {
   const navigate = useNavigate();
   const isFirstRender = useRef(true);
 
-  useEffect(() => {
-    const handleModeChange = async () => {
-      console.log("Effect triggered due to mode change");
-      setImages([]); // Reset images when mode changes
-      if (mode === "series") {
-        await ShowSeriesinfoList();
-      } else if (mode === "bookinfo") {
-        const booklist = await GetBookListAll();
-        setBooklist(booklist);
-        await processImages(booklist);
-      }
-    };
+  const ShowBookinfoList = async () => {
+    try {
+      const booklist = await GetBookListAll();
+      setBooklist(booklist);
 
-    if (isFirstRender.current) {
-      console.log("Effect triggered when mode changes");
-      isFirstRender.current = false; // Mark as rendered
-    } else {
-      handleModeChange();
+      const placeholders = Array(booklist.length).fill(null); // Initialize placeholders
+      setImages(placeholders);
+
+      booklist.forEach(async (bookinfo, index) => {
+        try {
+          const img = await GetBookCoverByKey(bookinfo.bookname + "_" + bookinfo.booknumber);
+          const newImage = `data:image/png;base64,${img.FileBitmap}`;
+          setImages((prevImages) => {
+            const updatedImages = [...prevImages];
+            updatedImages[index] = newImage; // Update the specific image
+            return updatedImages;
+          });
+        } catch (error) {
+          console.error("Failed to process image:", error);
+        }
+      });
+    } catch (error) {
+      console.error("Error in ShowBookinfoList:", error);
     }
-  }, [mode]);
-
-  const processImages = async (booklist) => {
-    const placeholders = Array(booklist.length).fill(null); // Initialize placeholders
-    setImages(placeholders);
-
-    booklist.forEach(async (bookinfo, index) => {
-      try {
-        const img = await GetBookCoverByKey(bookinfo.bookname + "_" + bookinfo.booknumber);
-        const newImage = `data:image/png;base64,${img.FileBitmap}`;
-        setImages((prevImages) => {
-          const updatedImages = [...prevImages];
-          updatedImages[index] = newImage; // Update the specific image
-          return updatedImages;
-        });
-      } catch (error) {
-        console.error("Failed to process image:", error);
-      }
-    });
   };
 
   const ShowSeriesinfoList = async () => {
@@ -88,6 +74,25 @@ export default function ImageBoxList({ mode }) {
       console.error("Error in ShowSeriesinfoList:", error);
     }
   };
+
+  useEffect(() => {
+    const handleModeChange = async () => {
+      console.log("Effect triggered due to mode change");
+      setImages([]); // Reset images when mode changes
+      if (mode === "series") {
+        await ShowSeriesinfoList();
+      } else if (mode === "bookinfo") {
+        await ShowBookinfoList();
+      }
+    };
+
+    if (isFirstRender.current) {
+      console.log("Effect triggered when mode changes");
+      isFirstRender.current = false; // Mark as rendered
+    } else {
+      handleModeChange();
+    }
+  }, [mode]);
 
   return (
     <Box sx={{ width: "100%", display: "flex", flexDirection: "column" }}>

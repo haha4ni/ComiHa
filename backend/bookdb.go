@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"io"
 
 	"ComiHa/backend/db"
 	"ComiHa/backend/debug"
@@ -274,7 +275,65 @@ func (a *App) GetBookListAll() (bookList []BookInfo) {
 }
 
 func (a *App) GetBookCoverByKey(key string) (*BookImageData, error) {
-	return nil, nil
+	fmt.Println("GetBookCoverByKey()")
+
+	bookInfo, err := GetBookInfoByKey(key)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get book info: %w", err)
+	}
+	zipPath := bookInfo.FileName
+	r, err := zip.OpenReader(zipPath)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+
+	
+
+	// 先將圖片名稱存入 slice
+	fileMap := make(map[string]*zip.File)
+	var keys []string
+
+	for _, f := range r.File {
+		if !strings.HasSuffix(f.Name, ".png") && !strings.HasSuffix(f.Name, ".jpg") {
+			continue // 只處理 PNG / JPG 圖片
+		}
+
+		// 提取副檔名以外的部分，例如 "0_cover.jpg" 解析成 "0_cover"
+		base := strings.TrimSuffix(f.Name, ".png")
+		base = strings.TrimSuffix(base, ".jpg")
+
+		keys = append(keys, base)
+		fileMap[base] = f
+	}
+
+	// 按照字串排序檔名
+	sort.Strings(keys)
+	// fmt.Println(keys)
+
+	f := fileMap[keys[0]]
+
+	// 打開f檔案
+	fo, err := f.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer fo.Close()
+
+	// 讀取檔案內容
+	data, err := io.ReadAll(fo)
+	if err != nil {
+		fmt.Println("讀取檔案內容失敗:", err)
+		return nil, err
+	}
+
+	// 存入結果
+    image := &BookImageData{
+        FileName:   f.Name,
+        FileBitmap: data,
+    }
+	fmt.Println("GetBookCoverByKey() end")
+	return image, nil
 }
 
 func (a *App) GetBookInfoByKey(key string) (*BookInfo, error) {

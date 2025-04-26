@@ -2,12 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Typography, Avatar } from "@mui/material";
 import {
-  ScanBookAll,
   GetBookListAll,
-  ReadCover,
   GetBookInfoByKey,
   GetSeriesKeyListAll,
-  GetSeriesInfoByKey
+  GetSeriesInfoByKey,
+  GetBookCoverByKey
 } from "../../../wailsjs/go/main/App";
 
 export default function ImageBoxList({ mode }) {
@@ -39,18 +38,22 @@ export default function ImageBoxList({ mode }) {
   }, [mode]);
 
   const processImages = async (booklist) => {
-    for (const bookinfo of booklist) {
+    const placeholders = Array(booklist.length).fill(null); // Initialize placeholders
+    setImages(placeholders);
+
+    booklist.forEach(async (bookinfo, index) => {
       try {
-        const path = bookinfo.filename;
-        const img = await ReadCover(path);
-        const newImages = img.map(
-          (item) => `data:image/png;base64,${item.FileBitmap}`
-        );
-        setImages((prevImages) => [...prevImages, ...newImages]);
+        const img = await GetBookCoverByKey(bookinfo.bookname + "_" + bookinfo.booknumber);
+        const newImage = `data:image/png;base64,${img.FileBitmap}`;
+        setImages((prevImages) => {
+          const updatedImages = [...prevImages];
+          updatedImages[index] = newImage; // Update the specific image
+          return updatedImages;
+        });
       } catch (error) {
         console.error("Failed to process image:", error);
       }
-    }
+    });
   };
 
   const ShowSeriesinfoList = async () => {
@@ -60,28 +63,30 @@ export default function ImageBoxList({ mode }) {
         console.error("Invalid series list received:", seriesList);
         return;
       }
-      for (const series of seriesList) {
-        const seriesInfo = await GetSeriesInfoByKey(series);
-        const bookinfo = await GetBookInfoByKey(seriesInfo.bookinfokeys[0]);
-        setSerieslist((serieslist) => [...serieslist, seriesInfo]);
+
+      const placeholders = Array(seriesList.length).fill(null); // Initialize placeholders
+      setImages(placeholders);
+
+      seriesList.forEach(async (series, index) => {
         try {
-          const path = bookinfo.filename;
-          const img = await ReadCover(path);
-          const newImages = img.map(
-            (item) => `data:image/png;base64,${item.FileBitmap}`
-          );
-          setImages((prevImages) => [...prevImages, ...newImages]);
+          const seriesInfo = await GetSeriesInfoByKey(series);
+          const bookinfo = await GetBookInfoByKey(seriesInfo.bookinfokeys[0]);
+          setSerieslist((serieslist) => [...serieslist, seriesInfo]);
+
+          const img = await GetBookCoverByKey(bookinfo.bookname + "_" + bookinfo.booknumber);
+          const newImage = `data:image/png;base64,${img.FileBitmap}`;
+          setImages((prevImages) => {
+            const updatedImages = [...prevImages];
+            updatedImages[index] = newImage; // Update the specific image
+            return updatedImages;
+          });
         } catch (error) {
           console.error("Failed to process image:", error);
         }
-      }
+      });
     } catch (error) {
       console.error("Error in ShowSeriesinfoList:", error);
     }
-  };
-
-  const handleGetBooks = async () => {
-    await ScanBookAll();
   };
 
   return (
@@ -91,7 +96,7 @@ export default function ImageBoxList({ mode }) {
           <Box
             key={index}
             sx={{
-              width: 215,
+              width: 150,
               textAlign: "center",
               bgcolor: "gray",
               borderRadius: "8px",
@@ -101,7 +106,7 @@ export default function ImageBoxList({ mode }) {
             <Avatar
               src={image}
               alt={`Drawer Image ${index}`}
-              sx={{ width: 215, height: 320, borderRadius: "8px 8px 0 0" }}
+              sx={{ width: "100%", height: 220, borderRadius: "8px 8px 0 0" }}
               onClick={() => {
                 if (mode === "bookinfo") {
                   const book = booklist[index];
@@ -117,7 +122,7 @@ export default function ImageBoxList({ mode }) {
                 }
               }}
             />
-            <Typography variant="body2">
+            <Typography variant="caption">
               {mode === "bookinfo"
                 ? `${booklist[index]?.bookname} ${booklist[index]?.booknumber}`
                 : `${serieslist[index]?.seriesname}`}

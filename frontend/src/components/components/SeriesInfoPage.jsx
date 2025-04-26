@@ -21,7 +21,9 @@ export default function SeriesInfoInfoPage() {
     const fetchSeriesInfo = async () => {
       try {
         const seriesinfo = await GetSeriesInfoByKey(seriesname);
-        const seriesInfoResult = await GetBookInfoByKey(seriesinfo.bookinfokeys[0]);
+        const seriesInfoResult = await GetBookInfoByKey(
+          seriesinfo.bookinfokeys[0]
+        );
         setBookinfo(seriesInfoResult);
         if (seriesInfoResult?.filename) {
           const img = await ReadCover(seriesInfoResult.filename);
@@ -43,7 +45,9 @@ export default function SeriesInfoInfoPage() {
         const thumbnails = [];
         for (const key of fetchedSeriesInfo.bookinfokeys) {
           const bookinfo = await GetBookInfoByKey(key);
-          const img = await GetBookCoverByKey(bookinfo.bookname + "_" + bookinfo.booknumber);
+          const img = await GetBookCoverByKey(
+            bookinfo.bookname + "_" + bookinfo.booknumber
+          );
           thumbnails.push(img);
         }
         setThumbnails(thumbnails);
@@ -76,9 +80,13 @@ export default function SeriesInfoInfoPage() {
           alt={`${index + 1}`}
           onClick={() => {
             const handleNavigation = async () => {
-              const book = await GetBookInfoByKey(seriesinfo.bookinfokeys[index]);
+              const book = await GetBookInfoByKey(
+                seriesinfo.bookinfokeys[index]
+              );
               navigate(
-                `/bookinfo/${encodeURIComponent(book.bookname)}/${encodeURIComponent(book.booknumber)}`
+                `/bookinfo/${encodeURIComponent(
+                  book.bookname
+                )}/${encodeURIComponent(book.booknumber)}`
               );
             };
             handleNavigation();
@@ -90,7 +98,7 @@ export default function SeriesInfoInfoPage() {
             objectFit: "cover",
           }}
         />
-        <Typography variant="caption">{`卷 ${index+1}`}</Typography>
+        <Typography variant="caption">{`卷 ${index + 1}`}</Typography>
       </Box>
     ));
   };
@@ -99,7 +107,7 @@ export default function SeriesInfoInfoPage() {
     <Box
       sx={{
         width: "100%",
-        maxWidth: "1200px",
+        // maxWidth: "1200px",
         margin: "0 auto",
       }}
     >
@@ -109,10 +117,11 @@ export default function SeriesInfoInfoPage() {
             display: "flex",
             flexWrap: "wrap",
             gap: 2,
-            backgroundColor: "#f5f5f5",
+            backgroundColor: "#f8f8f8",
             borderRadius: "10px",
             padding: 2,
-            width: "100%",
+            mx: 2,
+            mt: 1,
           }}
         >
           {bookCover && (
@@ -160,11 +169,15 @@ export default function SeriesInfoInfoPage() {
         </Box>
       )}
 
-      {/* Tabs and Thumbnails Grid */}
       <Tabs
         value={tabValue}
         onChange={handleTabChange}
-        sx={{ mt: 2, backgroundColor: "#f5f5f5", borderRadius: "10px" }}
+        sx={{ 
+          mt: 1,
+          mx: 2,
+          backgroundColor: "#f5f5f5", 
+          borderRadius: "10px 10px 0 0", // Keep rounded corners for Tabs
+        }}
       >
         <Tab label="卷" />
         <Tab label="章" />
@@ -172,12 +185,12 @@ export default function SeriesInfoInfoPage() {
       {tabValue === 0 && (
         <Box
           sx={{
-            mt: 2,
+            mx: 2,
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
             gap: 2,
             backgroundColor: "#f5f5f5",
-            borderRadius: "10px",
+            borderRadius: "0 0 10px 10px", // Sharp corners only at the bottom
             padding: 2,
           }}
         >
@@ -192,7 +205,7 @@ export default function SeriesInfoInfoPage() {
             flexDirection: "column",
             gap: 2,
             backgroundColor: "#f5f5f5",
-            borderRadius: "10px",
+            borderRadius: "0 0 10px 10px", // Sharp corners only at the bottom
             padding: 2,
           }}
         >

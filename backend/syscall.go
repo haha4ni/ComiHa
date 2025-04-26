@@ -15,7 +15,12 @@ func GetFileList(dir string) ([]string, error) {
 		return nil, err
 	}
 	for _, entry := range entries {
-		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".zip") {
+		if !entry.IsDir() && 
+		   (strings.HasSuffix(entry.Name(), ".zip") || 
+			strings.HasSuffix(entry.Name(), ".rar") || 
+			strings.HasSuffix(entry.Name(), ".7z") || 
+			strings.HasSuffix(entry.Name(), ".cbz") || 
+			strings.HasSuffix(entry.Name(), ".cbr")) {
 			files = append(files, entry.Name())
 		}
 	}

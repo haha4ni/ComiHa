@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { ScanBookAll } from "../../wailsjs/go/main/App";
 import CircularProgress from "@mui/material/CircularProgress";
 
-const drawerWidth = 240;
+const drawerWidth = 180;
 
 export default function SimpleDrawer({ open, onToggle }) {
   const navigate = useNavigate();

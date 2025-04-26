@@ -22,7 +22,7 @@ export default function MainMode() {
         <Box
           sx={{
             zIndex: (theme) => theme.zIndex.drawer + 5,
-            marginLeft: drawerOpen ? "0px" : "-240px", // Adjust margin based on drawer state
+            marginLeft: drawerOpen ? "0px" : "-180px", // Adjust margin based on drawer state
             transition: "margin-left 0.3s ease", // Smooth transition
             // bgcolor: "grey",
             // bgcolor: "white",

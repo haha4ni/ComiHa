@@ -1,7 +1,6 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import MainMode from "./components/MainMode";
-import BookMode from "./components/BookMode";
 import BookInfoPage from "./components/components/BookInfoPage";
 import BookReadPage from "./components/components/BookReadPage";
 import ImageBoxList from "./components/components/ImageBoxList";

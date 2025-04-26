@@ -199,6 +199,8 @@ export namespace backend {
 	
 	export class SeriesInfo {
 	    seriesname: string;
+	    seriessummary: string;
+	    serieswriter: string;
 	    bookinfokeys: string[];
 	
 	    static createFrom(source: any = {}) {
@@ -208,6 +210,8 @@ export namespace backend {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.seriesname = source["seriesname"];
+	        this.seriessummary = source["seriessummary"];
+	        this.serieswriter = source["serieswriter"];
 	        this.bookinfokeys = source["bookinfokeys"];
 	    }
 	}

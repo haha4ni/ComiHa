@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Box, Typography, Avatar, TextField, Tabs, Tab } from "@mui/material";
+import SettingsIcon from "@mui/icons-material/Settings";
 import {
   ReadCover,
   GetBookInfoByKey,
@@ -122,8 +123,33 @@ export default function SeriesInfoInfoPage() {
             padding: 2,
             mx: 2,
             mt: 1,
+            position: "relative", // Added for positioning the gear icon
           }}
         >
+          <Box
+            sx={{
+              position: "absolute",
+              mt: 2, // Top margin
+              mr: 2, // Right margin
+              top: 0,
+              right: 0,
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              console.log("Gear icon clicked");
+              // Add your desired functionality here
+            }}
+          >
+            <SettingsIcon
+              sx={{
+                fontSize: 24,
+                color: "#b0b0b0", // Darker default color
+                "&:hover": {
+                  color: "#808080", // Current lighter color on hover
+                },
+              }}
+            />
+          </Box>
           {bookCover && (
             <Avatar
               src={bookCover}
@@ -131,12 +157,11 @@ export default function SeriesInfoInfoPage() {
               onClick={() => navigate(`/bookinfo/${bookname}/${booknumber}/0`)}
               sx={{
                 width: "auto",
-                height: "50vh",
+                height: "calc(60vh - 80px)",
                 borderRadius: "10px",
                 maxWidth: "100%",
                 aspectRatio: "215 / 320",
                 objectFit: "cover",
-                margin: "5px",
                 flex: "0 0 auto",
                 cursor: "pointer",
               }}

@@ -275,8 +275,6 @@ func (a *App) GetBookListAll() (bookList []BookInfo) {
 }
 
 func (a *App) GetBookCoverByKey(key string) (*BookImageData, error) {
-	fmt.Println("GetBookCoverByKey()")
-
 	bookInfo, err := GetBookInfoByKey(key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get book info: %w", err)
@@ -332,7 +330,6 @@ func (a *App) GetBookCoverByKey(key string) (*BookImageData, error) {
         FileName:   f.Name,
         FileBitmap: data,
     }
-	fmt.Println("GetBookCoverByKey() end")
 	return image, nil
 }
 

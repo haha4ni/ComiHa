@@ -1,6 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Box, Typography, Avatar, TextField, Tabs, Tab, Button, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Avatar,
+  TextField,
+  Tabs,
+  Tab,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import {
   ReadCover,
@@ -118,7 +130,7 @@ export default function SeriesInfoInfoPage() {
         <Box
           sx={{
             display: "flex",
-            alignItems: "flex-start",  // 加這行
+            alignItems: "flex-start", // 加這行
             flexWrap: "wrap",
             gap: 2,
             backgroundColor: "#f8f8f8",
@@ -166,11 +178,13 @@ export default function SeriesInfoInfoPage() {
               <Avatar
                 src={bookCover}
                 alt={`${bookinfo.bookname} cover`}
-                onClick={() => navigate(`/bookinfo/${bookname}/${booknumber}/0`)}
+                onClick={() =>
+                  navigate(`/bookinfo/${bookname}/${booknumber}/0`)
+                }
                 sx={{
                   width: "auto",
                   height: "calc(56vh - 48px)",
-                  minHeight: "300px",           // 不管怎樣最小高度是300px
+                  minHeight: "300px", // 不管怎樣最小高度是300px
                   borderRadius: "10px",
                   maxWidth: "100%",
                   aspectRatio: "215 / 320",
@@ -186,41 +200,54 @@ export default function SeriesInfoInfoPage() {
                 flex: 1, // 讓 Typography 占據剩餘空間
                 minWidth: 0,
                 marginLeft: "10px",
-                display: "flex",           // 加這行
-                flexDirection: "column",    // 加這行
+                display: "grid", // 加這行
+                flexDirection: "column", // 加這行
                 justifyContent: "space-between", // 加這行
-                backgroundColor: "#D2D4f5",
               }}
             >
-              <Typography variant="h5">
-                {bookinfo.metadata?.series || bookinfo.bookname}
+              <Box>
+                <Typography variant="h5">
+                  {bookinfo.metadata?.series || bookinfo.bookname}
+                </Typography>
+                <Typography variant="body1">
+                  {bookinfo.metadata?.writer}
+                </Typography>
+              </Box>
+              <Typography variant="body1"
+                sx={{
+                  display: "flex",
+                  justifyContent: "flex-start", // Align to the left
+                  alignItems: "flex-end", // Align to the bottom
+                }}
+              >
+                內容簡介:
               </Typography>
-              <Typography variant="body1" sx={{ mb: 10 }}>
-                {bookinfo.metadata?.writer}
-              </Typography>
-              <Typography sx={{ mt: 2 }}>內容簡介:</Typography>
-              <Typography 
+              <Typography variant="body2"
                 sx={{
                   maxWidth: "100%",
-                  overflow: "auto",  // 超過範圍會顯示滾動條
+                  overflow: "auto", // 超過範圍會顯示滾動條
                 }}
-              
               >
                 {bookinfo.metadata?.summary || ""}
               </Typography>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => navigate(`/bookinfo/${bookname}/${booknumber}/0`)}
+              <Box
                 sx={{
-                  mt: 2,              // 上面留點間距
-                  alignSelf: "flex-start", // 讓按鈕靠左（可選）
-                  borderRadius: "5px",     // 跟你原本的一樣
-                  textTransform: "none",   // 取消自動大寫
+                  display: "flex",
+                  justifyContent: "flex-start", // Align to the left
+                  alignItems: "flex-end", // Align to the bottom
+                  mt: "auto", // Push to the bottom of the container
                 }}
               >
-                開始閱讀
-              </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() =>
+                    navigate(`/bookinfo/${bookname}/${booknumber}/0`)
+                  }
+                >
+                  開始閱讀
+                </Button>
+              </Box>
             </Box>
           </Box>
         </Box>
@@ -240,10 +267,10 @@ export default function SeriesInfoInfoPage() {
       <Tabs
         value={tabValue}
         onChange={handleTabChange}
-        sx={{ 
+        sx={{
           mt: 1,
           mx: 2,
-          backgroundColor: "#f5f5f5", 
+          backgroundColor: "#f5f5f5",
           borderRadius: "10px 10px 0 0", // Keep rounded corners for Tabs
         }}
       >

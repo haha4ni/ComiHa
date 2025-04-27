@@ -12,7 +12,6 @@ export default function BookInfoPage() {
 
   const handleSwitchMode = async () => {
     try {
-      console.log("Current bookinfo:", bookinfo);
       const newBookInfo = await ScraperInfo(bookname, booknumber);
       console.log("New bookinfo:", newBookInfo);
       setBookinfo(newBookInfo);
@@ -21,21 +20,23 @@ export default function BookInfoPage() {
     }
   };
 
-  const handleGetBookPages = async () => {
-    try {
-      const pages = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-      for (const page of pages) {
-        const result = await GetBookPage(bookname + "_" + booknumber, page);
-        setThumbnails(prev => {
-          const newThumbnails = [...prev];
-          newThumbnails[page] = result;
-          return newThumbnails;
-        });
+  useEffect(() => {
+    const fetchBookPages = async () => {
+      try {
+        const pages = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+        const thumbnails = [];
+        for (const page of pages) {
+          const result = await GetBookPage(bookname + "_" + booknumber, page);
+          thumbnails[page] = result;
+        }
+        setThumbnails(thumbnails);
+      } catch (error) {
+        console.error("Error fetching book pages:", error);
       }
-    } catch (error) {
-      console.error("Error fetching book pages:", error);
-    }
-  };
+    };
+
+    fetchBookPages();
+  }, [bookname, booknumber]);
 
   useEffect(() => {
     const fetchBookInfo = async () => {
@@ -61,30 +62,27 @@ export default function BookInfoPage() {
     <Box
       sx={{
         width: "100%",
-        maxWidth: "1200px",
         margin: "0 auto",
       }}
     >
-      {/* <Button variant="contained" onClick={() => navigate("/")} sx={{ mb: 2 }}>
-        Back to Home
-      </Button> */}
-      <Button variant="contained" onClick={handleSwitchMode} sx={{ mb: 2, ml: 2 }}>
+      {/* <Button variant="contained" onClick={handleSwitchMode} sx={{ mb: 2, ml: 2 }}>
         ScraperInfo
-      </Button>
-      <Button variant="contained" onClick={handleGetBookPages} sx={{ mb: 2, ml: 2 }}>
-        GetBookPages
-      </Button>
+      </Button> */}
       
       {bookinfo && (
         <Box
           sx={{
             display: "flex",
+            alignItems: "flex-start", // 加這行
             flexWrap: "wrap",
             gap: 2,
-            backgroundColor: "#f5f5f5",
+            backgroundColor: "#f8f8f8",
             borderRadius: "10px",
             padding: 2,
-            width: "100%",
+            mx: 2,
+            mt: 1,
+            mb: 2,
+            position: "relative", // Added for positioning the gear icon
           }}
         >
           {bookCover && (
@@ -128,32 +126,18 @@ export default function BookInfoPage() {
           </Box>
         </Box>
       )}
-      <Box
-        sx={{
-          mt: 2,
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 2,
-          backgroundColor: "#f5f5f5",
-          borderRadius: "10px",
-          padding: 2,
-          width: "100%",
-        }}
-      >
-        <Typography variant="h6">{bookinfo?.metadata?.series}</Typography>
-      </Box>
 
       {/* Thumbnails Grid */}
       <Box
-        sx={{
-          mt: 2,
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
-          gap: 2,
-          backgroundColor: "#f5f5f5",
-          borderRadius: "10px",
-          padding: 2,
-        }}
+          sx={{
+            mx: 2,
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
+            gap: 1,
+            backgroundColor: "#f5f5f5",
+            borderRadius: "0 0 10px 10px", // Sharp corners only at the bottom
+            padding: 2,
+          }}
       >
         {Thumbnails.map((thumbnail, index) => (
           <Box

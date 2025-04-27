@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Box, IconButton } from '@mui/material';
+import { Box, Button, Slider } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { GetBookPage } from '../../../wailsjs/go/main/App';
 
@@ -10,6 +10,11 @@ export default function BookReadPage() {
   const [lastLoadedPage, setLastLoadedPage] = useState(parseInt(page));
   const observerRef = useRef(null);
   const loadingRef = useRef(false);
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+
+  const togglePopup = () => {
+    setIsPopupVisible((prev) => !prev);
+  };
 
   const loadPages = useCallback(async (startPage, count = 5) => {
     if (loadingRef.current) return;
@@ -68,6 +73,17 @@ export default function BookReadPage() {
     return () => observer.disconnect();
   }, [lastLoadedPage, loadPages]);
 
+  // Scroll to the corresponding page when the `page` parameter changes
+  useEffect(() => {
+    const currentPageNum = parseInt(page);
+    if (pages[currentPageNum]) {
+      const pageElement = document.querySelector(`[data-page="${currentPageNum}"]`);
+      if (pageElement) {
+        pageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [page, pages]);
+
   return (
     <Box
       sx={{
@@ -81,11 +97,15 @@ export default function BookReadPage() {
         padding: '20px 0'
       }}
     >
+      <Button onClick={togglePopup}>
+        Toggle Popup
+      </Button>
       {Object.entries(pages)
         .map(([pageNum, pageData]) => (
           pageData && (
             <Box
               key={pageNum}
+              data-page={pageNum} // Add data attribute for scrolling
               sx={{
                 width: '100%',
                 display: 'flex',
@@ -93,10 +113,11 @@ export default function BookReadPage() {
                 marginBottom: '20px'
               }}
             >
-              <img
+              <Box
+                component="img"
                 src={`data:image/png;base64,${pageData.FileBitmap}`}
                 alt={`Page ${pageNum}`}
-                style={{
+                sx={{
                   maxWidth: '90%',
                   height: 'auto',
                   objectFit: 'contain'
@@ -106,6 +127,57 @@ export default function BookReadPage() {
           )
         ))}
       <Box ref={observerRef} sx={{ height: '20px', width: '100%' }} />
+
+      {/* Bottom Popup */}
+      {isPopupVisible && (
+        <Box
+          sx={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            width: '100%',
+            backgroundColor: 'rgba(51, 51, 51, 0.8)', // Semi-transparent background
+            color: '#fff',
+            padding: '20px',
+            boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            flexDirection: 'column', // Adjust layout for Slider
+            alignItems: 'center',
+            zIndex: 1000
+          }}
+        >
+          {/* Page Slider */}
+          <Slider
+            defaultValue={30} // Dummy value
+            aria-label="Page Slider"
+            valueLabelDisplay="auto"
+            sx={{
+              width: '80%',
+              color: '#fff',
+              '& .MuiSlider-thumb': {
+                backgroundColor: '#fff',
+              },
+              '& .MuiSlider-track': {
+                backgroundColor: '#fff',
+              },
+              '& .MuiSlider-rail': {
+                backgroundColor: '#555',
+              },
+            }}
+          />
+          <span>Popup Content</span>
+          <Button
+            onClick={togglePopup}
+            sx={{
+              color: '#fff',
+              borderColor: '#fff',
+              '&:hover': { backgroundColor: '#444' }
+            }}
+          >
+            Close
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 }

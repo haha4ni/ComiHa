@@ -2,12 +2,18 @@ package backend
 
 import (
 	"archive/zip"
+	"bytes"
 	"fmt"
+	"image"
+	"image/jpeg"
+	"image/png"
 	"io"
 	"sort"
 	"strings"
 
 	"ComiHa/backend/debug"
+
+	"github.com/nfnt/resize"
 )
 
 type ImageDataTemp struct {
@@ -143,7 +149,6 @@ func (a *App) GetBookPage(bookKey string, page int64) (ImageDataTemp, error) {
 	}
 
 	path := bookInfo.FileName
-	debug.DebugInfo("path:", path)
 	debug.DebugInfo("page:", page)
 
 	// 開啟 ZIP 檔案
@@ -187,5 +192,85 @@ func (a *App) GetBookPage(bookKey string, page int64) (ImageDataTemp, error) {
 	return ImageDataTemp{
 		FileName:   targetFile.Name,
 		FileBitmap: data,
+	}, nil
+}
+
+// GetBookPageThumbnail returns a resized thumbnail for the requested page
+func (a *App) GetBookPageThumbnail(bookKey string, page int64, width uint, height uint) (ImageDataTemp, error) {
+	debug.DebugInfo("GetBookPageThumbnail()")
+	bookInfo, err := GetBookInfoByKey(bookKey)
+	if err != nil {
+		return ImageDataTemp{}, err
+	}
+
+	path := bookInfo.FileName
+	debug.DebugInfo("page:", page)
+
+	// Open ZIP file
+	r, err := zip.OpenReader(path)
+	if err != nil {
+		debug.DebugInfo("Failed to open ZIP:", err)
+		return ImageDataTemp{}, err
+	}
+	defer r.Close()
+
+	if page < 0 || int(page) >= len(bookInfo.ImageData) {
+		debug.DebugInfo("Page out of range:", page)
+		return ImageDataTemp{}, fmt.Errorf("Page out of range: %d", page)
+	}
+
+	fileIndex := bookInfo.ImageData[page].FileIndex
+	if fileIndex < 0 || fileIndex >= int64(len(r.File)) {
+		debug.DebugInfo("File index out of range:", fileIndex)
+		return ImageDataTemp{}, fmt.Errorf("File index out of range: %d", fileIndex)
+	}
+
+	targetFile := r.File[fileIndex]
+	debug.DebugInfo("Reading file:", targetFile.Name)
+
+	// Open file
+	fileReader, err := targetFile.Open()
+	if err != nil {
+		debug.DebugInfo("Failed to open file:", err)
+		return ImageDataTemp{}, err
+	}
+	defer fileReader.Close()
+
+	// Read file content
+	data, err := io.ReadAll(fileReader)
+	if err != nil {
+		debug.DebugInfo("Failed to read file content:", err)
+		return ImageDataTemp{}, err
+	}
+
+	// Decode image
+	img, format, err := image.Decode(bytes.NewReader(data))
+	if err != nil {
+		debug.DebugInfo("Failed to decode image:", err)
+		return ImageDataTemp{}, err
+	}
+
+	// Resize image
+	thumbnail := resize.Resize(width, height, img, resize.Lanczos3)
+
+	// Encode resized image to buffer
+	var buf bytes.Buffer
+	switch format {
+	case "jpeg":
+		err = jpeg.Encode(&buf, thumbnail, nil)
+	case "png":
+		err = png.Encode(&buf, thumbnail)
+	default:
+		return ImageDataTemp{}, fmt.Errorf("Unsupported image format: %s", format)
+	}
+	if err != nil {
+		debug.DebugInfo("Failed to encode thumbnail:", err)
+		return ImageDataTemp{}, err
+	}
+
+	// Return thumbnail data
+	return ImageDataTemp{
+		FileName:   targetFile.Name,
+		FileBitmap: buf.Bytes(),
 	}, nil
 }

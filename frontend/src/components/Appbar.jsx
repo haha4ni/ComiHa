@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, AppBar, Toolbar, Typography, IconButton, Avatar } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack"; // Import ArrowBackIcon
 import logo from "../assets/images/appicon.png";
 
 
@@ -26,16 +27,25 @@ export default function Appbar({ onMenuClick }) {
           >
             <MenuIcon />
           </IconButton>
+          <IconButton
+            edge="start"
+            aria-label="back"
+            sx={{ mr: 2 }}
+            onClick={() => window.history.back()} // Navigate back to the previous page
+          >
+            <ArrowBackIcon />
+          </IconButton>
           <Typography
             variant="h7"
             color="inherit"
             component="div"
             sx={{ 
                 display: "flex", 
-                alignItems: "center",
+                alignItems: "center", 
                 color: 'white',
                 WebkitTextStroke: '1.1px rgb(112, 112, 112)', // Add stroke to text
                 fontWeight: 'bold',
+                userSelect: 'none', // Prevent text selection
             }} // Align content horizontally
           >
             <Avatar

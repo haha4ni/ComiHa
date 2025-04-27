@@ -23,13 +23,18 @@ export default function BookInfoPage() {
   useEffect(() => {
     const fetchBookPages = async () => {
       try {
-        const pages = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-        const thumbnails = [];
-        for (const page of pages) {
+        const bookinfo = await GetBookInfoByKey(bookname + "_" + booknumber);
+        console.log("New bookinfo:", bookinfo.imagedata);
+        const size = bookinfo.imagedata?.length || 0; // Retrieve the size using the array length
+        console.log("New bookinfo:", size);
+        for (let page = 0; page < size/10; page++) { // Loop dynamically based on size
           const result = await GetBookPage(bookname + "_" + booknumber, page);
-          thumbnails[page] = result;
+          setThumbnails((prevThumbnails) => {
+            const updatedThumbnails = [...prevThumbnails];
+            updatedThumbnails[page] = result;
+            return updatedThumbnails;
+          });
         }
-        setThumbnails(thumbnails);
       } catch (error) {
         console.error("Error fetching book pages:", error);
       }

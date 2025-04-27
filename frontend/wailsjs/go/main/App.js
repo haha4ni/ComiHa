@@ -18,6 +18,10 @@ export function GetBookPage(arg1, arg2) {
   return window['go']['main']['App']['GetBookPage'](arg1, arg2);
 }
 
+export function GetBookPageThumbnail(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['GetBookPageThumbnail'](arg1, arg2, arg3, arg4);
+}
+
 export function GetBookPages(arg1, arg2) {
   return window['go']['main']['App']['GetBookPages'](arg1, arg2);
 }

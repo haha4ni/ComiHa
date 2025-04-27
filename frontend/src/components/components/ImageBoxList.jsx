@@ -108,7 +108,7 @@ export default function ImageBoxList({ mode }) {
             sx={{
               width: 150,
               textAlign: "center",
-              bgcolor: "gray",
+              bgcolor: "#f5f5f5",
               borderRadius: "8px",
               m: 2,
             }}

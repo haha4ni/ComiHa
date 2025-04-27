@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Box, Typography, Avatar, TextField, Tabs, Tab } from "@mui/material";
+import { Box, Typography, Avatar, TextField, Tabs, Tab, Button, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import {
   ReadCover,
@@ -15,6 +15,7 @@ export default function SeriesInfoInfoPage() {
   const [bookinfo, setBookinfo] = useState(null);
   const [seriesinfo, setSeriesinfo] = useState(null);
   const [tabValue, setTabValue] = useState(0);
+  const [openSettings, setOpenSettings] = useState(false); // Added state for Dialog
   const navigate = useNavigate();
   const { seriesname, bookname, booknumber } = useParams();
 
@@ -74,6 +75,7 @@ export default function SeriesInfoInfoPage() {
           flexDirection: "column",
           alignItems: "center",
           gap: 1,
+          // backgroundColor: "lightblue"
         }}
       >
         <Avatar
@@ -97,6 +99,7 @@ export default function SeriesInfoInfoPage() {
             height: "auto",
             borderRadius: "8px",
             objectFit: "cover",
+            cursor: "pointer",
           }}
         />
         <Typography variant="caption">{`卷 ${index + 1}`}</Typography>
@@ -108,7 +111,6 @@ export default function SeriesInfoInfoPage() {
     <Box
       sx={{
         width: "100%",
-        // maxWidth: "1200px",
         margin: "0 auto",
       }}
     >
@@ -116,6 +118,7 @@ export default function SeriesInfoInfoPage() {
         <Box
           sx={{
             display: "flex",
+            alignItems: "flex-start",  // 加這行
             flexWrap: "wrap",
             gap: 2,
             backgroundColor: "#f8f8f8",
@@ -126,6 +129,7 @@ export default function SeriesInfoInfoPage() {
             position: "relative", // Added for positioning the gear icon
           }}
         >
+          {/* 齒輪 */}
           <Box
             sx={{
               position: "absolute",
@@ -135,12 +139,10 @@ export default function SeriesInfoInfoPage() {
               right: 0,
               cursor: "pointer",
             }}
-            onClick={() => {
-              console.log("Gear icon clicked");
-              // Add your desired functionality here
-            }}
+            onClick={() => setOpenSettings(true)} // Modified onClick
           >
             <SettingsIcon
+              fontSize="large"
               sx={{
                 fontSize: 24,
                 color: "#b0b0b0", // Darker default color
@@ -150,49 +152,90 @@ export default function SeriesInfoInfoPage() {
               }}
             />
           </Box>
-          {bookCover && (
-            <Avatar
-              src={bookCover}
-              alt={`${bookinfo.bookname} cover`}
-              onClick={() => navigate(`/bookinfo/${bookname}/${booknumber}/0`)}
-              sx={{
-                width: "auto",
-                height: "calc(60vh - 80px)",
-                borderRadius: "10px",
-                maxWidth: "100%",
-                aspectRatio: "215 / 320",
-                objectFit: "cover",
-                flex: "0 0 auto",
-                cursor: "pointer",
-              }}
-            />
-          )}
+
+          {/* /////////////////////////////////// */}
           <Box
             sx={{
-              textAlign: "left",
-              flex: "1 1 auto",
-              minWidth: 0,
-              marginLeft: "10px",
+              display: "flex",
+              flexDirection: "row",
+              flexWrap: "wrap",
+              gap: 2,
             }}
           >
-            <Typography variant="h6">
-              {bookinfo.metadata?.series || bookinfo.bookname}
-            </Typography>
-            <Typography variant="body1">
-              作者: {bookinfo.metadata?.writer}
-            </Typography>
-            <Typography sx={{ mt: 2 }}>內容簡介:</Typography>
-            <TextField
-              fullWidth
-              size="small"
-              margin="dense"
-              multiline
-              minRows={4}
-              value={bookinfo.metadata?.summary || ""}
-            />
+            {bookCover && (
+              <Avatar
+                src={bookCover}
+                alt={`${bookinfo.bookname} cover`}
+                onClick={() => navigate(`/bookinfo/${bookname}/${booknumber}/0`)}
+                sx={{
+                  width: "auto",
+                  height: "calc(56vh - 48px)",
+                  minHeight: "300px",           // 不管怎樣最小高度是300px
+                  borderRadius: "10px",
+                  maxWidth: "100%",
+                  aspectRatio: "215 / 320",
+                  objectFit: "cover",
+                  flex: "0 0 auto",
+                  cursor: "pointer",
+                }}
+              />
+            )}
+            <Box
+              sx={{
+                textAlign: "left",
+                flex: 1, // 讓 Typography 占據剩餘空間
+                minWidth: 0,
+                marginLeft: "10px",
+                display: "flex",           // 加這行
+                flexDirection: "column",    // 加這行
+                justifyContent: "space-between", // 加這行
+                backgroundColor: "#D2D4f5",
+              }}
+            >
+              <Typography variant="h5">
+                {bookinfo.metadata?.series || bookinfo.bookname}
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 10 }}>
+                {bookinfo.metadata?.writer}
+              </Typography>
+              <Typography sx={{ mt: 2 }}>內容簡介:</Typography>
+              <Typography 
+                sx={{
+                  maxWidth: "100%",
+                  overflow: "auto",  // 超過範圍會顯示滾動條
+                }}
+              
+              >
+                {bookinfo.metadata?.summary || ""}
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => navigate(`/bookinfo/${bookname}/${booknumber}/0`)}
+                sx={{
+                  mt: 2,              // 上面留點間距
+                  alignSelf: "flex-start", // 讓按鈕靠左（可選）
+                  borderRadius: "5px",     // 跟你原本的一樣
+                  textTransform: "none",   // 取消自動大寫
+                }}
+              >
+                開始閱讀
+              </Button>
+            </Box>
           </Box>
         </Box>
       )}
+
+      {/* Dialog for settings */}
+      <Dialog open={openSettings} onClose={() => setOpenSettings(false)}>
+        <DialogTitle>設定</DialogTitle>
+        <DialogContent>
+          <Typography>這裡可以放一些設定項目！</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenSettings(false)}>關閉</Button>
+        </DialogActions>
+      </Dialog>
 
       <Tabs
         value={tabValue}
@@ -213,7 +256,7 @@ export default function SeriesInfoInfoPage() {
             mx: 2,
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
-            gap: 2,
+            gap: 1,
             backgroundColor: "#f5f5f5",
             borderRadius: "0 0 10px 10px", // Sharp corners only at the bottom
             padding: 2,
@@ -225,7 +268,7 @@ export default function SeriesInfoInfoPage() {
       {tabValue === 1 && (
         <Box
           sx={{
-            mt: 2,
+            mx: 2,
             display: "flex",
             flexDirection: "column",
             gap: 2,

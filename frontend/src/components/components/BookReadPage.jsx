@@ -44,6 +44,29 @@ export default function BookReadPage() {
     }
   }, [bookname, booknumber]);
 
+  const jumpToPage = async (pageNumber) => {
+    console.log(`Attempting to jump to page ${pageNumber}`);
+    let pageElement = document.querySelector(`[data-page="${pageNumber}"]`);
+    if (pageElement) {
+      console.log(`Page ${pageNumber} found, scrolling into view.`);
+      pageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      console.log(`Page ${pageNumber} not found, loading page.`);
+      await loadPages(pageNumber, 1);
+
+      // Wait for the DOM to update
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      pageElement = document.querySelector(`[data-page="${pageNumber}"]`);
+      if (pageElement) {
+        console.log(`Page ${pageNumber} loaded, scrolling into view.`);
+        pageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        console.error(`Page ${pageNumber} could not be loaded.`);
+      }
+    }
+  };
+
   // Initial load
   useEffect(() => {
     const currentPageNum = parseInt(page);
@@ -73,17 +96,6 @@ export default function BookReadPage() {
     return () => observer.disconnect();
   }, [lastLoadedPage, loadPages]);
 
-  // Scroll to the corresponding page when the `page` parameter changes
-  useEffect(() => {
-    const currentPageNum = parseInt(page);
-    if (pages[currentPageNum]) {
-      const pageElement = document.querySelector(`[data-page="${currentPageNum}"]`);
-      if (pageElement) {
-        pageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }
-  }, [page, pages]);
-
   return (
     <Box
       sx={{
@@ -99,6 +111,9 @@ export default function BookReadPage() {
     >
       <Button onClick={togglePopup}>
         Toggle Popup
+      </Button>
+      <Button onClick={() => jumpToPage(100)}>
+        Jump to Page 10
       </Button>
       {Object.entries(pages)
         .map(([pageNum, pageData]) => (

@@ -27,7 +27,7 @@ export default function BookInfoPage() {
         console.log("New bookinfo:", bookinfo.imagedata);
         const size = bookinfo.imagedata?.length || 0; // Retrieve the size using the array length
         console.log("New bookinfo:", size);
-        for (let page = 0; page < size/10; page++) { // Loop dynamically based on size
+        for (let page = 0; page < size/100; page++) { // Loop dynamically based on size
           const result = await GetBookPage(bookname + "_" + booknumber, page);
           setThumbnails((prevThumbnails) => {
             const updatedThumbnails = [...prevThumbnails];

@@ -11,6 +11,10 @@ export default function BookReadPage() {
   const observerRef = useRef(null);
   const loadingRef = useRef(false);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [sliderValue, setSliderValue] = useState(parseInt(page));
+  const totalPages = 200; // 這裡替換為實際總頁數，或從 props/backend 拿
+  
+
 
   const togglePopup = () => {
     setIsPopupVisible((prev) => !prev);
@@ -21,7 +25,8 @@ export default function BookReadPage() {
     loadingRef.current = true;
 
     try {
-      const pagesToLoad = Array.from({ length: count }, (_, i) => startPage + i);
+      const pagesToLoad = Array.from({ length: count }, (_, i) => startPage + i)
+  .filter(pn => !pages.hasOwnProperty(pn));
       
       const loadedPages = await Promise.all(
         pagesToLoad.map(pageNum => 
@@ -84,8 +89,8 @@ export default function BookReadPage() {
         }
       },
       {
-        threshold: 0.5,
-        rootMargin: '200px'
+        threshold: 1,
+        rootMargin: '500px'
       }
     );
 
@@ -162,9 +167,19 @@ export default function BookReadPage() {
           }}
         >
           {/* Page Slider */}
+          <Box
+  sx={{
+    display: 'flex',
+    alignItems: 'center',
+    width: '80%',
+    justifyContent: 'space-between'
+  }}
+>
           <Slider
             defaultValue={30} // Dummy value
             aria-label="Page Slider"
+            onChange={(e, val) => setSliderValue(val)}
+            onChangeCommitted={(e, val) => jumpToPage(val)}
             valueLabelDisplay="auto"
             sx={{
               width: '80%',
@@ -180,6 +195,10 @@ export default function BookReadPage() {
               },
             }}
           />
+            <Box sx={{ marginLeft: '16px', minWidth: '80px', textAlign: 'right' }}>
+    <span>{sliderValue} / {totalPages}</span>
+  </Box>
+          </Box>
           <span>Popup Content</span>
           <Button
             onClick={togglePopup}

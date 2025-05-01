@@ -2,18 +2,20 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Box, Button, Slider } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { GetBookPage, GetBookInfoByKey } from '../../../wailsjs/go/main/App';
+import ScrollView from './ScrollView';
+import TwoPageView from './TwoPageView';
 
 export default function BookReadPage() {
   const { bookname, booknumber, page } = useParams();
   const navigate = useNavigate();
   const [pages, setPages] = useState({});
   const [lastLoadedPage, setLastLoadedPage] = useState(parseInt(page));
-  const observerRef = useRef(null);
   const loadingRef = useRef(false);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [sliderValue, setSliderValue] = useState(parseInt(page));
   const [totalPages, setTotalPages] = useState(0); // Default value
   const pageRefs = useRef({});
+  const [viewMode, setViewMode] = useState('scroll'); // 'scroll' or 'two-page'
 
   useEffect(() => {
     const fetchBookInfo = async () => {
@@ -34,13 +36,31 @@ export default function BookReadPage() {
     setIsPopupVisible((prev) => !prev);
   };
 
+  const toggleViewMode = () => {
+    setViewMode((prev) => (prev === 'scroll' ? 'two-page' : 'scroll'));
+  };
+
+  const handleLeftButtonClick = () => {
+    console.log("Left button clicked");
+    // Add functionality for left button click if needed
+  };
+
+  const handleCenterButtonClick = () => {
+    togglePopup();
+  };
+
+  const handleRightButtonClick = () => {
+    console.log("Right button clicked");
+    // Add functionality for right button click if needed
+  };
+
   const loadPages = useCallback(async (startPage, count = 5) => {
     if (loadingRef.current) return;
     loadingRef.current = true;
 
     try {
       const pagesToLoad = Array.from({ length: count }, (_, i) => startPage + i)
-  .filter(pn => !pages.hasOwnProperty(pn));
+        .filter(pn => !pages.hasOwnProperty(pn));
       
       const loadedPages = await Promise.all(
         pagesToLoad.map(pageNum => 
@@ -93,28 +113,6 @@ export default function BookReadPage() {
     loadPages(currentPageNum);
   }, [page, loadPages]);
 
-  // Setup intersection observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const lastEntry = entries[0];
-        if (lastEntry.isIntersecting) {
-          loadPages(lastLoadedPage + 1);
-        }
-      },
-      {
-        threshold: 1,
-        rootMargin: '500px'
-      }
-    );
-
-    if (observerRef.current) {
-      observer.observe(observerRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [lastLoadedPage, loadPages]);
-
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       const visibleEntry = entries.find(e => e.isIntersecting);
@@ -133,7 +131,6 @@ export default function BookReadPage() {
     return () => observer.disconnect();
   }, [pages]);
   
-
   return (
     <Box
       sx={{
@@ -144,44 +141,52 @@ export default function BookReadPage() {
         flexDirection: 'column',
         alignItems: 'center',
         overflowY: 'auto',
-        padding: '20px 0'
+        padding: '20px 0',
+        position: 'relative' // Ensure absolute children are positioned correctly
       }}
     >
-      <Button onClick={togglePopup}>
-        Toggle Popup
-      </Button>
-      <Button onClick={() => jumpToPage(100)}>
-        Jump to Page 10
-      </Button>
-      {Object.entries(pages)
-        .map(([pageNum, pageData]) => (
-          pageData && (
-            <Box
-              key={pageNum}
-              data-page={pageNum} // Add data attribute for scrolling
-              ref={el => pageRefs.current[pageNum] = el} // 記錄每個頁的元素
-              sx={{
-                width: '100%',
-                display: 'flex',
-                justifyContent: 'center',
-                marginBottom: '20px'
-              }}
-            >
-              <Box
-                component="img"
-                src={`data:image/png;base64,${pageData.FileBitmap}`}
-                alt={`Page ${pageNum}`}
-                sx={{
-                  maxWidth: '90%',
-                  height: 'auto',
-                  objectFit: 'contain'
-                }}
-              />
-            </Box>
-          )
-        ))}
-      <Box ref={observerRef} sx={{ height: '20px', width: '100%' }} />
-
+      <Box
+        onClick={handleLeftButtonClick}
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '20%',
+          height: '100%',
+          zIndex: 10,
+        }}
+      />
+      <Box
+        onClick={handleCenterButtonClick}
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: '20%',
+          width: '60%',
+          height: '100%',
+          zIndex: 10,
+        }}
+      />
+      <Box
+        onClick={handleRightButtonClick}
+        sx={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: '20%',
+          height: '100%',
+          zIndex: 10,
+        }}
+      />
+      {viewMode === 'scroll' ? (
+        <ScrollView
+          pages={pages}
+          pageRefs={pageRefs}
+          onLoadMore={() => loadPages(lastLoadedPage + 1)}
+        />
+      ) : (
+        <TwoPageView pages={pages} pageRefs={pageRefs} />
+      )}
       {/* Bottom Popup */}
       {isPopupVisible && (
         <Box
@@ -190,43 +195,75 @@ export default function BookReadPage() {
             bottom: 0,
             left: 0,
             width: '100%',
-            backgroundColor: 'rgba(51, 51, 51, 0.8)', // Semi-transparent background
+            backgroundColor: 'rgba(51, 51, 51, 0.8)',
             color: '#fff',
             padding: '20px',
             boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.5)',
             display: 'flex',
-            flexDirection: 'column', // Adjust layout for Slider
+            flexDirection: 'column',
             alignItems: 'center',
             zIndex: 1000
           }}
         >
           {/* Page Slider */}
           <Box
-  sx={{
-    display: 'flex',
-    alignItems: 'center',
-    width: '80%',
-    justifyContent: 'space-between'
-  }}
->
-<Slider
-    value={sliderValue}
-    min={1}
-    max={totalPages}
-    onChange={(e, val) => setSliderValue(val)}
-    onChangeCommitted={(e, val) => jumpToPage(val)}
-    valueLabelDisplay="auto"
-    sx={{
-      flexGrow: 1,
-      color: '#fff',
-      '& .MuiSlider-thumb': { backgroundColor: '#fff' },
-      '& .MuiSlider-track': { backgroundColor: '#fff' },
-      '& .MuiSlider-rail': { backgroundColor: '#555' },
-    }}
-  />
-            <Box sx={{ marginLeft: '16px', minWidth: '80px', textAlign: 'right' }}>
-    <span>{sliderValue} / {totalPages}</span>
-  </Box>
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              width: '80%',
+              justifyContent: 'space-between'
+            }}
+          >
+            <Slider
+              value={sliderValue}
+              min={1}
+              max={totalPages}
+              onChange={(e, val) => setSliderValue(val)}
+              onChangeCommitted={(e, val) => jumpToPage(val)}
+              valueLabelDisplay="auto"
+              sx={{
+                width: '10%',
+                flexGrow: 1,
+                color: '#fff',
+                '& .MuiSlider-thumb': { backgroundColor: '#fff' },
+                '& .MuiSlider-track': { backgroundColor: '#fff' },
+                '& .MuiSlider-rail': { backgroundColor: '#555' },
+              }}
+            />
+            <Box
+              sx={{
+                marginLeft: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              <span>{sliderValue} / {totalPages}</span>
+              <Button
+                onClick={toggleViewMode}
+                sx={{
+                  color: '#fff',
+                  borderColor: '#fff',
+                  '&:hover': { backgroundColor: '#444' },
+                  fontSize: '0.8rem',
+                  padding: '4px 8px'
+                }}
+              >
+                Switch
+              </Button>
+              <Button
+                onClick={() => jumpToPage(100)}
+                sx={{
+                  color: '#fff',
+                  borderColor: '#fff',
+                  '&:hover': { backgroundColor: '#444' },
+                  fontSize: '0.8rem',
+                  padding: '4px 8px'
+                }}
+              >
+                Jump
+              </Button>
+            </Box>
           </Box>
           <span>Popup Content</span>
           <Button

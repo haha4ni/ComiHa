@@ -17,6 +17,9 @@ export default function BookReadPage() {
   const pageRefs = useRef({});
   const [viewMode, setViewMode] = useState('scroll'); // 'scroll' or 'two-page'
 
+  const [isJumping, setIsJumping] = useState(false); // 新增狀態變數
+
+
   useEffect(() => {
     const fetchBookInfo = async () => {
       try {
@@ -85,6 +88,8 @@ export default function BookReadPage() {
 
   const jumpToPage = async (pageNumber) => {
     console.log(`Attempting to jump to page ${pageNumber}`);
+    setIsJumping(true); // 開始跳轉，禁用 IntersectionObserver 的更新
+
     let pageElement = document.querySelector(`[data-page="${pageNumber}"]`);
     if (pageElement) {
       console.log(`Page ${pageNumber} found, scrolling into view.`);
@@ -104,6 +109,7 @@ export default function BookReadPage() {
         console.error(`Page ${pageNumber} could not be loaded.`);
       }
     }
+    setTimeout(() => setIsJumping(false), 500); // 延遲一段時間後重新啟用更新
   };
 
   // Initial load
@@ -114,13 +120,16 @@ export default function BookReadPage() {
   }, [page, loadPages]);
 
   useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      const visibleEntry = entries.find(e => e.isIntersecting);
-      if (visibleEntry) {
-        const currentPage = parseInt(visibleEntry.target.dataset.page);
-        setSliderValue(currentPage);
-      }
-    }, {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (isJumping) return; // 如果正在跳轉頁數，則不更新 sliderValue
+  
+        const visibleEntry = entries.find((e) => e.isIntersecting);
+        if (visibleEntry) {
+          const currentPage = parseInt(visibleEntry.target.dataset.page);
+          setSliderValue(currentPage);
+        }
+      }, {
       threshold: 0.6
     });
   

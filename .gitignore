@@ -5,3 +5,4 @@ comic/
 *.db
 *.db.lock
 *.ComicInfo.xml
+*.patch

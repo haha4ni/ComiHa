@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Box, Button, Slider } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
-import { GetBookPage } from '../../../wailsjs/go/main/App';
+import { GetBookPage, GetBookInfoByKey } from '../../../wailsjs/go/main/App';
 
 export default function BookReadPage() {
   const { bookname, booknumber, page } = useParams();
@@ -12,9 +12,23 @@ export default function BookReadPage() {
   const loadingRef = useRef(false);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [sliderValue, setSliderValue] = useState(parseInt(page));
-  const totalPages = 200; // 這裡替換為實際總頁數，或從 props/backend 拿
-  
+  const [totalPages, setTotalPages] = useState(0); // Default value
+  const pageRefs = useRef({});
 
+  useEffect(() => {
+    const fetchBookInfo = async () => {
+      try {
+        const bookinfo = await GetBookInfoByKey(bookname + "_" + booknumber);
+        console.log("New bookinfo:", bookinfo.imagedata);
+        const size = bookinfo.imagedata?.length || 0;
+        setTotalPages(size);
+      } catch (error) {
+        console.error("Error fetching book info:", error);
+      }
+    };
+
+    fetchBookInfo();
+  }, [bookname, booknumber]);
 
   const togglePopup = () => {
     setIsPopupVisible((prev) => !prev);
@@ -101,6 +115,25 @@ export default function BookReadPage() {
     return () => observer.disconnect();
   }, [lastLoadedPage, loadPages]);
 
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      const visibleEntry = entries.find(e => e.isIntersecting);
+      if (visibleEntry) {
+        const currentPage = parseInt(visibleEntry.target.dataset.page);
+        setSliderValue(currentPage);
+      }
+    }, {
+      threshold: 0.6
+    });
+  
+    Object.values(pageRefs.current).forEach(el => {
+      if (el) observer.observe(el);
+    });
+  
+    return () => observer.disconnect();
+  }, [pages]);
+  
+
   return (
     <Box
       sx={{
@@ -126,6 +159,7 @@ export default function BookReadPage() {
             <Box
               key={pageNum}
               data-page={pageNum} // Add data attribute for scrolling
+              ref={el => pageRefs.current[pageNum] = el} // 記錄每個頁的元素
               sx={{
                 width: '100%',
                 display: 'flex',
@@ -175,26 +209,21 @@ export default function BookReadPage() {
     justifyContent: 'space-between'
   }}
 >
-          <Slider
-            defaultValue={30} // Dummy value
-            aria-label="Page Slider"
-            onChange={(e, val) => setSliderValue(val)}
-            onChangeCommitted={(e, val) => jumpToPage(val)}
-            valueLabelDisplay="auto"
-            sx={{
-              width: '80%',
-              color: '#fff',
-              '& .MuiSlider-thumb': {
-                backgroundColor: '#fff',
-              },
-              '& .MuiSlider-track': {
-                backgroundColor: '#fff',
-              },
-              '& .MuiSlider-rail': {
-                backgroundColor: '#555',
-              },
-            }}
-          />
+<Slider
+    value={sliderValue}
+    min={1}
+    max={totalPages}
+    onChange={(e, val) => setSliderValue(val)}
+    onChangeCommitted={(e, val) => jumpToPage(val)}
+    valueLabelDisplay="auto"
+    sx={{
+      flexGrow: 1,
+      color: '#fff',
+      '& .MuiSlider-thumb': { backgroundColor: '#fff' },
+      '& .MuiSlider-track': { backgroundColor: '#fff' },
+      '& .MuiSlider-rail': { backgroundColor: '#555' },
+    }}
+  />
             <Box sx={{ marginLeft: '16px', minWidth: '80px', textAlign: 'right' }}>
     <span>{sliderValue} / {totalPages}</span>
   </Box>

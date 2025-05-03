@@ -38,7 +38,6 @@ export default function ScrollView({ pages, pageRefs, onLoadMore }) {
                 width: "100%",
                 display: "flex",
                 justifyContent: "center",
-                marginBottom: "20px",
               }}
             >
               <Box

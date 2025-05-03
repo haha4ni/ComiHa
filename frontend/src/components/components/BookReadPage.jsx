@@ -3,7 +3,7 @@ import { Box, Button, Slider } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { GetBookPage, GetBookInfoByKey } from '../../../wailsjs/go/main/App';
 import ScrollView from './ScrollView';
-import TwoPageView from './TwoPageView';
+import PageView from './PageView';
 
 export default function BookReadPage() {
   const { bookname, booknumber, page } = useParams();
@@ -15,7 +15,7 @@ export default function BookReadPage() {
   const [sliderValue, setSliderValue] = useState(parseInt(page));
   const [totalPages, setTotalPages] = useState(0); // Default value
   const pageRefs = useRef({});
-  const [viewMode, setViewMode] = useState('scroll'); // 'scroll' or 'two-page'
+  const [viewMode, setViewMode] = useState('scroll'); // 'scroll', 'two-page', or 'single-page'
 
   const [isJumping, setIsJumping] = useState(false); // 新增狀態變數
 
@@ -40,12 +40,18 @@ export default function BookReadPage() {
   };
 
   const toggleViewMode = () => {
-    setViewMode((prev) => (prev === 'scroll' ? 'two-page' : 'scroll'));
+    setViewMode((prev) => {
+      if (prev === 'scroll') return 'two-page';
+      if (prev === 'two-page') return 'single-page';
+      return 'scroll';
+    });
   };
 
   const handleLeftButtonClick = () => {
     console.log("Left button clicked");
-    // Add functionality for left button click if needed
+    const nextPage = Math.min(sliderValue + 1, totalPages); // Ensure it doesn't exceed totalPages
+    setSliderValue(nextPage);
+    jumpToPage(nextPage - 1); // Map sliderValue to image index (nextPage - 1)
   };
 
   const handleCenterButtonClick = () => {
@@ -54,7 +60,9 @@ export default function BookReadPage() {
 
   const handleRightButtonClick = () => {
     console.log("Right button clicked");
-    // Add functionality for right button click if needed
+    const prevPage = Math.max(sliderValue - 1, 1); // Ensure it doesn't go below 1
+    setSliderValue(prevPage);
+    jumpToPage(prevPage - 1); // Map sliderValue to image index (prevPage - 1)
   };
 
   const loadPages = useCallback(async (startPage, count = 5) => {
@@ -93,10 +101,11 @@ export default function BookReadPage() {
     let pageElement = document.querySelector(`[data-page="${pageNumber}"]`);
     if (pageElement) {
       console.log(`Page ${pageNumber} found, scrolling into view.`);
+      await loadPages(pageNumber,2);
       pageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } else {
       console.log(`Page ${pageNumber} not found, loading page.`);
-      await loadPages(pageNumber, 1);
+      await loadPages(pageNumber,2);
 
       // Wait for the DOM to update
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -127,7 +136,7 @@ export default function BookReadPage() {
         const visibleEntry = entries.find((e) => e.isIntersecting);
         if (visibleEntry) {
           const currentPage = parseInt(visibleEntry.target.dataset.page);
-          setSliderValue(currentPage);
+          setSliderValue(currentPage + 1);
         }
       }, {
       threshold: 0.6
@@ -144,13 +153,12 @@ export default function BookReadPage() {
     <Box
       sx={{
         width: '100%',
-        minHeight: '100vh',
-        backgroundColor: '#1a1a1a',
+        maxHeight: "calc(100vh - 48px)",
+        backgroundColor: '#123456',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         overflowY: 'auto',
-        padding: '20px 0',
         position: 'relative' // Ensure absolute children are positioned correctly
       }}
     >
@@ -193,8 +201,10 @@ export default function BookReadPage() {
           pageRefs={pageRefs}
           onLoadMore={() => loadPages(lastLoadedPage + 1)}
         />
+      ) : viewMode === 'two-page' ? (
+        <PageView pages={pages} pageRefs={pageRefs} sliderValue={sliderValue} mode="two-page" />
       ) : (
-        <TwoPageView pages={pages} pageRefs={pageRefs} />
+        <PageView pages={pages} pageRefs={pageRefs} sliderValue={sliderValue} mode="single-page" />
       )}
       {/* Bottom Popup */}
       {isPopupVisible && (
@@ -208,7 +218,7 @@ export default function BookReadPage() {
             color: '#fff',
             padding: '20px',
             boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.5)',
-            display: 'flex',
+            display: 'flex',  
             flexDirection: 'column',
             alignItems: 'center',
             zIndex: 1000
@@ -224,11 +234,11 @@ export default function BookReadPage() {
             }}
           >
             <Slider
-              value={sliderValue}
-              min={1}
-              max={totalPages}
-              onChange={(e, val) => setSliderValue(val)}
-              onChangeCommitted={(e, val) => jumpToPage(val)}
+              value={sliderValue} // Keep sliderValue as is since it starts from 1
+              min={1} // Minimum value starts from 1
+              max={totalPages} // Maximum value matches totalPages
+              onChange={(e, val) => setSliderValue(val)} // Update sliderValue directly
+              onChangeCommitted={(e, val) => jumpToPage(val - 1)} // Map sliderValue to image index (val - 1)
               valueLabelDisplay="auto"
               sx={{
                 width: '10%',
@@ -261,7 +271,7 @@ export default function BookReadPage() {
                 Switch
               </Button>
               <Button
-                onClick={() => jumpToPage(100)}
+                onClick={() => jumpToPage(sliderValue - 1)} // Map sliderValue to image index (sliderValue - 1)
                 sx={{
                   color: '#fff',
                   borderColor: '#fff',

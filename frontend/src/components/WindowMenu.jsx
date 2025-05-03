@@ -26,7 +26,7 @@ export default function WindowMenu() {
         position: "fixed",
         zIndex: (theme) => theme.zIndex.drawer + 10 ,
         top: 0,
-        width: "30%", // Change width to 50%
+        width: "70%", // Change width to 50%
         right: 0, // Align to the right
 
         display: "flex",

@@ -4,11 +4,13 @@ import { Box, Typography, Avatar, Button, TextField } from "@mui/material";
 import { ReadCover, ScraperInfo, GetBookPage, GetBookInfoByKey } from "../../../wailsjs/go/main/App";
 
 export default function BookInfoPage() {
+  const navigate = useNavigate();
+  const { bookname, booknumber } = useParams();
+  
   const [bookCover, setBookCover] = useState(null);
   const [Thumbnails, setThumbnails] = useState([]);
   const [bookinfo, setBookinfo] = useState(null);
-  const navigate = useNavigate();
-  const { bookname, booknumber } = useParams();
+
 
   const handleSwitchMode = async () => {
     try {
@@ -69,11 +71,7 @@ export default function BookInfoPage() {
         width: "100%",
         margin: "0 auto",
       }}
-    >
-      {/* <Button variant="contained" onClick={handleSwitchMode} sx={{ mb: 2, ml: 2 }}>
-        ScraperInfo
-      </Button> */}
-      
+    >      
       {bookinfo && (
         <Box
           sx={{

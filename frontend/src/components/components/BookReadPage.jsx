@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { Box, Button, Slider } from "@mui/material";
+import { Box, Button, Slider, Tooltip } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import { GetBookPage, GetBookInfoByKey } from "../../../wailsjs/go/main/App";
 import ScrollView from "./ScrollView";
 import PageView from "./PageView";
+import LooksOneIcon from '@mui/icons-material/LooksOne';
+import LooksTwoIcon from '@mui/icons-material/LooksTwo';
+import SwapVertIcon from '@mui/icons-material/SwapVert';
 
 export default function BookReadPage() {
   const { bookname, booknumber, page } = useParams();
@@ -294,30 +297,22 @@ export default function BookReadPage() {
               <span>
                 {sliderValue} / {totalPages}
               </span>
-              <Button
-                onClick={toggleViewMode}
-                sx={{
-                  color: "#fff",
-                  borderColor: "#fff",
-                  "&:hover": { backgroundColor: "#444" },
-                  fontSize: "0.8rem",
-                  padding: "4px 8px",
-                }}
-              >
-                Switch
-              </Button>
-              <Button
-                onClick={() => jumpToPage(sliderValue - 1)} // Map sliderValue to image index (sliderValue - 1)
-                sx={{
-                  color: "#fff",
-                  borderColor: "#fff",
-                  "&:hover": { backgroundColor: "#444" },
-                  fontSize: "0.8rem",
-                  padding: "4px 8px",
-                }}
-              >
-                Jump
-              </Button>
+              <Tooltip title="閱讀模式">
+                <Button
+                  onClick={toggleViewMode}
+                  sx={{
+                    color: "#fff",
+                    borderColor: "#fff",
+                    "&:hover": { backgroundColor: "#444" },
+                    fontSize: "0.8rem",
+                    padding: "4px 8px",
+                  }}
+                >
+                  {viewMode === "scroll" && <SwapVertIcon />}
+                  {viewMode === "two-page" && <LooksTwoIcon />}
+                  {viewMode === "single-page" && <LooksOneIcon />}
+                </Button>
+              </Tooltip>
             </Box>
           </Box>
           <span>Popup Content</span>

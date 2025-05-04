@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Typography, Avatar } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import {
   GetBookListAll,
   GetBookInfoByKey,
   GetSeriesKeyListAll,
   GetSeriesInfoByKey,
-  GetBookCoverByKey
+  GetBookCoverByKey,
 } from "../../../wailsjs/go/main/App";
 
 export default function ImageBoxList({ mode }) {
@@ -26,7 +26,9 @@ export default function ImageBoxList({ mode }) {
 
       booklist.forEach(async (bookinfo, index) => {
         try {
-          const img = await GetBookCoverByKey(bookinfo.bookname + "_" + bookinfo.booknumber);
+          const img = await GetBookCoverByKey(
+            bookinfo.bookname + "_" + bookinfo.booknumber
+          );
           const newImage = `data:image/png;base64,${img.FileBitmap}`;
           setImages((prevImages) => {
             const updatedImages = [...prevImages];
@@ -57,7 +59,9 @@ export default function ImageBoxList({ mode }) {
         try {
           const seriesInfo = await GetSeriesInfoByKey(series);
           const bookinfo = await GetBookInfoByKey(seriesInfo.bookinfokeys[0]);
-          const img = await GetBookCoverByKey(bookinfo.bookname + "_" + bookinfo.booknumber);
+          const img = await GetBookCoverByKey(
+            bookinfo.bookname + "_" + bookinfo.booknumber
+          );
           const newImage = `data:image/png;base64,${img.FileBitmap}`;
 
           setSerieslist((prevSerieslist) => {
@@ -100,46 +104,76 @@ export default function ImageBoxList({ mode }) {
   }, [mode]);
 
   return (
-    <Box sx={{ width: "100%", display: "flex", flexDirection: "column" }}>
-      <Box sx={{ display: "flex", flexWrap: "wrap" }}>
-        {images.map((image, index) => (
-          <Box
-            key={index}
+    <Box
+      sx={{
+        padding: 2,
+        width: "100%",
+        display: "grid", // 使用 grid 排版
+        gap: 2, // 間距
+        gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+        // gridAutoFlow: "column", // 按列排列，避免換行
+        // gridTemplateColumns: "repeat(auto-fill, 150px)", // 固定每個項目的寬度
+        // overflowX: "auto", // 添加水平滾動條
+        // whiteSpace: "nowrap", // 防止內容換行
+      }}
+    >
+      {images.map((image, index) => (
+        <Box
+          key={index}
+          sx={{
+            width: "100%",
+            textAlign: "center",
+            bgcolor: "#f5f5f5",
+            borderRadius: "8px",
+            display: "flex",
+            flexDirection: "column", // Stack image and text vertically
+            alignItems: "center", // Center align content
+          }}
+        >
+          <img
+            src={image}
+            alt={`Drawer Image ${index}`}
+            style={{
+              width: "100%",
+              aspectRatio: "15 / 21", // Maintain a 16:9 aspect ratio
+              borderRadius: "8px 8px 0 0",
+              objectFit: "cover",
+              cursor: "pointer",
+              display: "block",
+            }}
+            onClick={() => {
+              if (mode === "bookinfo") {
+                const book = booklist[index];
+                navigate(
+                  `/bookinfo/${encodeURIComponent(
+                    book.bookname
+                  )}/${encodeURIComponent(book.booknumber)}`
+                );
+              } else if (mode === "series") {
+                const series = serieslist[index];
+                navigate(
+                  `/seriesinfo/${encodeURIComponent(series.seriesname)}`
+                );
+              }
+            }}
+          />
+          <Typography
+            variant="caption"
             sx={{
-              width: 150,
-              textAlign: "center",
-              bgcolor: "#f5f5f5",
-              borderRadius: "8px",
-              m: 2,
+              px: 1,
+              whiteSpace: "nowrap", // 強制單行顯示
+              overflow: "hidden", // 隱藏超出部分
+              textOverflow: "ellipsis", // 用點點點表示超出部分
+              display: "block", // 確保是塊級元素
+              maxWidth: "100%", // 限制寬度
             }}
           >
-            <Avatar
-              src={image}
-              alt={`Drawer Image ${index}`}
-              sx={{ width: "100%", height: 220, borderRadius: "8px 8px 0 0" }}
-              onClick={() => {
-                if (mode === "bookinfo") {
-                  const book = booklist[index];
-                  navigate(
-                    `/bookinfo/${encodeURIComponent(book.bookname)}/${encodeURIComponent(book.booknumber)}`
-                  );
-                }
-                else if (mode === "series") {
-                  const series = serieslist[index];
-                  navigate(
-                    `/seriesinfo/${encodeURIComponent(series.seriesname)}`
-                  );
-                }
-              }}
-            />
-            <Typography variant="caption">
-              {mode === "bookinfo"
-                ? `${booklist[index]?.bookname} ${booklist[index]?.booknumber}`
-                : `${serieslist[index]?.seriesname}`}
-            </Typography>
-          </Box>
-        ))}
-      </Box>
+            {mode === "bookinfo"
+              ? `${booklist[index]?.bookname} ${booklist[index]?.booknumber}`
+              : `${serieslist[index]?.seriesname}`}
+          </Typography>
+        </Box>
+      ))}
     </Box>
   );
 }

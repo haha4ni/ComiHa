@@ -4,7 +4,6 @@ import {
   Box,
   Typography,
   Avatar,
-  TextField,
   Tabs,
   Tab,
   Button,
@@ -165,7 +164,6 @@ export default function SeriesInfoInfoPage() {
             />
           </Box>
 
-          {/* /////////////////////////////////// */}
           <Box
             sx={{
               display: "flex",
@@ -213,7 +211,8 @@ export default function SeriesInfoInfoPage() {
                   {bookinfo.metadata?.writer}
                 </Typography>
               </Box>
-              <Typography variant="body1"
+              <Typography
+                variant="body1"
                 sx={{
                   display: "flex",
                   justifyContent: "flex-start", // Align to the left
@@ -222,7 +221,8 @@ export default function SeriesInfoInfoPage() {
               >
                 內容簡介:
               </Typography>
-              <Typography variant="body2"
+              <Typography
+                variant="body2"
                 sx={{
                   maxWidth: "100%",
                   overflow: "auto", // 超過範圍會顯示滾動條

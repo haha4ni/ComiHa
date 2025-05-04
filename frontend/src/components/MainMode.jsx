@@ -36,7 +36,7 @@ export default function MainMode() {
             overflowY: "auto",
           }}
         >
-          <Box sx={{ width: "100%", display: "flex", flexWrap: "wrap" }}>
+          <Box sx={{ width: "100%"}}>
             <Outlet />
           </Box>
         </Box>

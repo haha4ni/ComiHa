@@ -27,11 +27,11 @@ export default function MainMode() {
             // bgcolor: "grey",
             // bgcolor: "white",
             display: "flex",
-            mt: 6, // appbar高度
+            mt: 5, // appbar高度
             flexWrap: "wrap",
             alignItems: "flex-start",
             alignContent: "flex-start",
-            height: "calc(100vh - 48px)",
+            height: "calc(100vh - 40px)",
             width: "100%",
             overflowY: "auto",
           }}

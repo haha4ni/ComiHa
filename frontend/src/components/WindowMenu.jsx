@@ -20,6 +20,10 @@ export default function WindowMenu() {
     Shutdown(); // Call the shutdown method from the Go backend
   };
 
+  const handleDoubleClick = () => {
+    WindowToggleMaximise(); // 切換最大化/還原
+  };
+
   return (
     <Box
       sx={{
@@ -35,6 +39,7 @@ export default function WindowMenu() {
         height: 46,
         "--wails-draggable": "drag", // 讓整個元件可拖動
       }}
+      onDoubleClick={handleDoubleClick} // Add double-click event
     >
       <IconButton size="small" sx={{ p: 1, m: 0.7 }} onClick={handleMinimize}>
         <RemoveIcon fontSize="small" sx={{ color: " " }} />

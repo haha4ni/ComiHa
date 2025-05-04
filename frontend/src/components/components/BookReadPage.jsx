@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Box, Button, Slider } from '@mui/material';
-import { useParams, useNavigate } from 'react-router-dom';
-import { GetBookPage, GetBookInfoByKey } from '../../../wailsjs/go/main/App';
-import ScrollView from './ScrollView';
-import PageView from './PageView';
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { Box, Button, Slider } from "@mui/material";
+import { useParams, useNavigate } from "react-router-dom";
+import { GetBookPage, GetBookInfoByKey } from "../../../wailsjs/go/main/App";
+import ScrollView from "./ScrollView";
+import PageView from "./PageView";
 
 export default function BookReadPage() {
   const { bookname, booknumber, page } = useParams();
@@ -15,10 +15,12 @@ export default function BookReadPage() {
   const [sliderValue, setSliderValue] = useState(parseInt(page));
   const [totalPages, setTotalPages] = useState(0); // Default value
   const pageRefs = useRef({});
-  const [viewMode, setViewMode] = useState('scroll'); // 'scroll', 'two-page', or 'single-page'
+  const [viewMode, setViewMode] = useState("scroll"); // 'scroll', 'two-page', or 'single-page'
 
   const [isJumping, setIsJumping] = useState(false); // 新增狀態變數
 
+  const parentRef = useRef(null);
+  const [scrollY, setScrollY] = useState(0); // 修改為 scrollY
 
   useEffect(() => {
     const fetchBookInfo = async () => {
@@ -41,9 +43,9 @@ export default function BookReadPage() {
 
   const toggleViewMode = () => {
     setViewMode((prev) => {
-      if (prev === 'scroll') return 'two-page';
-      if (prev === 'two-page') return 'single-page';
-      return 'scroll';
+      if (prev === "scroll") return "two-page";
+      if (prev === "two-page") return "single-page";
+      return "scroll";
     });
   };
 
@@ -65,34 +67,42 @@ export default function BookReadPage() {
     jumpToPage(prevPage - 1); // Map sliderValue to image index (prevPage - 1)
   };
 
-  const loadPages = useCallback(async (startPage, count = 5) => {
-    if (loadingRef.current) return;
-    loadingRef.current = true;
+  const loadPages = useCallback(
+    async (startPage, count = 5) => {
+      if (loadingRef.current) return;
+      loadingRef.current = true;
 
-    try {
-      const pagesToLoad = Array.from({ length: count }, (_, i) => startPage + i)
-        .filter(pn => !pages.hasOwnProperty(pn));
-      
-      const loadedPages = await Promise.all(
-        pagesToLoad.map(pageNum => 
-          GetBookPage(bookname + "_" + booknumber, pageNum)
-            .then(result => ({ [pageNum]: result }))
-            .catch(error => {
-              console.error(`Error loading page ${pageNum}:`, error);
-              return { [pageNum]: null };
-            })
-        )
-      );
+      try {
+        const pagesToLoad = Array.from(
+          { length: count },
+          (_, i) => startPage + i
+        ).filter((pn) => !pages.hasOwnProperty(pn));
 
-      const pagesObject = loadedPages.reduce((acc, curr) => ({ ...acc, ...curr }), {});
-      setPages(prev => ({ ...prev, ...pagesObject }));
-      setLastLoadedPage(startPage + count - 1);
-    } catch (error) {
-      console.error("Error loading pages:", error);
-    } finally {
-      loadingRef.current = false;
-    }
-  }, [bookname, booknumber]);
+        const loadedPages = await Promise.all(
+          pagesToLoad.map((pageNum) =>
+            GetBookPage(bookname + "_" + booknumber, pageNum)
+              .then((result) => ({ [pageNum]: result }))
+              .catch((error) => {
+                console.error(`Error loading page ${pageNum}:`, error);
+                return { [pageNum]: null };
+              })
+          )
+        );
+
+        const pagesObject = loadedPages.reduce(
+          (acc, curr) => ({ ...acc, ...curr }),
+          {}
+        );
+        setPages((prev) => ({ ...prev, ...pagesObject }));
+        setLastLoadedPage(startPage + count - 1);
+      } catch (error) {
+        console.error("Error loading pages:", error);
+      } finally {
+        loadingRef.current = false;
+      }
+    },
+    [bookname, booknumber]
+  );
 
   const jumpToPage = async (pageNumber) => {
     console.log(`Attempting to jump to page ${pageNumber}`);
@@ -101,11 +111,11 @@ export default function BookReadPage() {
     let pageElement = document.querySelector(`[data-page="${pageNumber}"]`);
     if (pageElement) {
       console.log(`Page ${pageNumber} found, scrolling into view.`);
-      await loadPages(pageNumber,2);
-      pageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      await loadPages(pageNumber, 2);
+      pageElement.scrollIntoView({ behavior: "smooth", block: "center" });
     } else {
       console.log(`Page ${pageNumber} not found, loading page.`);
-      await loadPages(pageNumber,2);
+      await loadPages(pageNumber, 2);
 
       // Wait for the DOM to update
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -113,7 +123,7 @@ export default function BookReadPage() {
       pageElement = document.querySelector(`[data-page="${pageNumber}"]`);
       if (pageElement) {
         console.log(`Page ${pageNumber} loaded, scrolling into view.`);
-        pageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        pageElement.scrollIntoView({ behavior: "smooth", block: "center" });
       } else {
         console.error(`Page ${pageNumber} could not be loaded.`);
       }
@@ -132,105 +142,129 @@ export default function BookReadPage() {
     const observer = new IntersectionObserver(
       (entries) => {
         if (isJumping) return; // 如果正在跳轉頁數，則不更新 sliderValue
-  
+
         const visibleEntry = entries.find((e) => e.isIntersecting);
         if (visibleEntry) {
           const currentPage = parseInt(visibleEntry.target.dataset.page);
           setSliderValue(currentPage + 1);
         }
-      }, {
-      threshold: 0.6
-    });
-  
-    Object.values(pageRefs.current).forEach(el => {
+      },
+      {
+        threshold: 0.6,
+      }
+    );
+
+    Object.values(pageRefs.current).forEach((el) => {
       if (el) observer.observe(el);
     });
-  
+
     return () => observer.disconnect();
   }, [pages]);
-  
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (parentRef.current) {
+        setScrollY(parentRef.current.scrollTop); // 修改為 scrollTop
+      }
+    };
+
+    const parentElement = parentRef.current;
+    if (parentElement) {
+      parentElement.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (parentElement) {
+        parentElement.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, []);
+
   return (
     <Box
+    ref={parentRef}
       sx={{
-        width: '100%',
-        maxHeight: "calc(100vh - 48px)",
-        backgroundColor: '#123456',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        overflowY: 'auto',
-        position: 'relative' // Ensure absolute children are positioned correctly
+        width: "100%",
+        maxHeight: "calc(100vh - 40px)",
+        backgroundColor: "#123456",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        overflowY: "auto",
+        position: "relative", // Ensure absolute children are positioned correctly
       }}
     >
       <Box
-        onClick={handleLeftButtonClick}
         sx={{
-          position: 'absolute',
-          top: 0,
+          position: "absolute",
+          top: scrollY, // 將 scrollY 值應用到 top
           left: 0,
-          width: '20%',
-          height: '100%',
+          width: "100%",
+          height: "100%",
           zIndex: 10,
+          display: "flex",
+          pointerEvents: "none", // 讓內層可點擊，其餘透明
         }}
-      />
-      <Box
-        onClick={handleCenterButtonClick}
-        sx={{
-          position: 'absolute',
-          top: 0,
-          left: '20%',
-          width: '60%',
-          height: '100%',
-          zIndex: 10,
-        }}
-      />
-      <Box
-        onClick={handleRightButtonClick}
-        sx={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '20%',
-          height: '100%',
-          zIndex: 10,
-        }}
-      />
-      {viewMode === 'scroll' ? (
+      >
+        <Box
+          onClick={handleLeftButtonClick}
+          sx={{ width: "20%", height: "100%", pointerEvents: "auto" }}
+        />
+        <Box
+          onClick={handleCenterButtonClick}
+          sx={{ width: "60%", height: "100%", pointerEvents: "auto" }}
+        />
+        <Box
+          onClick={handleRightButtonClick}
+          sx={{ width: "20%", height: "100%", pointerEvents: "auto" }}
+        />
+      </Box>
+      {viewMode === "scroll" ? (
         <ScrollView
           pages={pages}
           pageRefs={pageRefs}
           onLoadMore={() => loadPages(lastLoadedPage + 1)}
         />
-      ) : viewMode === 'two-page' ? (
-        <PageView pages={pages} pageRefs={pageRefs} sliderValue={sliderValue} mode="two-page" />
+      ) : viewMode === "two-page" ? (
+        <PageView
+          pages={pages}
+          pageRefs={pageRefs}
+          sliderValue={sliderValue}
+          mode="two-page"
+        />
       ) : (
-        <PageView pages={pages} pageRefs={pageRefs} sliderValue={sliderValue} mode="single-page" />
+        <PageView
+          pages={pages}
+          pageRefs={pageRefs}
+          sliderValue={sliderValue}
+          mode="single-page"
+        />
       )}
       {/* Bottom Popup */}
       {isPopupVisible && (
         <Box
           sx={{
-            position: 'fixed',
+            position: "fixed",
             bottom: 0,
             left: 0,
-            width: '100%',
-            backgroundColor: 'rgba(51, 51, 51, 0.8)',
-            color: '#fff',
-            padding: '20px',
-            boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.5)',
-            display: 'flex',  
-            flexDirection: 'column',
-            alignItems: 'center',
-            zIndex: 1000
+            width: "100%",
+            backgroundColor: "rgba(51, 51, 51, 0.8)",
+            color: "#fff",
+            padding: "20px",
+            boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            zIndex: 1000,
           }}
         >
           {/* Page Slider */}
           <Box
             sx={{
-              display: 'flex',
-              alignItems: 'center',
-              width: '80%',
-              justifyContent: 'space-between'
+              display: "flex",
+              alignItems: "center",
+              width: "80%",
+              justifyContent: "space-between",
             }}
           >
             <Slider
@@ -241,31 +275,33 @@ export default function BookReadPage() {
               onChangeCommitted={(e, val) => jumpToPage(val - 1)} // Map sliderValue to image index (val - 1)
               valueLabelDisplay="auto"
               sx={{
-                width: '10%',
+                width: "10%",
                 flexGrow: 1,
-                color: '#fff',
-                '& .MuiSlider-thumb': { backgroundColor: '#fff' },
-                '& .MuiSlider-track': { backgroundColor: '#fff' },
-                '& .MuiSlider-rail': { backgroundColor: '#555' },
+                color: "#fff",
+                "& .MuiSlider-thumb": { backgroundColor: "#fff" },
+                "& .MuiSlider-track": { backgroundColor: "#fff" },
+                "& .MuiSlider-rail": { backgroundColor: "#111" },
               }}
             />
             <Box
               sx={{
-                marginLeft: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
+                marginLeft: "16px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
               }}
             >
-              <span>{sliderValue} / {totalPages}</span>
+              <span>
+                {sliderValue} / {totalPages}
+              </span>
               <Button
                 onClick={toggleViewMode}
                 sx={{
-                  color: '#fff',
-                  borderColor: '#fff',
-                  '&:hover': { backgroundColor: '#444' },
-                  fontSize: '0.8rem',
-                  padding: '4px 8px'
+                  color: "#fff",
+                  borderColor: "#fff",
+                  "&:hover": { backgroundColor: "#444" },
+                  fontSize: "0.8rem",
+                  padding: "4px 8px",
                 }}
               >
                 Switch
@@ -273,11 +309,11 @@ export default function BookReadPage() {
               <Button
                 onClick={() => jumpToPage(sliderValue - 1)} // Map sliderValue to image index (sliderValue - 1)
                 sx={{
-                  color: '#fff',
-                  borderColor: '#fff',
-                  '&:hover': { backgroundColor: '#444' },
-                  fontSize: '0.8rem',
-                  padding: '4px 8px'
+                  color: "#fff",
+                  borderColor: "#fff",
+                  "&:hover": { backgroundColor: "#444" },
+                  fontSize: "0.8rem",
+                  padding: "4px 8px",
                 }}
               >
                 Jump
@@ -285,16 +321,6 @@ export default function BookReadPage() {
             </Box>
           </Box>
           <span>Popup Content</span>
-          <Button
-            onClick={togglePopup}
-            sx={{
-              color: '#fff',
-              borderColor: '#fff',
-              '&:hover': { backgroundColor: '#444' }
-            }}
-          >
-            Close
-          </Button>
         </Box>
       )}
     </Box>

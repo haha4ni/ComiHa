@@ -30,7 +30,7 @@ export default function PageView({ pages, pageRefs, sliderValue, mode }) {
                 data-page={pageNum}
                 ref={el => pageRefs.current[pageNum] = el}
                 sx={{
-                  maxWidth: mode === 'single-page' ? '100%' : '50%', // Limit width to 50% for two-page mode
+                  maxWidth: '100%', 
                   backgroundColor: '#9aFFFF',
                   display: 'flex', // Ensure image scaling follows this Box
                   justifyContent: 'center', // Center the image within the Box
@@ -44,7 +44,7 @@ export default function PageView({ pages, pageRefs, sliderValue, mode }) {
                     sx={{
                       width: '100%', // Scale image to fit within the Box
                       height: 'auto', // Maintain aspect ratio
-                      maxHeight: '100vh', // Ensure the image height does not exceed the viewport
+                      maxHeight: "calc(100vh - 40px)", // Ensure the image height does not exceed the viewport
                     }}
                   />
                 

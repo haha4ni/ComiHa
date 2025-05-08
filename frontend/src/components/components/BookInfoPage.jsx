@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Box, Typography, Button, TextField } from "@mui/material";
+import { Box, Typography, Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import Chip from "@mui/material/Chip";
 import {
   ReadCover,
@@ -9,6 +9,7 @@ import {
   GetBookInfoByKey,
 } from "../../../wailsjs/go/main/App";
 import SettingsIcon from "@mui/icons-material/Settings";
+import bookwalker from "../../assets/images/bookwalker.jpg";
 
 export default function BookInfoPage() {
   const navigate = useNavigate();
@@ -17,6 +18,8 @@ export default function BookInfoPage() {
   const [bookCover, setBookCover] = useState(null);
   const [Thumbnails, setThumbnails] = useState([]);
   const [bookinfo, setBookinfo] = useState(null);
+  const [openSettings, setOpenSettings] = useState(false); // Added state for Dialog
+  const [editableMetadata, setEditableMetadata] = useState(null); // Added state for editable metadata
 
   const handleSwitchMode = async () => {
     try {
@@ -74,6 +77,27 @@ export default function BookInfoPage() {
     fetchBookInfo();
   }, [bookname, booknumber]);
 
+  useEffect(() => {
+    if (bookinfo?.metadata) {
+      setEditableMetadata({ ...bookinfo.metadata }); // Initialize editable metadata
+    }
+  }, [bookinfo]);
+
+  const handleMetadataChange = (field, value) => {
+    setEditableMetadata((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const saveMetadataChanges = () => {
+    setBookinfo((prev) => ({
+      ...prev,
+      metadata: { ...editableMetadata },
+    }));
+    setOpenSettings(false); // Close dialog after saving
+  };
+
   return (
     <Box
       sx={{
@@ -92,7 +116,7 @@ export default function BookInfoPage() {
             borderRadius: "10px",
             padding: 2,
             mx: 2,
-            mt: 1,
+            mt: 2,
             mb: 2,
             position: "relative", // Added for positioning the gear icon
           }}
@@ -105,6 +129,7 @@ export default function BookInfoPage() {
               mr: 2, // Right margin
               top: 0,
               right: 0,
+              zIndex: 10,
               cursor: "pointer",
             }}
             onClick={() => setOpenSettings(true)} // Modified onClick
@@ -155,6 +180,7 @@ export default function BookInfoPage() {
                 textAlign: "left",
                 flex: "1",
                 marginLeft: "10px",
+                position: "relative"
               }}
             >
               <Typography variant="h6">
@@ -165,24 +191,40 @@ export default function BookInfoPage() {
               <Typography
                 variant="body2"
                 sx={{
-                  maxWidth: "100%",
+                  maxWidth: "90%",
                   overflow: "auto", // 超過範圍會顯示滾動條
                 }}
               >
                 {bookinfo.metadata?.summary || ""}
               </Typography>
+              <Box sx={{ height: "16px" }} /> {/* Add spacing here */}
+              <img
+                src={bookwalker}
+                alt="logo"
+                style={{
+                  borderRadius: "4px",
+                  width: 20,
+                  height: 20,
+                  marginRight: 8,
+                  objectFit: "contain",
+                }}
+              />
+                            <Box sx={{ height: "8px" }} /> {/* Add spacing here */}
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", // Responsive columns
+                  gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", // Responsive columns
                   gap: 2,
                   mt: 2,
                   width: "100%", // Ensure the grid spans 100% width
+                  textAlign: "center", // Horizontally center the text
+                  alignItems: "center", // Vertically center the text
+                  justifyContent: "center", // Optional: Center within a container
                 }}
               >
                 <Box>
                   <Typography variant="body2">
-                    <strong>作者:</strong>
+                    <strong>作者</strong>
                   </Typography>
                   <Typography variant="body2">
                     {bookinfo.metadata?.writer || "未知"}
@@ -190,7 +232,7 @@ export default function BookInfoPage() {
                 </Box>
                 <Box>
                   <Typography variant="body2">
-                    <strong>發行時間:</strong>
+                    <strong>發行日</strong>
                   </Typography>
                   <Typography variant="body2">
                     {`${bookinfo.metadata?.year || "未知"}-${
@@ -200,7 +242,7 @@ export default function BookInfoPage() {
                 </Box>
                 <Box>
                   <Typography variant="body2">
-                    <strong>出版社:</strong>
+                    <strong>出版社</strong>
                   </Typography>
                   <Typography variant="body2">
                     {bookinfo.metadata?.publisher || "未知"}
@@ -208,23 +250,80 @@ export default function BookInfoPage() {
                 </Box>
                 <Box>
                   <Typography variant="body2">
-                    <strong>標籤:</strong>
+                    <strong>標籤</strong>
                   </Typography>
                   <Typography variant="body2">
-                    {bookinfo.metadata?.tags?.join(", ") ||               <Chip
-                label="Comic"
-                color="warning"
-                size="small"
-                variant="outlined"
-                sx={{ borderRadius: "6px" }}
-              />}
+                    {bookinfo.metadata?.tags?.join(", ") || (
+                      <Chip
+                        label="Comic"
+                        color="warning"
+                        size="small"
+                        variant="outlined"
+                        sx={{ borderRadius: "6px" }}
+                      />
+                    )}
                   </Typography>
                 </Box>
+              </Box>
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: 8, // Distance from the bottom
+                  left: 0, // Distance from the left
+                }}
+              >
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() =>
+                    navigate(`/bookinfo/${bookname}/${booknumber}/0`)
+                  }
+                >
+                  開始閱讀
+                </Button>
               </Box>
             </Box>
           </Box>
         </Box>
       )}
+
+      {/* Dialog for settings */}
+      <Dialog open={openSettings} onClose={() => setOpenSettings(false)}>
+        <DialogTitle>書籍資訊</DialogTitle>
+        <DialogContent>
+          {editableMetadata ? (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "1fr 2fr", // Two columns: label and input
+                gap: 1,
+              }}
+            >
+              {Object.keys(editableMetadata).map((key) => (
+                <React.Fragment key={key}>
+                  <Typography variant="body2">
+                    <strong>{key}:</strong>
+                  </Typography>
+                  <TextField
+                    variant="outlined"
+                    size="small"
+                    value={editableMetadata[key] || ""}
+                    onChange={(e) => handleMetadataChange(key, e.target.value)}
+                  />
+                </React.Fragment>
+              ))}
+            </Box>
+          ) : (
+            <Typography variant="body2">無法取得書籍資訊。</Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenSettings(false)}>取消</Button>
+          <Button onClick={saveMetadataChanges} variant="contained" color="primary">
+            儲存
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Thumbnails Grid */}
       <Box

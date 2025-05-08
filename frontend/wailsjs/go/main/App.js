@@ -62,6 +62,10 @@ export function Shutdown() {
   return window['go']['main']['App']['Shutdown']();
 }
 
+export function WriteComicInfo(arg1) {
+  return window['go']['main']['App']['WriteComicInfo'](arg1);
+}
+
 export function WriteComicInfoToZip(arg1) {
   return window['go']['main']['App']['WriteComicInfoToZip'](arg1);
 }

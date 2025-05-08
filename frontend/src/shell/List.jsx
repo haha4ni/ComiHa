@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
 import Toolbar from "@mui/material/Toolbar";
@@ -13,9 +14,9 @@ import MailIcon from "@mui/icons-material/Mail";
 import HomeIcon from '@mui/icons-material/Home';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
-import { useNavigate } from "react-router-dom";
 import { ScanBookAll } from "../../wailsjs/go/main/App";
 import CircularProgress from "@mui/material/CircularProgress";
+import SettingsIcon from '@mui/icons-material/Settings';
 
 const drawerWidth = 180;
 
@@ -60,7 +61,7 @@ export default function SimpleDrawer({ open, onToggle }) {
         <Toolbar variant='dense' disableGutters sx={{ minHeight: 40, height: 40 }}/>
         <Box sx={{ overflow: "auto" }}>
           <List>
-            {["首頁", "全部書籍", "全部系列", "掃描書籍", "＜"].map((text, index) => (
+            {["首頁", "全部書籍", "全部系列", "掃描書籍", "設定", "＜"].map((text, index) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton onClick={async () => {
                   switch(index) {
@@ -82,6 +83,9 @@ export default function SimpleDrawer({ open, onToggle }) {
                       }
                       break;
                     case 4:
+                      navigate("/settings");
+                      break;
+                    case 5:
                       onToggle();
                       break;
                     default:
@@ -100,6 +104,8 @@ export default function SimpleDrawer({ open, onToggle }) {
                         case 3:
                           return <MailIcon />;
                         case 4:
+                          return <SettingsIcon />; // Replace with a settings icon if available
+                        case 5:
                           return <ArrowBackIcon />;
                         default:
                           return <MailIcon />;

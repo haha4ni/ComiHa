@@ -300,6 +300,10 @@ func (a *App) ScraperInfo(title string, volume string) (*BookInfo, error) {
 }
 
 
+func (a *App) WriteComicInfo(bookInfo BookInfo) {
+	WriteComicInfo(bookInfo)
+}
+
 func (a *App) WriteComicInfoToZip(bookInfo BookInfo) {
 	WriteComicInfoToZip(bookInfo)
 }

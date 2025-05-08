@@ -1,10 +1,10 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
-import MainMode from "./components/MainMode";
-import BookInfoPage from "./components/components/BookInfoPage";
-import BookReadPage from "./components/components/BookReadPage";
-import ImageBoxList from "./components/components/ImageBoxList";
-import SeriesInfoPage from './components/components/SeriesInfoPage';
+import MainMode from "./shell/MainMode";
+import BookInfoPage from "./shell/pages/BookInfoPage";
+import BookReadPage from "./shell/pages/BookReadPage";
+import ImageBoxList from "./shell/pages/ImageBoxList";
+import SeriesInfoPage from './shell/pages/SeriesInfoPage';
 
 export default function App() {
     return (

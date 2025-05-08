@@ -32,4 +32,6 @@ export function ScraperInfo(arg1:string,arg2:string):Promise<backend.BookInfo>;
 
 export function Shutdown():Promise<void>;
 
+export function WriteComicInfo(arg1:backend.BookInfo):Promise<void>;
+
 export function WriteComicInfoToZip(arg1:backend.BookInfo):Promise<void>;

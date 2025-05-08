@@ -1,12 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Box, Typography, Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
 import Chip from "@mui/material/Chip";
 import {
   ReadCover,
   ScraperInfo,
   GetBookPage,
   GetBookInfoByKey,
+  WriteComicInfo,
 } from "../../../wailsjs/go/main/App";
 import SettingsIcon from "@mui/icons-material/Settings";
 import bookwalker from "../../assets/images/bookwalker.jpg";
@@ -90,12 +100,25 @@ export default function BookInfoPage() {
     }));
   };
 
-  const saveMetadataChanges = () => {
-    setBookinfo((prev) => ({
-      ...prev,
+  const saveMetadataChanges = async () => {
+    const updatedBookinfo = {
+      ...bookinfo,
       metadata: { ...editableMetadata },
-    }));
+    };
+
+    setBookinfo(updatedBookinfo); // Update bookinfo state
+
     setOpenSettings(false); // Close dialog after saving
+
+    // Wait for state update to complete
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    try {
+      await WriteComicInfo(updatedBookinfo); // Call WriteComicInfo with updated bookinfo
+      console.log("Metadata saved successfully.");
+    } catch (error) {
+      console.error("Error saving metadata:", error);
+    }
   };
 
   return (
@@ -109,15 +132,12 @@ export default function BookInfoPage() {
         <Box
           sx={{
             display: "flex",
-            alignItems: "flex-start", // 加這行
             flexWrap: "wrap",
-            gap: 2,
             backgroundColor: "#f8f8f8",
             borderRadius: "10px",
-            padding: 2,
+            p: 2,
             mx: 2,
-            mt: 2,
-            mb: 2,
+            my: 2,
             position: "relative", // Added for positioning the gear icon
           }}
         >
@@ -180,7 +200,7 @@ export default function BookInfoPage() {
                 textAlign: "left",
                 flex: "1",
                 marginLeft: "10px",
-                position: "relative"
+                position: "relative",
               }}
             >
               <Typography variant="h6">
@@ -209,7 +229,7 @@ export default function BookInfoPage() {
                   objectFit: "contain",
                 }}
               />
-                            <Box sx={{ height: "8px" }} /> {/* Add spacing here */}
+              <Box sx={{ height: "8px" }} /> {/* Add spacing here */}
               <Box
                 sx={{
                   display: "grid",
@@ -288,14 +308,23 @@ export default function BookInfoPage() {
       )}
 
       {/* Dialog for settings */}
-      <Dialog open={openSettings} onClose={() => setOpenSettings(false)}>
+      <Dialog
+        open={openSettings}
+        onClose={() => setOpenSettings(false)}
+        fullWidth={true} // Enable full width
+        maxWidth="md" // Set maximum width to "md" (medium)
+      >
         <DialogTitle>書籍資訊</DialogTitle>
-        <DialogContent>
+        <DialogContent
+          sx={{
+            maxWidth: "800px", // Set a minimum width for the dialog content
+          }}
+        >
           {editableMetadata ? (
             <Box
               sx={{
                 display: "grid",
-                gridTemplateColumns: "1fr 2fr", // Two columns: label and input
+                gridTemplateColumns: "1fr 4fr", // Two columns: label and input
                 gap: 1,
               }}
             >
@@ -319,7 +348,11 @@ export default function BookInfoPage() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenSettings(false)}>取消</Button>
-          <Button onClick={saveMetadataChanges} variant="contained" color="primary">
+          <Button
+            onClick={saveMetadataChanges}
+            variant="contained"
+            color="primary"
+          >
             儲存
           </Button>
         </DialogActions>

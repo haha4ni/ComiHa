@@ -5,6 +5,7 @@ import BookInfoPage from "./shell/pages/BookInfoPage";
 import BookReadPage from "./shell/pages/BookReadPage";
 import ImageBoxList from "./shell/pages/ImageBoxList";
 import SeriesInfoPage from './shell/pages/SeriesInfoPage';
+import SettingPage from "./shell/pages/SettingPage";
 
 export default function App() {
     return (
@@ -17,6 +18,7 @@ export default function App() {
                     <Route path="bookinfo" element={<ImageBoxList mode="bookinfo" />} />
                     <Route path="bookinfo/:bookname/:booknumber" element={<BookInfoPage />} />
                     <Route path="bookinfo/:bookname/:booknumber/:page" element={<BookReadPage />} />
+                    <Route path="settings" element={<SettingPage />} />
                 </Route>
                 {/* <Route path="/" element={<Navigate to="/home" replace />} /> */}
             </Routes>

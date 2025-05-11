@@ -14,29 +14,15 @@ export namespace backend {
 	        this.FileBitmap = source["FileBitmap"];
 	    }
 	}
-	export class ImageData {
-	    filename: string;
-	    fileindex: number;
-	    size: number;
-	
-	    static createFrom(source: any = {}) {
-	        return new ImageData(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.filename = source["filename"];
-	        this.fileindex = source["fileindex"];
-	        this.size = source["size"];
-	    }
-	}
 	export class Page {
-	    image: number;
-	    imageSize: number;
-	    imageWidth: number;
-	    imageHeight: number;
-	    type?: string;
-	    comment?: string;
+	    ID: number;
+	    MetadataID: number;
+	    Image: number;
+	    ImageSize: number;
+	    ImageWidth: number;
+	    ImageHeight: number;
+	    Type: string;
+	    Comment: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Page(source);
@@ -44,44 +30,48 @@ export namespace backend {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.image = source["image"];
-	        this.imageSize = source["imageSize"];
-	        this.imageWidth = source["imageWidth"];
-	        this.imageHeight = source["imageHeight"];
-	        this.type = source["type"];
-	        this.comment = source["comment"];
+	        this.ID = source["ID"];
+	        this.MetadataID = source["MetadataID"];
+	        this.Image = source["Image"];
+	        this.ImageSize = source["ImageSize"];
+	        this.ImageWidth = source["ImageWidth"];
+	        this.ImageHeight = source["ImageHeight"];
+	        this.Type = source["Type"];
+	        this.Comment = source["Comment"];
 	    }
 	}
 	export class Metadata {
+	    ID: number;
+	    BookInfoID: number;
 	    XMLName: xml.Name;
-	    title: string;
-	    series: string;
-	    number: string;
-	    volume: string;
-	    alternateSeries: string;
-	    alternateNumber: string;
-	    storyArc: string;
-	    year: string;
-	    month: string;
-	    day: string;
-	    seriesGroup: string;
-	    summary: string;
-	    notes: string;
-	    writer: string;
-	    publisher: string;
-	    imprint: string;
-	    genre: string;
-	    web: string;
-	    pageCount: number;
-	    languageISO: string;
-	    format: string;
-	    ageRating: string;
-	    manga: string;
-	    characters: string;
-	    teams: string;
-	    locations: string;
-	    scanInformation: string;
-	    pages: Page[];
+	    Title: string;
+	    Series: string;
+	    Number: string;
+	    Volume: string;
+	    AlternateSeries: string;
+	    AlternateNumber: string;
+	    StoryArc: string;
+	    Year: string;
+	    Month: string;
+	    Day: string;
+	    SeriesGroup: string;
+	    Summary: string;
+	    Notes: string;
+	    Writer: string;
+	    Publisher: string;
+	    Imprint: string;
+	    Genre: string;
+	    Web: string;
+	    PageCount: number;
+	    LanguageISO: string;
+	    Format: string;
+	    AgeRating: string;
+	    Manga: string;
+	    Characters: string;
+	    Teams: string;
+	    Locations: string;
+	    ScanInformation: string;
+	    Pages: Page[];
 	
 	    static createFrom(source: any = {}) {
 	        return new Metadata(source);
@@ -89,35 +79,37 @@ export namespace backend {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ID = source["ID"];
+	        this.BookInfoID = source["BookInfoID"];
 	        this.XMLName = this.convertValues(source["XMLName"], xml.Name);
-	        this.title = source["title"];
-	        this.series = source["series"];
-	        this.number = source["number"];
-	        this.volume = source["volume"];
-	        this.alternateSeries = source["alternateSeries"];
-	        this.alternateNumber = source["alternateNumber"];
-	        this.storyArc = source["storyArc"];
-	        this.year = source["year"];
-	        this.month = source["month"];
-	        this.day = source["day"];
-	        this.seriesGroup = source["seriesGroup"];
-	        this.summary = source["summary"];
-	        this.notes = source["notes"];
-	        this.writer = source["writer"];
-	        this.publisher = source["publisher"];
-	        this.imprint = source["imprint"];
-	        this.genre = source["genre"];
-	        this.web = source["web"];
-	        this.pageCount = source["pageCount"];
-	        this.languageISO = source["languageISO"];
-	        this.format = source["format"];
-	        this.ageRating = source["ageRating"];
-	        this.manga = source["manga"];
-	        this.characters = source["characters"];
-	        this.teams = source["teams"];
-	        this.locations = source["locations"];
-	        this.scanInformation = source["scanInformation"];
-	        this.pages = this.convertValues(source["pages"], Page);
+	        this.Title = source["Title"];
+	        this.Series = source["Series"];
+	        this.Number = source["Number"];
+	        this.Volume = source["Volume"];
+	        this.AlternateSeries = source["AlternateSeries"];
+	        this.AlternateNumber = source["AlternateNumber"];
+	        this.StoryArc = source["StoryArc"];
+	        this.Year = source["Year"];
+	        this.Month = source["Month"];
+	        this.Day = source["Day"];
+	        this.SeriesGroup = source["SeriesGroup"];
+	        this.Summary = source["Summary"];
+	        this.Notes = source["Notes"];
+	        this.Writer = source["Writer"];
+	        this.Publisher = source["Publisher"];
+	        this.Imprint = source["Imprint"];
+	        this.Genre = source["Genre"];
+	        this.Web = source["Web"];
+	        this.PageCount = source["PageCount"];
+	        this.LanguageISO = source["LanguageISO"];
+	        this.Format = source["Format"];
+	        this.AgeRating = source["AgeRating"];
+	        this.Manga = source["Manga"];
+	        this.Characters = source["Characters"];
+	        this.Teams = source["Teams"];
+	        this.Locations = source["Locations"];
+	        this.ScanInformation = source["ScanInformation"];
+	        this.Pages = this.convertValues(source["Pages"], Page);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -138,14 +130,33 @@ export namespace backend {
 		    return a;
 		}
 	}
+	export class ImageData {
+	    ID: number;
+	    BookInfoID: number;
+	    FileName: string;
+	    FileIndex: number;
+	    FileSize: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new ImageData(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ID = source["ID"];
+	        this.BookInfoID = source["BookInfoID"];
+	        this.FileName = source["FileName"];
+	        this.FileIndex = source["FileIndex"];
+	        this.FileSize = source["FileSize"];
+	    }
+	}
 	export class BookInfo {
-	    bookname: string;
-	    booknumber: string;
-	    filename: string;
-	    sha: string;
-	    timestamp: number;
-	    metadata: Metadata;
-	    imagedata: ImageData[];
+	    ID: number;
+	    FileName: string;
+	    SHA: string;
+	    Timestamp: number;
+	    ImageData: ImageData[];
+	    Metadata: Metadata;
 	
 	    static createFrom(source: any = {}) {
 	        return new BookInfo(source);
@@ -153,13 +164,12 @@ export namespace backend {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.bookname = source["bookname"];
-	        this.booknumber = source["booknumber"];
-	        this.filename = source["filename"];
-	        this.sha = source["sha"];
-	        this.timestamp = source["timestamp"];
-	        this.metadata = this.convertValues(source["metadata"], Metadata);
-	        this.imagedata = this.convertValues(source["imagedata"], ImageData);
+	        this.ID = source["ID"];
+	        this.FileName = source["FileName"];
+	        this.SHA = source["SHA"];
+	        this.Timestamp = source["Timestamp"];
+	        this.ImageData = this.convertValues(source["ImageData"], ImageData);
+	        this.Metadata = this.convertValues(source["Metadata"], Metadata);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

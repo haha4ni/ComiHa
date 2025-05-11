@@ -5,60 +5,66 @@ import (
 )
 
 type BookInfo struct {
-	BookName   string      `json:"bookname"`
-	BookNumber string      `json:"booknumber"`
-	FileName   string      `json:"filename"`
-	SHA        string      `json:"sha"`
-	Timestamp  int64       `json:"timestamp"`
-	Metadata   Metadata    `json:"metadata"` // 書籍元數據
-	ImageData  []ImageData `json:"imagedata"`
+	ID         uint   `gorm:"primaryKey"`
+	FileName   string
+	SHA        string
+	Timestamp  int64
+	ImageData  []ImageData `gorm:"foreignKey:BookInfoID;constraint:OnDelete:CASCADE;"` // Foreign key and cascade delete
+	Metadata   Metadata    `gorm:"foreignKey:BookInfoID;constraint:OnDelete:CASCADE;"` // Foreign key and cascade delete
 }
 
 type ImageData struct {
-	FileName  string `json:"filename"`
-	FileIndex int64  `json:"fileindex"`
-	FileSize  int64  `json:"size"`
+	ID         uint   `gorm:"primaryKey"`
+	BookInfoID uint   // Foreign key to BookInfo
+	FileName   string
+	FileIndex  int64
+	FileSize   int64
+}
+
+// ComicInfo XML structure
+type Metadata struct {
+	ID         uint   `gorm:"primaryKey"`
+	BookInfoID uint   // Foreign key to BookInfo
+	XMLName    xml.Name `xml:"ComicInfo" gorm:"-"` // Ignore this field for GORM
+	Title           string   `xml:"Title"            `
+	Series          string   `xml:"Series"           `
+	Number          string   `xml:"Number"           `
+	Volume          string   `xml:"Volume"           `
+	AlternateSeries string   `xml:"AlternateSeries"  `
+	AlternateNumber string   `xml:"AlternateNumber"  `
+	StoryArc        string   `xml:"StoryArc"         `
+	Year            string   `xml:"Year"             `
+	Month           string   `xml:"Month"            `
+	Day             string   `xml:"Day"              `
+	SeriesGroup     string   `xml:"SeriesGroup"      `
+	Summary         string   `xml:"Summary"          `
+	Notes           string   `xml:"Notes"            `
+	Writer          string   `xml:"Writer"           `
+	Publisher       string   `xml:"Publisher"        `
+	Imprint         string   `xml:"Imprint"          `
+	Genre           string   `xml:"Genre"            `
+	Web             string   `xml:"Web"              `
+	PageCount       int      `xml:"PageCount"        `
+	LanguageISO     string   `xml:"LanguageISO"      `
+	Format          string   `xml:"Format"           `
+	AgeRating       string   `xml:"AgeRating"        `
+	Manga           string   `xml:"Manga"            `
+	Characters      string   `xml:"Characters"       `
+	Teams           string   `xml:"Teams"            `
+	Locations       string   `xml:"Locations"        `
+	ScanInformation string   `xml:"ScanInformation"  `
+	Pages           []Page   `gorm:"foreignKey:MetadataID;constraint:OnDelete:CASCADE;"` // Define Pages as a separate table
 }
 
 type Page struct {
-	Image       int    `xml:"Image,attr"       json:"image"`
-	ImageSize   int    `xml:"ImageSize,attr"   json:"imageSize"`
-	ImageWidth  int    `xml:"ImageWidth,omitempty"  json:"imageWidth"`
-	ImageHeight int    `xml:"ImageHeight,omitempty" json:"imageHeight"`
-	Type        string `xml:"Type,attr,omitempty"        json:"type,omitempty"`
-	Comment     string `xml:"Comment,attr,omitempty"     json:"comment,omitempty"`
-}
-
-type Metadata struct {
-	XMLName         xml.Name `xml:"ComicInfo"`
-	Title           string   `xml:"Title"             json:"title"`
-	Series          string   `xml:"Series"            json:"series"`
-	Number          string   `xml:"Number"            json:"number"`
-	Volume          string   `xml:"Volume"            json:"volume"`
-	AlternateSeries string   `xml:"AlternateSeries"   json:"alternateSeries"`
-	AlternateNumber string   `xml:"AlternateNumber"   json:"alternateNumber"`
-	StoryArc        string   `xml:"StoryArc"          json:"storyArc"`
-	Year            string   `xml:"Year"              json:"year"`
-	Month           string   `xml:"Month"             json:"month"`
-	Day             string   `xml:"Day"               json:"day"`
-	SeriesGroup     string   `xml:"SeriesGroup"       json:"seriesGroup"`
-	Summary         string   `xml:"Summary"           json:"summary"`
-	Notes           string   `xml:"Notes"             json:"notes"`
-	Writer          string   `xml:"Writer"            json:"writer"`
-	Publisher       string   `xml:"Publisher"         json:"publisher"`
-	Imprint         string   `xml:"Imprint"           json:"imprint"`
-	Genre           string   `xml:"Genre"             json:"genre"`
-	Web             string   `xml:"Web"               json:"web"`
-	PageCount       int      `xml:"PageCount"         json:"pageCount"`
-	LanguageISO     string   `xml:"LanguageISO"       json:"languageISO"`
-	Format          string   `xml:"Format"            json:"format"`
-	AgeRating       string   `xml:"AgeRating"         json:"ageRating"`
-	Manga           string   `xml:"Manga"             json:"manga"`
-	Characters      string   `xml:"Characters"        json:"characters"`
-	Teams           string   `xml:"Teams"             json:"teams"`
-	Locations       string   `xml:"Locations"         json:"locations"`
-	ScanInformation string   `xml:"ScanInformation"   json:"scanInformation"`
-	Pages           []Page   `xml:"Pages>Page"        json:"pages"`
+	ID          uint   `gorm:"primaryKey"`
+	MetadataID  uint   // Foreign key to Metadata
+	Image       int    `xml:"Image,attr"`
+	ImageSize   int    `xml:"ImageSize,attr"`
+	ImageWidth  int    `xml:"ImageWidth,omitempty"`
+	ImageHeight int    `xml:"ImageHeight,omitempty"`
+	Type        string `xml:"Type,attr,omitempty"`
+	Comment     string `xml:"Comment,attr,omitempty"`
 }
 
 type SeriesInfo struct {

@@ -6,7 +6,7 @@ import {
   GetBookInfoByKey,
   GetSeriesKeyListAll,
   GetSeriesInfoByKey,
-  GetBookCoverByKey,
+  GetBookCoverBySeriesAndNumber,
 } from "../../../wailsjs/go/main/App";
 
 export default function ImageBoxList({ mode }) {
@@ -18,7 +18,9 @@ export default function ImageBoxList({ mode }) {
 
   const ShowBookinfoList = async () => {
     try {
+      console.log("================");
       const booklist = await GetBookListAll();
+      
       setBooklist(booklist);
 
       const placeholders = Array(booklist.length).fill(null); // Initialize placeholders
@@ -26,10 +28,8 @@ export default function ImageBoxList({ mode }) {
 
       booklist.forEach(async (bookinfo, index) => {
         try {
-          const img = await GetBookCoverByKey(
-            bookinfo.bookname + "_" + bookinfo.booknumber
-          );
-          const newImage = `data:image/png;base64,${img.FileBitmap}`;
+          const img = await GetBookCoverBySeriesAndNumber(bookinfo.Metadata.Series, bookinfo.Metadata.Number);
+          const newImage = `data:image/jpg;base64,${img.FileBitmap}`;
           setImages((prevImages) => {
             const updatedImages = [...prevImages];
             updatedImages[index] = newImage; // Update the specific image
@@ -59,9 +59,7 @@ export default function ImageBoxList({ mode }) {
         try {
           const seriesInfo = await GetSeriesInfoByKey(series);
           const bookinfo = await GetBookInfoByKey(seriesInfo.bookinfokeys[0]);
-          const img = await GetBookCoverByKey(
-            bookinfo.bookname + "_" + bookinfo.booknumber
-          );
+          const img = await GetBookCoverBySeriesAndNumber(bookinfo.Metadata.Series, bookinfo.Metadata.Number)
           const newImage = `data:image/png;base64,${img.FileBitmap}`;
 
           setSerieslist((prevSerieslist) => {

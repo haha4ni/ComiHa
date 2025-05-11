@@ -3,13 +3,13 @@ package backend
 import (
 	"archive/zip"
 	"fmt"
+	"io"
 	"log"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
 	"time"
-	"io"
 
 	"ComiHa/backend/db"
 	"ComiHa/backend/debug"
@@ -17,67 +17,42 @@ import (
 )
 
 // Global database connection
-var globalDB *db.DB
+var comicDB *db.DB
 
 // InitializeDB initializes the global database connection
 func InitializeDB() error {
+	dbPath := "./bookinfo.db"
 	var err error
-	globalDB, err = db.NewDB("data.db")
+	comicDB, err = db.NewDB(dbPath, &BookInfo{}, &ImageData{}, &Metadata{}, &Page{})
 	return err
 }
 
 // CloseDB closes the global database connection
 func CloseDB() error {
-	if globalDB != nil {
-		return globalDB.Close()
+	if comicDB != nil {
+		return db.CloseBD(comicDB)
 	}
 	return nil
 }
 
 // ///////////////////////////////////////////////////////////////////////////////////////
 func SaveSeriesInfo(book BookInfo) error {
-	key := book.BookName
-	var seriesInfo SeriesInfo
-
-	// Load existing data
-	err := globalDB.LoadData("seriesinfo", key, &seriesInfo)
-	if err != nil {
-		// If bucket doesn't exist or key not found, initialize empty seriesInfo
-		seriesInfo = SeriesInfo{
-			SeriesName: key,
-			BookInfoKeys: []string{},
-		}
-	}
-
-	// Append new key
-	newKey := fmt.Sprintf("%s_%s", book.BookName, book.BookNumber)
-	seriesInfo.BookInfoKeys = append(seriesInfo.BookInfoKeys, newKey)
-
-	// Sort the keys
-	sort.Strings(seriesInfo.BookInfoKeys)
-
-	return globalDB.SaveData("seriesinfo", key, seriesInfo)
+	return nil //TODO
 }
 
 // 存入 BookInfo 到 BoltDB
 func SaveBookInfo(book BookInfo) error {
-	key := fmt.Sprintf("%s_%s", book.BookName, book.BookNumber)
-	return globalDB.SaveData("bookinfo", key, book)
+	return db.SaveData(comicDB, &book)
 }
 
 // 從 BoltDB 讀取 BookInfo
 func LoadBookInfo(bookname string) (*BookInfo, error) {
-	var book BookInfo
-	err := globalDB.LoadData("bookinfo", bookname, &book)
-	if err != nil {
-		return nil, err
-	}
-	return &book, nil
+	return nil, nil //TODO
 }
 
 // 根據 BookName 刪除 BookInfo
 func DeleteBookInfo(bookname string) error {
-	return globalDB.DeleteData("bookinfo", bookname)
+	return nil //TODO
 }
 
 func parseBookName(fileName string) (string, string) {
@@ -149,8 +124,6 @@ func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
 	})
 
 	bookInfo := &BookInfo{
-		BookName:   bookName,
-		BookNumber: bookNumber,
 		FileName:   zipPath,
 		SHA:        sha,
 		Timestamp:  time.Now().Unix(),
@@ -161,6 +134,8 @@ func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
 	if metadata != nil {
 		bookInfo.Metadata = *metadata
 	}
+	bookInfo.Metadata.Series = bookName
+	bookInfo.Metadata.Number = bookNumber
 
 	//如果metadata.pages是空的
 	//把images填進metadata裡面
@@ -181,57 +156,65 @@ func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
 	return bookInfo, nil
 }
 
+func GetBookBySeriesAndNumber(db *db.DB, series string, number string) (*BookInfo, error) {
+    var book BookInfo
+    err := db.Conn().Preload("ImageData").Preload("Metadata").
+        Joins("JOIN metadata ON metadata.book_info_id = book_infos.id").
+        Where("metadata.series = ? AND metadata.number = ?", series, number).
+        First(&book).Error
+    if err != nil {
+        return nil, err
+    }
+    return &book, nil
+}
+
 func AddBook(bookPath string) error {
 	// 比對現有的book Key其SHA是否相同
-
-	// Generate SHA for quick comparison
 	sha, err := gadget.GenerateSHA256(bookPath)
 	if err != nil {
 		return fmt.Errorf("生成 SHA 失敗: %w", err)
 	}
-
+	debug.DebugInfo("11111:")
 	// Attempt to retrieve ComicInfo.xml metadata
 	metadata, err := GetComicInfoFromZip(bookPath)
 	if err != nil {
 		fmt.Printf("讀取 ComicInfo.xml 失敗，將使用檔名解析: %v\n", err)
 	}
-
-	var key string
+	debug.DebugInfo("22222:")
+	var dbBook *BookInfo
 	if metadata != nil && metadata.Series != "" && metadata.Number != "" {
-		key = fmt.Sprintf("%s_%s", metadata.Series, metadata.Number)
+		// Use metadata to find the book
+		dbBook, err = GetBookBySeriesAndNumber(comicDB, metadata.Series, metadata.Number)
 	} else {
+		// Fallback to parsing the book name
 		bookName, bookNumber := parseBookName(bookPath)
-		key = fmt.Sprintf("%s_%s", bookName, bookNumber)
+		dbBook, err = GetBookBySeriesAndNumber(comicDB, bookName, bookNumber)
 	}
-
-	var dbBook BookInfo
-	err = globalDB.LoadData("bookinfo", key, &dbBook)
-	if err == nil {
-		if dbBook.SHA == sha {
-			fmt.Printf("書籍已存在且 SHA 相同，跳過保存: %s\n", dbBook.BookName)
-			return nil
-		}
+	debug.DebugInfo("33333:")
+	if err == nil && dbBook.SHA == sha {
+		fmt.Printf("書籍已存在且 SHA 相同，跳過保存: %s\n", dbBook.Metadata.Series)
+		return nil
 	}
-
-	// Perform full ZIP analysis if the book is not found
+	debug.DebugInfo("44444:")
+	// Perform full ZIP analysis if the book is not found or SHA is different
 	bookInfo, err := AnalyzeZipFile(bookPath)
 	if err != nil {
 		return fmt.Errorf("解析失敗: %w", err)
 	}
-
+	debug.DebugInfo("55555:")
 	// Save BookInfo to BoltDB
 	err = SaveBookInfo(*bookInfo)
 	if err != nil {
 		return fmt.Errorf("存入 BoltDB 失敗: %w", err)
 	}
-
+	debug.DebugInfo("66666:")
 	// Save series info
 	err = SaveSeriesInfo(*bookInfo)
 	if err != nil {
 		return fmt.Errorf("存入系列資訊失敗: %w", err)
 	}
 
-	fmt.Printf("成功新增書籍: %s\n", bookInfo.BookName)
+	fmt.Printf("成功新增書籍: %s\n", bookInfo.Metadata.Series)
 	return nil
 }
 
@@ -267,15 +250,18 @@ func (a *App) ScanBookAll() {
 
 func (a *App) GetBookListAll() (bookList []BookInfo) {
 	// 讀取所有 BookInfo
-	err := globalDB.GetAllData("bookinfo", &bookList)
+		fmt.Printf("111111111111111\n")
+
+	err := db.GetAllData(comicDB, &bookList, "ImageData", "Metadata")
 	if err != nil {
 		log.Fatal("讀取所有 BookInfo 失敗:", err)
 	}
+	fmt.Printf("2222222222222\n")
 	return bookList
 }
 
-func (a *App) GetBookCoverByKey(key string) (*BookImageData, error) {
-	bookInfo, err := GetBookInfoByKey(key)
+func (a *App) GetBookCoverBySeriesAndNumber(series string, number string) (*BookImageData, error) {
+	bookInfo, err := GetBookBySeriesAndNumber(comicDB, series, number)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get book info: %w", err)
 	}
@@ -348,27 +334,32 @@ func GetBookInfoByKey(key string) (*BookInfo, error) {
 
 func (a *App) GetSeriesListAll() (seriesinfoList []SeriesInfo) {
 	// 讀取所有 BookInfo
-	err := globalDB.GetAllData("seriesinfo", &seriesinfoList)
-	if err != nil {
-		log.Fatal("讀取所有 seriesinfo 失敗:", err)
-	}
-	return seriesinfoList
+	// err := globalDB.GetAllData("seriesinfo", &seriesinfoList)
+	// if err != nil {
+	// 	log.Fatal("讀取所有 seriesinfo 失敗:", err)
+	// }
+	// return seriesinfoList
+
+	return nil
 }
 
 func (a *App) GetSeriesKeyListAll() (serieskeyList []string) {
 	// 讀取所有 BookInfo
-	serieskeyList, err := globalDB.GetAllKeys("seriesinfo")
-	if err != nil {
-		log.Fatal("讀取所有 serieskey 失敗:", err)
-	}
-	return serieskeyList
+	// serieskeyList, err := globalDB.GetAllKeys("seriesinfo")
+	// if err != nil {
+	// 	log.Fatal("讀取所有 serieskey 失敗:", err)
+	// }
+	// return serieskeyList
+	return nil
 }
 
 func (a *App) GetSeriesInfoByKey(seriesKey string) (*SeriesInfo, error) {
-	var seriesInfo SeriesInfo
-	err := globalDB.LoadData("seriesinfo", seriesKey, &seriesInfo)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load series info: %w", err)
-	}
-	return &seriesInfo, nil
+	// var seriesInfo SeriesInfo
+	// err := globalDB.LoadData("seriesinfo", seriesKey, &seriesInfo)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to load series info: %w", err)
+	// }
+	// return &seriesInfo, nil
+
+	return nil, nil
 }

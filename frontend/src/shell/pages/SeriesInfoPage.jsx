@@ -17,7 +17,7 @@ import {
   ReadCover,
   GetBookInfoByKey,
   GetSeriesInfoByKey,
-  GetBookCoverByKey,
+  GetBookCoverBySeriesAndNumber,
 } from "../../../wailsjs/go/main/App";
 
 export default function SeriesInfoInfoPage() {
@@ -58,9 +58,7 @@ export default function SeriesInfoInfoPage() {
         const thumbnails = [];
         for (const key of fetchedSeriesInfo.bookinfokeys) {
           const bookinfo = await GetBookInfoByKey(key);
-          const img = await GetBookCoverByKey(
-            bookinfo.bookname + "_" + bookinfo.booknumber
-          );
+          const img = await GetBookCoverBySeriesAndNumber(bookinfo.Metadata.Series, bookinfo.Metadata.Number)
           thumbnails.push(img);
         }
         setThumbnails(thumbnails);

@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"time"
 
 	"ComiHa/backend/db"
 	"ComiHa/backend/debug"
@@ -19,15 +18,13 @@ import (
 // Global database connection
 var comicDB *db.DB
 
-// InitializeDB initializes the global database connection
-func InitializeDB() error {
+func InitDB() error {
 	dbPath := "./bookinfo.db"
 	var err error
 	comicDB, err = db.NewDB(dbPath, &BookInfo{}, &ImageData{}, &Metadata{}, &Page{})
 	return err
 }
 
-// CloseDB closes the global database connection
 func CloseDB() error {
 	if comicDB != nil {
 		return db.CloseBD(comicDB)
@@ -35,7 +32,6 @@ func CloseDB() error {
 	return nil
 }
 
-// ///////////////////////////////////////////////////////////////////////////////////////
 func SaveSeriesInfo(book BookInfo) error {
 	return nil //TODO
 }
@@ -74,98 +70,44 @@ func parseBookName(fileName string) (string, string) {
 	return baseName, ""
 }
 
-// 解析 ZIP 檔，取得檔案資訊
-func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
-	var bookName, bookNumber string
+func GetBookinfoByAndConditions(db *db.DB, conditions map[string]interface{}) (*BookInfo, error) {
+	var book BookInfo
+	debug.DebugInfo("GetBookinfoByAndConditions()")
+	debug.DebugInfo("conditions:", conditions)
+	query := db.Conn().Preload("ImageData").Preload("Metadata").
+		Joins("JOIN metadata ON metadata.book_info_id = book_infos.id")
 
-	// Retrieve ComicInfo.xml metadata
-	metadata, err := GetComicInfoFromZip(zipPath)
-	if err != nil {
-		fmt.Printf("讀取 ComicInfo.xml 失敗，將使用檔名解析: %v\n", err)
-		bookName, bookNumber = parseBookName(zipPath)
-	} else if metadata != nil && metadata.Series != "" && metadata.Number != "" {
-		bookName = metadata.Series
-		bookNumber = metadata.Number
-	} else {
-		fmt.Printf("讀取 ComicInfo.xml 書名未填寫，將使用檔名解析\n")
-		bookName, bookNumber = parseBookName(zipPath)
+	for key, value := range conditions {
+		query = query.Where(fmt.Sprintf("%s = ?", key), value)
 	}
 
-	zipReader, err := zip.OpenReader(zipPath)
+	err := query.First(&book).Error
 	if err != nil {
 		return nil, err
 	}
-	defer zipReader.Close()
-
-	var images []ImageData
-	for index, file := range zipReader.File {
-		if filepath.Ext(file.Name) == ".png" || filepath.Ext(file.Name) == ".jpg" {
-			images = append(images, ImageData{
-				FileName:  file.Name,
-				FileIndex: int64(index),
-				FileSize:  int64(file.UncompressedSize64),
-			})
-		}
-	}
-
-	if len(images) == 0 {
-		return nil, fmt.Errorf("ZIP 檔內沒有圖片")
-	}
-
-	// Generate SHA (using the binary content of the file)
-	sha, err := gadget.GenerateSHA256(zipPath)
-	if err != nil {
-		return nil, err
-	}
-
-	// Sort images by file name
-	sort.Slice(images, func(i, j int) bool {
-		return gadget.NaturalLess(images[i].FileName, images[j].FileName)
-	})
-
-	bookInfo := &BookInfo{
-		FileName:   zipPath,
-		SHA:        sha,
-		Timestamp:  time.Now().Unix(),
-		ImageData:  images,
-	}
-
-	// Populate metadata if ComicInfo.xml exists
-	if metadata != nil {
-		bookInfo.Metadata = *metadata
-	}
-	bookInfo.Metadata.Series = bookName
-	bookInfo.Metadata.Number = bookNumber
-
-	//如果metadata.pages是空的
-	//把images填進metadata裡面
-	if metadata != nil && len(metadata.Pages) == 0 {
-		fmt.Println("Metadata pages are empty, populating with image data...")
-		for i, img := range images {
-			metadata.Pages = append(metadata.Pages, Page{
-				Image:     i,
-				ImageSize: int(img.FileSize),
-			})
-		}
-		fmt.Printf("Populated metadata pages with %d images.\n", len(images))
-		// Reassign updated metadata back to bookInfo.Metadata
-		bookInfo.Metadata = *metadata
-	}
-	WriteComicInfo(*bookInfo)
-
-	return bookInfo, nil
+	return &book, nil
 }
 
-func GetBookBySeriesAndNumber(db *db.DB, series string, number string) (*BookInfo, error) {
-    var book BookInfo
-    err := db.Conn().Preload("ImageData").Preload("Metadata").
-        Joins("JOIN metadata ON metadata.book_info_id = book_infos.id").
-        Where("metadata.series = ? AND metadata.number = ?", series, number).
-        First(&book).Error
-    if err != nil {
-        return nil, err
-    }
-    return &book, nil
+func GetBookinfoByOrConditions(db *db.DB, conditions map[string]interface{}) (*BookInfo, error) {
+	var book BookInfo
+	query := db.Conn().Preload("ImageData").Preload("Metadata").
+		Joins("JOIN metadata ON metadata.book_info_id = book_infos.id")
+
+	// Build OR conditions dynamically
+	orConditions := []string{}
+	values := []interface{}{}
+	for key, value := range conditions {
+		orConditions = append(orConditions, fmt.Sprintf("%s = ?", key))
+		values = append(values, value)
+	}
+
+	query = query.Where(strings.Join(orConditions, " OR "), values...)
+
+	err := query.First(&book).Error
+	if err != nil {
+		return nil, err
+	}
+	return &book, nil
 }
 
 func AddBook(bookPath string) error {
@@ -174,40 +116,45 @@ func AddBook(bookPath string) error {
 	if err != nil {
 		return fmt.Errorf("生成 SHA 失敗: %w", err)
 	}
-	debug.DebugInfo("11111:")
 	// Attempt to retrieve ComicInfo.xml metadata
 	metadata, err := GetComicInfoFromZip(bookPath)
 	if err != nil {
 		fmt.Printf("讀取 ComicInfo.xml 失敗，將使用檔名解析: %v\n", err)
 	}
-	debug.DebugInfo("22222:")
+
 	var dbBook *BookInfo
 	if metadata != nil && metadata.Series != "" && metadata.Number != "" {
 		// Use metadata to find the book
-		dbBook, err = GetBookBySeriesAndNumber(comicDB, metadata.Series, metadata.Number)
+		dbBook, err = GetBookinfoByAndConditions(comicDB, map[string]interface{}{
+			"metadata.series": metadata.Series,
+			"metadata.number": metadata.Number,
+		})
 	} else {
 		// Fallback to parsing the book name
 		bookName, bookNumber := parseBookName(bookPath)
-		dbBook, err = GetBookBySeriesAndNumber(comicDB, bookName, bookNumber)
+		dbBook, err = GetBookinfoByAndConditions(comicDB, map[string]interface{}{
+			"metadata.series": bookName,
+			"metadata.number": bookNumber,
+		})
 	}
-	debug.DebugInfo("33333:")
+
 	if err == nil && dbBook.SHA == sha {
 		fmt.Printf("書籍已存在且 SHA 相同，跳過保存: %s\n", dbBook.Metadata.Series)
 		return nil
 	}
-	debug.DebugInfo("44444:")
+	
 	// Perform full ZIP analysis if the book is not found or SHA is different
 	bookInfo, err := AnalyzeZipFile(bookPath)
 	if err != nil {
 		return fmt.Errorf("解析失敗: %w", err)
 	}
-	debug.DebugInfo("55555:")
+	
 	// Save BookInfo to BoltDB
 	err = SaveBookInfo(*bookInfo)
 	if err != nil {
 		return fmt.Errorf("存入 BoltDB 失敗: %w", err)
 	}
-	debug.DebugInfo("66666:")
+	
 	// Save series info
 	err = SaveSeriesInfo(*bookInfo)
 	if err != nil {
@@ -219,8 +166,6 @@ func AddBook(bookPath string) error {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
-// API
-
 type BookImageData struct {
 	FileName   string
 	FileBitmap []byte
@@ -246,33 +191,30 @@ func (a *App) ScanBookAll() {
 	}
 }
 
-///
-
 func (a *App) GetBookListAll() (bookList []BookInfo) {
-	// 讀取所有 BookInfo
-		fmt.Printf("111111111111111\n")
-
 	err := db.GetAllData(comicDB, &bookList, "ImageData", "Metadata")
 	if err != nil {
 		log.Fatal("讀取所有 BookInfo 失敗:", err)
 	}
-	fmt.Printf("2222222222222\n")
 	return bookList
 }
 
-func (a *App) GetBookCoverBySeriesAndNumber(series string, number string) (*BookImageData, error) {
-	bookInfo, err := GetBookBySeriesAndNumber(comicDB, series, number)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get book info: %w", err)
+
+func (a *App) GetBookinfoByAndConditions(series string, number string) (*BookInfo, error) {
+	conditions := map[string]interface{}{
+		"metadata.series": series,
+		"metadata.number": number,
 	}
+	return GetBookinfoByAndConditions(comicDB, conditions)
+}
+
+func (a *App) GetBookCoverByBookinfo(bookInfo *BookInfo) (*BookImageData, error) {
 	zipPath := bookInfo.FileName
 	r, err := zip.OpenReader(zipPath)
 	if err != nil {
 		return nil, err
 	}
 	defer r.Close()
-
-	
 
 	// 先將圖片名稱存入 slice
 	fileMap := make(map[string]*zip.File)
@@ -293,18 +235,15 @@ func (a *App) GetBookCoverBySeriesAndNumber(series string, number string) (*Book
 
 	// 按照字串排序檔名
 	sort.Strings(keys)
-	// fmt.Println(keys)
 
+	// 打開第一個檔案
 	f := fileMap[keys[0]]
-
-	// 打開f檔案
 	fo, err := f.Open()
 	if err != nil {
 		return nil, err
 	}
 	defer fo.Close()
 
-	// 讀取檔案內容
 	data, err := io.ReadAll(fo)
 	if err != nil {
 		fmt.Println("讀取檔案內容失敗:", err)
@@ -312,19 +251,86 @@ func (a *App) GetBookCoverBySeriesAndNumber(series string, number string) (*Book
 	}
 
 	// 存入結果
-    image := &BookImageData{
-        FileName:   f.Name,
-        FileBitmap: data,
-    }
+	image := &BookImageData{
+		FileName:   f.Name,
+		FileBitmap: data,
+	}
 	return image, nil
 }
+
+func (a *App) GetBookPagesByBookinfo(bookInfo *BookInfo, pages []int64) ([]BookImageData, error) {
+	debug.DebugInfo("GetBookPagesByBookinfo()")
+	debug.DebugInfo("GetBookPagesByBookinfo()")
+	bookInfo, err := GetBookinfoByAndConditions(comicDB, map[string]interface{}{
+			"metadata.series": bookInfo.Metadata.Series,
+			"metadata.number": bookInfo.Metadata.Number,
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	path := bookInfo.FileName
+	debug.DebugInfo("path:", path)
+	// debug.DebugInfo("bookInfo:", bookInfo)
+	debug.DebugInfo("pages:", pages)
+
+	// 開啟 ZIP 檔案
+	r, err := zip.OpenReader(path)
+	if err != nil {
+		debug.DebugInfo("開啟 ZIP 失敗:", err)
+		return nil, err
+	}
+	defer r.Close()
+
+	var images []BookImageData
+
+	// 讀取指定頁面的檔案
+	for _, page := range pages {
+		if page < 0 || int(page) >= len(bookInfo.ImageData) {
+			debug.DebugInfo("頁面超出範圍:", page)
+			continue
+		}
+
+		fileIndex := bookInfo.ImageData[page].FileIndex
+		if fileIndex < 0 || fileIndex >= int64(len(r.File)) {
+			debug.DebugInfo("檔案索引超出範圍:", fileIndex)
+			continue
+		}
+
+		targetFile := r.File[fileIndex]
+		debug.DebugInfo("讀取檔案:", targetFile.Name)
+
+		// 打開檔案
+		fileReader, err := targetFile.Open()
+		if err != nil {
+			debug.DebugInfo("開啟檔案失敗:", err)
+			continue
+		}
+		defer fileReader.Close()
+
+		// 讀取檔案內容
+		data, err := io.ReadAll(fileReader)
+		if err != nil {
+			debug.DebugInfo("讀取檔案內容失敗:", err)
+			continue
+		}
+
+		// 將圖片數據添加到結果中
+		images = append(images, BookImageData{
+			FileName:   targetFile.Name,
+			FileBitmap: data,
+		})
+	}
+
+	return images, nil
+}
+
 
 func (a *App) GetBookInfoByKey(key string) (*BookInfo, error) {
 	return GetBookInfoByKey(key)
 }
 
 func GetBookInfoByKey(key string) (*BookInfo, error) {
-	// 從 BoltDB 讀取 BookInfo
 	bookInfo, err := LoadBookInfo(key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load book info: %w", err)

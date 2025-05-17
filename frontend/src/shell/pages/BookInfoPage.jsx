@@ -12,10 +12,10 @@ import {
 } from "@mui/material";
 import Chip from "@mui/material/Chip";
 import {
-  ReadCover,
   ScraperInfo,
-  GetBookPage,
-  GetBookInfoByKey,
+  GetBookinfoByAndConditions,
+  GetBookCoverByBookinfo,
+  GetBookPagesByBookinfo,
   WriteComicInfo,
 } from "../../../wailsjs/go/main/App";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -44,16 +44,18 @@ export default function BookInfoPage() {
   useEffect(() => {
     const fetchBookPages = async () => {
       try {
-        const bookinfo = await GetBookInfoByKey(bookname + "_" + booknumber);
-        console.log("New bookinfo:", bookinfo.imagedata);
-        const size = bookinfo.imagedata?.length || 0; // Retrieve the size using the array length
+        const bookinfo = await GetBookinfoByAndConditions(bookname,booknumber);
+        console.log("New bookinfo:", bookinfo);
+        const size = bookinfo.ImageData?.length || 0; // Retrieve the size using the array length
         console.log("New bookinfo:", size);
         for (let page = 0; page < size / 100; page++) {
           // Loop dynamically based on size
-          const result = await GetBookPage(bookname + "_" + booknumber, page);
+          console.log("page:", page);
+          const result = await GetBookPagesByBookinfo(bookinfo, [page]);
+          console.log("New bookinfo:", result);
           setThumbnails((prevThumbnails) => {
             const updatedThumbnails = [...prevThumbnails];
-            updatedThumbnails[page] = result;
+            updatedThumbnails[page] = result[0];
             return updatedThumbnails;
           });
         }
@@ -68,16 +70,15 @@ export default function BookInfoPage() {
   useEffect(() => {
     const fetchBookInfo = async () => {
       try {
-        const bookInfoResult = await GetBookInfoByKey(
-          bookname + "_" + booknumber
+        const bookInfoTemp = await GetBookinfoByAndConditions(
+          bookname,
+          booknumber
         );
-        setBookinfo(bookInfoResult);
-        if (bookInfoResult?.filename) {
-          const img = await ReadCover(bookInfoResult.filename);
-          const cover = img.map(
-            (item) => `data:image/png;base64,${item.FileBitmap}`
-          );
-          setBookCover(cover[0]); // Assuming only one cover image is returned
+        setBookinfo(bookInfoTemp);
+        if (bookInfoTemp?.FileName) {
+          const img = await GetBookCoverByBookinfo(bookInfoTemp);
+          const newImage = `data:image/png;base64,${img.FileBitmap}`;
+          setBookCover(newImage); // Assuming only one cover image is returned
         }
       } catch (error) {
         console.error("Error fetching book info:", error);
@@ -204,8 +205,8 @@ export default function BookInfoPage() {
               }}
             >
               <Typography variant="h6">
-                {bookinfo.metadata?.series || bookinfo.bookname}{" "}
-                {bookinfo.metadata?.volume || bookinfo.booknumber}
+                {bookinfo.metadata?.series || bookinfo.Metadata.Series}{" "}
+                {bookinfo.metadata?.volume || bookinfo.Metadata.Number}
               </Typography>
               <Box sx={{ height: "16px" }} /> {/* Add spacing here */}
               <Typography
@@ -215,7 +216,7 @@ export default function BookInfoPage() {
                   overflow: "auto", // 超過範圍會顯示滾動條
                 }}
               >
-                {bookinfo.metadata?.summary || ""}
+                {bookinfo.Metadata?.Summary || ""}
               </Typography>
               <Box sx={{ height: "16px" }} /> {/* Add spacing here */}
               <img
@@ -247,7 +248,7 @@ export default function BookInfoPage() {
                     <strong>作者</strong>
                   </Typography>
                   <Typography variant="body2">
-                    {bookinfo.metadata?.writer || "未知"}
+                    {bookinfo.Metadata?.Writer || "未知"}
                   </Typography>
                 </Box>
                 <Box>
@@ -255,9 +256,9 @@ export default function BookInfoPage() {
                     <strong>發行日</strong>
                   </Typography>
                   <Typography variant="body2">
-                    {`${bookinfo.metadata?.year || "未知"}-${
-                      bookinfo.metadata?.month || "未知"
-                    }-${bookinfo.metadata?.day || "未知"}`}
+                    {`${bookinfo.Metadata?.Year || "未知"}-${
+                      bookinfo.Metadata?.Month || "未知"
+                    }-${bookinfo.Metadata?.Day || "未知"}`}
                   </Typography>
                 </Box>
                 <Box>
@@ -265,7 +266,7 @@ export default function BookInfoPage() {
                     <strong>出版社</strong>
                   </Typography>
                   <Typography variant="body2">
-                    {bookinfo.metadata?.publisher || "未知"}
+                    {bookinfo.Metadata?.Publisher || "未知"}
                   </Typography>
                 </Box>
                 <Box>
@@ -273,7 +274,7 @@ export default function BookInfoPage() {
                     <strong>標籤</strong>
                   </Typography>
                   <Typography variant="body2">
-                    {bookinfo.metadata?.tags?.join(", ") || (
+                    {bookinfo.Metadata?.Tags?.join(", ") || (
                       <Chip
                         label="Comic"
                         color="warning"

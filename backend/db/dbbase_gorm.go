@@ -15,8 +15,6 @@ func (db *DB) Conn() *gorm.DB {
     return db.conn
 }
 
-
-// NewDB creates a new BoltDB instance
 func NewDB(dbPath string, models ...interface{}) (*DB, error) {
 	// Initialize the database connection using the modified path
 	fullPath := fmt.Sprintf("%s?mode=rwc", dbPath)
@@ -57,7 +55,6 @@ func (db *DB) DeleteData(bucketName string, key string) error {
 	return nil
 }
 
-// GetAllData retrieves all data from a bucket
 func GetAllData(db *DB, out interface{}, preloads ...string) error {
 	// Apply preloads if any
 	query := db.conn

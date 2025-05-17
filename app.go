@@ -23,7 +23,7 @@ func (a *App) startup(ctx context.Context) {
 	a.Ctx = ctx
 
 	// Initialize database
-	if err := backend.InitializeDB(); err != nil {
+	if err := backend.InitDB(); err != nil {
 		log.Fatal("Failed to initialize database:", err)
 	}
 }

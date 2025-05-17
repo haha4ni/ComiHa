@@ -14,10 +14,9 @@ import {
 } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import {
-  ReadCover,
   GetBookInfoByKey,
   GetSeriesInfoByKey,
-  GetBookCoverBySeriesAndNumber,
+  GetBookCoverByBookinfo,
 } from "../../../wailsjs/go/main/App";
 
 export default function SeriesInfoInfoPage() {
@@ -39,7 +38,7 @@ export default function SeriesInfoInfoPage() {
         );
         setBookinfo(seriesInfoResult);
         if (seriesInfoResult?.filename) {
-          const img = await ReadCover(seriesInfoResult.filename);
+          const img = await GetBookCoverByBookinfo(seriesInfoResult);
           const cover = img.map(
             (item) => `data:image/png;base64,${item.FileBitmap}`
           );
@@ -58,7 +57,7 @@ export default function SeriesInfoInfoPage() {
         const thumbnails = [];
         for (const key of fetchedSeriesInfo.bookinfokeys) {
           const bookinfo = await GetBookInfoByKey(key);
-          const img = await GetBookCoverBySeriesAndNumber(bookinfo.Metadata.Series, bookinfo.Metadata.Number)
+          const img = await GetBookCoverByBookinfo(bookinfo);
           thumbnails.push(img);
         }
         setThumbnails(thumbnails);

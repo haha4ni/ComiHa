@@ -6,21 +6,22 @@ import {
   GetBookInfoByKey,
   GetSeriesKeyListAll,
   GetSeriesInfoByKey,
-  GetBookCoverBySeriesAndNumber,
+  GetBookCoverByBookinfo,
 } from "../../../wailsjs/go/main/App";
 
 export default function ImageBoxList({ mode }) {
+  const navigate = useNavigate();
+
   const [images, setImages] = useState([]);
   const [booklist, setBooklist] = useState([]);
   const [serieslist, setSerieslist] = useState([]);
-  const navigate = useNavigate();
+
   const isFirstRender = useRef(true);
 
   const ShowBookinfoList = async () => {
     try {
-      console.log("================");
       const booklist = await GetBookListAll();
-      
+
       setBooklist(booklist);
 
       const placeholders = Array(booklist.length).fill(null); // Initialize placeholders
@@ -28,7 +29,7 @@ export default function ImageBoxList({ mode }) {
 
       booklist.forEach(async (bookinfo, index) => {
         try {
-          const img = await GetBookCoverBySeriesAndNumber(bookinfo.Metadata.Series, bookinfo.Metadata.Number);
+          const img = await GetBookCoverByBookinfo(bookinfo);
           const newImage = `data:image/jpg;base64,${img.FileBitmap}`;
           setImages((prevImages) => {
             const updatedImages = [...prevImages];
@@ -59,7 +60,7 @@ export default function ImageBoxList({ mode }) {
         try {
           const seriesInfo = await GetSeriesInfoByKey(series);
           const bookinfo = await GetBookInfoByKey(seriesInfo.bookinfokeys[0]);
-          const img = await GetBookCoverBySeriesAndNumber(bookinfo.Metadata.Series, bookinfo.Metadata.Number)
+          const img = await GetBookCoverByBookinfo(bookinfo);
           const newImage = `data:image/png;base64,${img.FileBitmap}`;
 
           setSerieslist((prevSerieslist) => {
@@ -109,10 +110,6 @@ export default function ImageBoxList({ mode }) {
         display: "grid", // 使用 grid 排版
         gap: 2, // 間距
         gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-        // gridAutoFlow: "column", // 按列排列，避免換行
-        // gridTemplateColumns: "repeat(auto-fill, 150px)", // 固定每個項目的寬度
-        // overflowX: "auto", // 添加水平滾動條
-        // whiteSpace: "nowrap", // 防止內容換行
       }}
     >
       {images.map((image, index) => (
@@ -141,11 +138,10 @@ export default function ImageBoxList({ mode }) {
             }}
             onClick={() => {
               if (mode === "bookinfo") {
-                const book = booklist[index];
                 navigate(
                   `/bookinfo/${encodeURIComponent(
-                    book.bookname
-                  )}/${encodeURIComponent(book.booknumber)}`
+                    booklist[index].Metadata.Series
+                  )}/${encodeURIComponent(booklist[index].Metadata.Number)}`
                 );
               } else if (mode === "series") {
                 const series = serieslist[index];
@@ -167,7 +163,7 @@ export default function ImageBoxList({ mode }) {
             }}
           >
             {mode === "bookinfo"
-              ? `${booklist[index]?.bookname} ${booklist[index]?.booknumber}`
+              ? `${booklist[index]?.Metadata.Series} ${booklist[index]?.Metadata.Number}`
               : `${serieslist[index]?.seriesname}`}
           </Typography>
         </Box>

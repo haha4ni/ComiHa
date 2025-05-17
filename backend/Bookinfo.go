@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"ComiHa/backend/gadget"
 	"archive/zip"
 	"encoding/xml"
 	"fmt"
@@ -8,7 +9,10 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"sort"
 	"strings"
+	"time"
 )
 
 // WriteComicInfo writes the BookInfo struct to a ComicInfo.xml file
@@ -125,4 +129,86 @@ func GetComicInfoFromZip(zipPath string) (*Metadata, error) {
 	}
 
 	return nil, nil // No ComicInfo.xml found
+}
+
+// 解析 ZIP 檔，取得檔案資訊
+func AnalyzeZipFile(zipPath string) (*BookInfo, error) {
+	var bookName, bookNumber string
+
+	// Retrieve ComicInfo.xml metadata
+	metadata, err := GetComicInfoFromZip(zipPath)
+	if err != nil {
+		fmt.Printf("讀取 ComicInfo.xml 失敗，將使用檔名解析: %v\n", err)
+		bookName, bookNumber = parseBookName(zipPath)
+	} else if metadata != nil && metadata.Series != "" && metadata.Number != "" {
+		bookName = metadata.Series
+		bookNumber = metadata.Number
+	} else {
+		fmt.Printf("讀取 ComicInfo.xml 書名未填寫，將使用檔名解析\n")
+		bookName, bookNumber = parseBookName(zipPath)
+	}
+
+	zipReader, err := zip.OpenReader(zipPath)
+	if err != nil {
+		return nil, err
+	}
+	defer zipReader.Close()
+
+	var images []ImageData
+	for index, file := range zipReader.File {
+		if filepath.Ext(file.Name) == ".png" || filepath.Ext(file.Name) == ".jpg" {
+			images = append(images, ImageData{
+				FileName:  file.Name,
+				FileIndex: int64(index),
+				FileSize:  int64(file.UncompressedSize64),
+			})
+		}
+	}
+
+	if len(images) == 0 {
+		return nil, fmt.Errorf("ZIP 檔內沒有圖片")
+	}
+
+	// Generate SHA (using the binary content of the file)
+	sha, err := gadget.GenerateSHA256(zipPath)
+	if err != nil {
+		return nil, err
+	}
+
+	// Sort images by file name
+	sort.Slice(images, func(i, j int) bool {
+		return gadget.NaturalLess(images[i].FileName, images[j].FileName)
+	})
+
+	bookInfo := &BookInfo{
+		FileName:   zipPath,
+		SHA:        sha,
+		Timestamp:  time.Now().Unix(),
+		ImageData:  images,
+	}
+
+	// Populate metadata if ComicInfo.xml exists
+	if metadata != nil {
+		bookInfo.Metadata = *metadata
+	}
+	bookInfo.Metadata.Series = bookName
+	bookInfo.Metadata.Number = bookNumber
+
+	//如果metadata.pages是空的
+	//把images填進metadata裡面
+	if metadata != nil && len(metadata.Pages) == 0 {
+		fmt.Println("Metadata pages are empty, populating with image data...")
+		for i, img := range images {
+			metadata.Pages = append(metadata.Pages, Page{
+				Image:     i,
+				ImageSize: int(img.FileSize),
+			})
+		}
+		fmt.Printf("Populated metadata pages with %d images.\n", len(images))
+		// Reassign updated metadata back to bookInfo.Metadata
+		bookInfo.Metadata = *metadata
+	}
+	WriteComicInfo(*bookInfo)
+
+	return bookInfo, nil
 }

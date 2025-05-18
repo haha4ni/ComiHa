@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Box, Button, Slider, Tooltip } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
-import { GetBookPage, GetBookInfoByKey } from "../../../wailsjs/go/main/App";
+import { GetBookPage, GetBookinfoByAndConditions } from "../../../wailsjs/go/main/App";
 import ScrollView from "./ScrollView";
 import PageView from "./PageView";
 import LooksOneIcon from '@mui/icons-material/LooksOne';
@@ -28,7 +28,7 @@ export default function BookReadPage() {
   useEffect(() => {
     const fetchBookInfo = async () => {
       try {
-        const bookinfo = await GetBookInfoByKey(bookname + "_" + booknumber);
+        const bookinfo = await GetBookinfoByAndConditions(bookname, booknumber);
         console.log("New bookinfo:", bookinfo.imagedata);
         const size = bookinfo.imagedata?.length || 0;
         setTotalPages(size);

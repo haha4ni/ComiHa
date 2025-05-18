@@ -15,7 +15,7 @@ import {
   ScraperInfo,
   GetBookinfoByAndConditions,
   GetBookCoverByBookinfo,
-  GetBookPagesByBookinfo,
+  GetBookPageByBookinfo,
   WriteComicInfo,
 } from "../../../wailsjs/go/main/App";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -42,56 +42,47 @@ export default function BookInfoPage() {
   };
 
   useEffect(() => {
-    const fetchBookPages = async () => {
-      try {
-        const bookinfo = await GetBookinfoByAndConditions(bookname,booknumber);
-        console.log("New bookinfo:", bookinfo);
-        const size = bookinfo.ImageData?.length || 0; // Retrieve the size using the array length
-        console.log("New bookinfo:", size);
-        for (let page = 0; page < size / 100; page++) {
-          // Loop dynamically based on size
-          console.log("page:", page);
-          const result = await GetBookPagesByBookinfo(bookinfo, [page]);
-          console.log("New bookinfo:", result);
-          setThumbnails((prevThumbnails) => {
-            const updatedThumbnails = [...prevThumbnails];
-            updatedThumbnails[page] = result[0];
-            return updatedThumbnails;
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching book pages:", error);
-      }
-    };
-
-    fetchBookPages();
-  }, [bookname, booknumber]);
-
-  useEffect(() => {
+    console.log("Effect: fetch bookinfo triggered", { bookname, booknumber });
     const fetchBookInfo = async () => {
       try {
-        const bookInfoTemp = await GetBookinfoByAndConditions(
-          bookname,
-          booknumber
-        );
+        const bookInfoTemp = await GetBookinfoByAndConditions(bookname, booknumber);
         setBookinfo(bookInfoTemp);
-        if (bookInfoTemp?.FileName) {
-          const img = await GetBookCoverByBookinfo(bookInfoTemp);
-          const newImage = `data:image/png;base64,${img.FileBitmap}`;
-          setBookCover(newImage); // Assuming only one cover image is returned
-        }
       } catch (error) {
         console.error("Error fetching book info:", error);
       }
     };
-
     fetchBookInfo();
   }, [bookname, booknumber]);
 
   useEffect(() => {
-    if (bookinfo?.metadata) {
-      setEditableMetadata({ ...bookinfo.metadata }); // Initialize editable metadata
-    }
+    console.log("Effect: fetch cover/thumbnails/metadata triggered", { bookinfo });
+    if (!bookinfo) return;
+
+    const fetchDetails = async () => {
+      try {
+        // 取得封面
+        const img = await GetBookCoverByBookinfo(bookinfo);
+        setBookCover(`data:image/png;base64,${img.FileBitmap}`);
+
+        // 取得縮圖
+        const size = bookinfo.ImageData?.length || 0;
+        let thumbnailsArr = [];
+        for (let page = 0; page < size / 100; page++) {
+          const result = await GetBookPageByBookinfo(bookinfo, page);
+          thumbnailsArr[page] = result;
+        }
+        setThumbnails(thumbnailsArr);
+
+        // 設定可編輯 metadata
+        if (bookinfo?.metadata) {
+          setEditableMetadata({ ...bookinfo.metadata });
+        }
+      } catch (error) {
+        console.error("Error fetching book details:", error);
+      }
+    };
+
+    fetchDetails();
   }, [bookinfo]);
 
   const handleMetadataChange = (field, value) => {
@@ -273,17 +264,19 @@ export default function BookInfoPage() {
                   <Typography variant="body2">
                     <strong>標籤</strong>
                   </Typography>
-                  <Typography variant="body2">
-                    {bookinfo.Metadata?.Tags?.join(", ") || (
-                      <Chip
-                        label="Comic"
-                        color="warning"
-                        size="small"
-                        variant="outlined"
-                        sx={{ borderRadius: "6px" }}
-                      />
-                    )}
-                  </Typography>
+                  {bookinfo.Metadata?.Tags?.length > 0 ? (
+                    <Typography variant="body2">
+                      {bookinfo.Metadata.Tags.join(", ")}
+                    </Typography>
+                  ) : (
+                    <Chip
+                      label="Comic"
+                      color="warning"
+                      size="small"
+                      variant="outlined"
+                      sx={{ borderRadius: "6px" }}
+                    />
+                  )}
                 </Box>
               </Box>
               <Box

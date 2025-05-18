@@ -10,7 +10,7 @@ export function GetBookListAll():Promise<Array<backend.BookInfo>>;
 
 export function GetBookPage(arg1:string,arg2:number):Promise<backend.ImageDataTemp>;
 
-export function GetBookPageThumbnail(arg1:string,arg2:number,arg3:number,arg4:number):Promise<backend.ImageDataTemp>;
+export function GetBookPageByBookinfo(arg1:backend.BookInfo,arg2:number):Promise<backend.BookImageData>;
 
 export function GetBookPagesByBookinfo(arg1:backend.BookInfo,arg2:Array<number>):Promise<Array<backend.BookImageData>>;
 

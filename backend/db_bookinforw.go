@@ -258,23 +258,21 @@ func (a *App) GetBookCoverByBookinfo(bookInfo *BookInfo) (*BookImageData, error)
 	return image, nil
 }
 
-func (a *App) GetBookPagesByBookinfo(bookInfo *BookInfo, pages []int64) ([]BookImageData, error) {
-	debug.DebugInfo("GetBookPagesByBookinfo()")
-	debug.DebugInfo("GetBookPagesByBookinfo()")
+// 取得單一頁面圖片
+func (a *App) GetBookPageByBookinfo(bookInfo *BookInfo, page int64) (*BookImageData, error) {
+	debug.DebugInfo("GetBookPageByBookinfo()")
 	bookInfo, err := GetBookinfoByAndConditions(comicDB, map[string]interface{}{
-			"metadata.series": bookInfo.Metadata.Series,
-			"metadata.number": bookInfo.Metadata.Number,
-		})
+		"metadata.series": bookInfo.Metadata.Series,
+		"metadata.number": bookInfo.Metadata.Number,
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	path := bookInfo.FileName
 	debug.DebugInfo("path:", path)
-	// debug.DebugInfo("bookInfo:", bookInfo)
-	debug.DebugInfo("pages:", pages)
+	debug.DebugInfo("page:", page)
 
-	// 開啟 ZIP 檔案
 	r, err := zip.OpenReader(path)
 	if err != nil {
 		debug.DebugInfo("開啟 ZIP 失敗:", err)
@@ -282,49 +280,54 @@ func (a *App) GetBookPagesByBookinfo(bookInfo *BookInfo, pages []int64) ([]BookI
 	}
 	defer r.Close()
 
-	var images []BookImageData
-
-	// 讀取指定頁面的檔案
-	for _, page := range pages {
-		if page < 0 || int(page) >= len(bookInfo.ImageData) {
-			debug.DebugInfo("頁面超出範圍:", page)
-			continue
-		}
-
-		fileIndex := bookInfo.ImageData[page].FileIndex
-		if fileIndex < 0 || fileIndex >= int64(len(r.File)) {
-			debug.DebugInfo("檔案索引超出範圍:", fileIndex)
-			continue
-		}
-
-		targetFile := r.File[fileIndex]
-		debug.DebugInfo("讀取檔案:", targetFile.Name)
-
-		// 打開檔案
-		fileReader, err := targetFile.Open()
-		if err != nil {
-			debug.DebugInfo("開啟檔案失敗:", err)
-			continue
-		}
-		defer fileReader.Close()
-
-		// 讀取檔案內容
-		data, err := io.ReadAll(fileReader)
-		if err != nil {
-			debug.DebugInfo("讀取檔案內容失敗:", err)
-			continue
-		}
-
-		// 將圖片數據添加到結果中
-		images = append(images, BookImageData{
-			FileName:   targetFile.Name,
-			FileBitmap: data,
-		})
+	if page < 0 || int(page) >= len(bookInfo.ImageData) {
+		debug.DebugInfo("頁面超出範圍:", page)
+		return nil, fmt.Errorf("頁面超出範圍: %d", page)
 	}
 
-	return images, nil
+	fileIndex := bookInfo.ImageData[page].FileIndex
+	if fileIndex < 0 || fileIndex >= int64(len(r.File)) {
+		debug.DebugInfo("檔案索引超出範圍:", fileIndex)
+		return nil, fmt.Errorf("檔案索引超出範圍: %d", fileIndex)
+	}
+
+	targetFile := r.File[fileIndex]
+	debug.DebugInfo("讀取檔案:", targetFile.Name)
+
+	fileReader, err := targetFile.Open()
+	if err != nil {
+		debug.DebugInfo("開啟檔案失敗:", err)
+		return nil, err
+	}
+	defer fileReader.Close()
+
+	data, err := io.ReadAll(fileReader)
+	if err != nil {
+		debug.DebugInfo("讀取檔案內容失敗:", err)
+		return nil, err
+	}
+
+	image := &BookImageData{
+		FileName:   targetFile.Name,
+		FileBitmap: data,
+	}
+	return image, nil
 }
 
+// 疊代呼叫單頁取得多頁
+func (a *App) GetBookPagesByBookinfo(bookInfo *BookInfo, pages []int64) ([]BookImageData, error) {
+	debug.DebugInfo("GetBookPagesByBookinfo()")
+	var images []BookImageData
+	for _, page := range pages {
+		img, err := a.GetBookPageByBookinfo(bookInfo, page)
+		if err != nil {
+			debug.DebugInfo("取得頁面失敗:", err)
+			continue
+		}
+		images = append(images, *img)
+	}
+	return images, nil
+}
 
 func (a *App) GetBookInfoByKey(key string) (*BookInfo, error) {
 	return GetBookInfoByKey(key)

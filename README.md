@@ -1,7 +1,10 @@
-<h1 align="left" style="display: flex; align-items: center; gap: 10px;">
-  <img src="/build/appicon.png?raw=true" width="42" height="42" style="vertical-align: middle;" />
+<h2 align="center" style="display: flex; align-items: center; gap: 10px;">
+  <img src="/build/appicon.png?raw=true" width="60" height="60" style="vertical-align: middle;" />
+  <p/>
   ComiHa
-</h1>
+</h2>
+
+
 
 ### TODO list
 

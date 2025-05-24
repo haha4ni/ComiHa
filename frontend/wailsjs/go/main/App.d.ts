@@ -14,7 +14,7 @@ export function GetBookPageByBookinfo(arg1:backend.BookInfo,arg2:number):Promise
 
 export function GetBookPagesByBookinfo(arg1:backend.BookInfo,arg2:Array<number>):Promise<Array<backend.BookImageData>>;
 
-export function GetBookinfoByAndConditions(arg1:string,arg2:string):Promise<backend.BookInfo>;
+export function GetBookinfoByAndConditions(arg1:{[key: string]: any}):Promise<backend.BookInfo>;
 
 export function GetSeriesInfoByKey(arg1:string):Promise<backend.SeriesInfo>;
 

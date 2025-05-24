@@ -1,12 +1,15 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Box, Button, Slider, Tooltip } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
-import { GetBookPage, GetBookinfoByAndConditions } from "../../../wailsjs/go/main/App";
+import {
+  GetBookPageByBookinfo,
+  GetBookinfoByAndConditions,
+} from "../../../wailsjs/go/main/App";
 import ScrollView from "./ScrollView";
 import PageView from "./PageView";
-import LooksOneIcon from '@mui/icons-material/LooksOne';
-import LooksTwoIcon from '@mui/icons-material/LooksTwo';
-import SwapVertIcon from '@mui/icons-material/SwapVert';
+import LooksOneIcon from "@mui/icons-material/LooksOne";
+import LooksTwoIcon from "@mui/icons-material/LooksTwo";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
 
 export default function BookReadPage() {
   const { bookname, booknumber, page } = useParams();
@@ -16,7 +19,7 @@ export default function BookReadPage() {
   const loadingRef = useRef(false);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [sliderValue, setSliderValue] = useState(parseInt(page));
-  const [totalPages, setTotalPages] = useState(0); // Default value
+
   const pageRefs = useRef({});
   const [viewMode, setViewMode] = useState("scroll"); // 'scroll', 'two-page', or 'single-page'
 
@@ -25,12 +28,21 @@ export default function BookReadPage() {
   const parentRef = useRef(null);
   const [scrollY, setScrollY] = useState(0); // 修改為 scrollY
 
+
+  const [bookinfo, setBookinfo] = useState(null);
+  const [totalPages, setTotalPages] = useState(0);
+
+
   useEffect(() => {
     const fetchBookInfo = async () => {
       try {
-        const bookinfo = await GetBookinfoByAndConditions(bookname, booknumber);
-        console.log("New bookinfo:", bookinfo.imagedata);
-        const size = bookinfo.imagedata?.length || 0;
+        console.log("Fetching book info for:", bookname, booknumber);
+        const info = await GetBookinfoByAndConditions({
+          "metadata.series": bookname,
+          "metadata.number": booknumber,
+        });
+        setBookinfo(info); 
+        const size = info?.ImageData?.length || 0;
         setTotalPages(size);
       } catch (error) {
         console.error("Error fetching book info:", error);
@@ -39,6 +51,14 @@ export default function BookReadPage() {
 
     fetchBookInfo();
   }, [bookname, booknumber]);
+
+
+
+
+
+
+
+
 
   const togglePopup = () => {
     setIsPopupVisible((prev) => !prev);
@@ -72,7 +92,10 @@ export default function BookReadPage() {
 
   const loadPages = useCallback(
     async (startPage, count = 5) => {
+      console.log("Right button clicked");
+      if (!bookinfo || !totalPages) return;
       if (loadingRef.current) return;
+      console.log("Right button clicked~~~");
       loadingRef.current = true;
 
       try {
@@ -83,7 +106,7 @@ export default function BookReadPage() {
 
         const loadedPages = await Promise.all(
           pagesToLoad.map((pageNum) =>
-            GetBookPage(bookname + "_" + booknumber, pageNum)
+            GetBookPageByBookinfo(bookinfo, pageNum)
               .then((result) => ({ [pageNum]: result }))
               .catch((error) => {
                 console.error(`Error loading page ${pageNum}:`, error);
@@ -104,7 +127,7 @@ export default function BookReadPage() {
         loadingRef.current = false;
       }
     },
-    [bookname, booknumber]
+    [bookinfo]
   );
 
   const jumpToPage = async (pageNumber) => {
@@ -173,19 +196,19 @@ export default function BookReadPage() {
 
     const parentElement = parentRef.current;
     if (parentElement) {
-      parentElement.addEventListener('scroll', handleScroll);
+      parentElement.addEventListener("scroll", handleScroll);
     }
 
     return () => {
       if (parentElement) {
-        parentElement.removeEventListener('scroll', handleScroll);
+        parentElement.removeEventListener("scroll", handleScroll);
       }
     };
   }, []);
 
   return (
     <Box
-    ref={parentRef}
+      ref={parentRef}
       sx={{
         width: "100%",
         maxHeight: "calc(100vh - 40px)",

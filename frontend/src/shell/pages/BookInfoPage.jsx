@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Box,
@@ -30,6 +30,7 @@ export default function BookInfoPage() {
   const [bookinfo, setBookinfo] = useState(null);
   const [openSettings, setOpenSettings] = useState(false); // Added state for Dialog
   const [editableMetadata, setEditableMetadata] = useState(null); // Added state for editable metadata
+  const isFirstRender = useRef(true);
 
   const handleSwitchMode = async () => {
     try {
@@ -42,21 +43,32 @@ export default function BookInfoPage() {
   };
 
   useEffect(() => {
-    console.log("Effect: fetch bookinfo triggered", { bookname, booknumber });
     const fetchBookInfo = async () => {
       try {
-        const bookInfoTemp = await GetBookinfoByAndConditions(bookname, booknumber);
+        const bookInfoTemp = await GetBookinfoByAndConditions({
+          "metadata.series": bookname,
+          "metadata.number": booknumber,
+        });
         setBookinfo(bookInfoTemp);
       } catch (error) {
         console.error("Error fetching book info:", error);
       }
     };
-    fetchBookInfo();
-  }, [bookname, booknumber]);
+
+    if (isFirstRender.current) {
+      console.log("First render, fetching book info...");
+      isFirstRender.current = false; // Set to false after the first render
+    } else {
+      console.log("Effect: fetch bookinfo triggered", { bookname, booknumber });
+      fetchBookInfo();
+    }
+  }, []);
 
   useEffect(() => {
-    console.log("Effect: fetch cover/thumbnails/metadata triggered", { bookinfo });
     if (!bookinfo) return;
+    console.log("Effect: fetch cover/thumbnails/metadata triggered", {
+      bookinfo,
+    });
 
     const fetchDetails = async () => {
       try {

@@ -200,11 +200,9 @@ func (a *App) GetBookListAll() (bookList []BookInfo) {
 }
 
 
-func (a *App) GetBookinfoByAndConditions(series string, number string) (*BookInfo, error) {
-	conditions := map[string]interface{}{
-		"metadata.series": series,
-		"metadata.number": number,
-	}
+func (a *App) GetBookinfoByAndConditions(conditions map[string]interface{}) (*BookInfo, error) {
+	fmt.Println("GetBookinfoByA()")
+	fmt.Println("conditions:", conditions)
 	return GetBookinfoByAndConditions(comicDB, conditions)
 }
 
@@ -257,6 +255,8 @@ func (a *App) GetBookCoverByBookinfo(bookInfo *BookInfo) (*BookImageData, error)
 	}
 	return image, nil
 }
+
+
 
 // 取得單一頁面圖片
 func (a *App) GetBookPageByBookinfo(bookInfo *BookInfo, page int64) (*BookImageData, error) {

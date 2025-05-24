@@ -26,8 +26,8 @@ export function GetBookPagesByBookinfo(arg1, arg2) {
   return window['go']['main']['App']['GetBookPagesByBookinfo'](arg1, arg2);
 }
 
-export function GetBookinfoByAndConditions(arg1, arg2) {
-  return window['go']['main']['App']['GetBookinfoByAndConditions'](arg1, arg2);
+export function GetBookinfoByAndConditions(arg1) {
+  return window['go']['main']['App']['GetBookinfoByAndConditions'](arg1);
 }
 
 export function GetSeriesInfoByKey(arg1) {

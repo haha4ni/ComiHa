@@ -14,12 +14,12 @@ export function GetBookListAll() {
   return window['go']['main']['App']['GetBookListAll']();
 }
 
-export function GetBookPage(arg1, arg2) {
-  return window['go']['main']['App']['GetBookPage'](arg1, arg2);
-}
-
 export function GetBookPageByBookinfo(arg1, arg2) {
   return window['go']['main']['App']['GetBookPageByBookinfo'](arg1, arg2);
+}
+
+export function GetBookPageThumbnailByBookinfo(arg1, arg2) {
+  return window['go']['main']['App']['GetBookPageThumbnailByBookinfo'](arg1, arg2);
 }
 
 export function GetBookPagesByBookinfo(arg1, arg2) {

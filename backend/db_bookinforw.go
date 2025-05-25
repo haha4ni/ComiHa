@@ -15,6 +15,9 @@ import (
 	"ComiHa/backend/gadget"
 )
 
+// data\cache
+var cachePath = "./data/cache"
+
 // Global database connection
 var comicDB *db.DB
 
@@ -256,18 +259,14 @@ func (a *App) GetBookCoverByBookinfo(bookInfo *BookInfo) (*BookImageData, error)
 	return image, nil
 }
 
+func (a *App) GetBookPageThumbnailByBookinfo(bookInfo *BookInfo, page int64) (*BookImageData, error) {
+	debug.DebugInfo("GetBookPageThumbnailByBookinfo()")
+	
+	return nil, fmt.Errorf("GetBookPageThumbnailByBookinfo() 尚未實作")
+}
 
-
-// 取得單一頁面圖片
 func (a *App) GetBookPageByBookinfo(bookInfo *BookInfo, page int64) (*BookImageData, error) {
 	debug.DebugInfo("GetBookPageByBookinfo()")
-	bookInfo, err := GetBookinfoByAndConditions(comicDB, map[string]interface{}{
-		"metadata.series": bookInfo.Metadata.Series,
-		"metadata.number": bookInfo.Metadata.Number,
-	})
-	if err != nil {
-		return nil, err
-	}
 
 	path := bookInfo.FileName
 	debug.DebugInfo("path:", path)

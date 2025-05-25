@@ -1,19 +1,17 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { Box, Button, Slider, Tooltip } from "@mui/material";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { Box } from "@mui/material";
 import {
   GetBookPageByBookinfo,
   GetBookinfoByAndConditions,
-} from "../../../wailsjs/go/main/App";
+} from "../../../../wailsjs/go/main/App";
 import ScrollView from "./ScrollView";
 import PageView from "./PageView";
-import LooksOneIcon from "@mui/icons-material/LooksOne";
-import LooksTwoIcon from "@mui/icons-material/LooksTwo";
-import SwapVertIcon from "@mui/icons-material/SwapVert";
+import BottomPopup from "./BottomPopup";
+import OverlayButtons from "./OverlayButtons";
 
 export default function BookReadPage() {
   const { bookname, booknumber, page } = useParams();
-  const navigate = useNavigate();
   const [pages, setPages] = useState({});
   const [lastLoadedPage, setLastLoadedPage] = useState(parseInt(page));
   const loadingRef = useRef(false);
@@ -28,10 +26,8 @@ export default function BookReadPage() {
   const parentRef = useRef(null);
   const [scrollY, setScrollY] = useState(0); // 修改為 scrollY
 
-
   const [bookinfo, setBookinfo] = useState(null);
   const [totalPages, setTotalPages] = useState(0);
-
 
   useEffect(() => {
     const fetchBookInfo = async () => {
@@ -41,7 +37,7 @@ export default function BookReadPage() {
           "metadata.series": bookname,
           "metadata.number": booknumber,
         });
-        setBookinfo(info); 
+        setBookinfo(info);
         const size = info?.ImageData?.length || 0;
         setTotalPages(size);
       } catch (error) {
@@ -51,44 +47,6 @@ export default function BookReadPage() {
 
     fetchBookInfo();
   }, [bookname, booknumber]);
-
-
-
-
-
-
-
-
-
-  const togglePopup = () => {
-    setIsPopupVisible((prev) => !prev);
-  };
-
-  const toggleViewMode = () => {
-    setViewMode((prev) => {
-      if (prev === "scroll") return "two-page";
-      if (prev === "two-page") return "single-page";
-      return "scroll";
-    });
-  };
-
-  const handleLeftButtonClick = () => {
-    console.log("Left button clicked");
-    const nextPage = Math.min(sliderValue + 1, totalPages); // Ensure it doesn't exceed totalPages
-    setSliderValue(nextPage);
-    jumpToPage(nextPage - 1); // Map sliderValue to image index (nextPage - 1)
-  };
-
-  const handleCenterButtonClick = () => {
-    togglePopup();
-  };
-
-  const handleRightButtonClick = () => {
-    console.log("Right button clicked");
-    const prevPage = Math.max(sliderValue - 1, 1); // Ensure it doesn't go below 1
-    setSliderValue(prevPage);
-    jumpToPage(prevPage - 1); // Map sliderValue to image index (prevPage - 1)
-  };
 
   const loadPages = useCallback(
     async (startPage, count = 5) => {
@@ -129,6 +87,49 @@ export default function BookReadPage() {
     },
     [bookinfo]
   );
+
+  const togglePopup = () => {
+    setIsPopupVisible((prev) => !prev);
+  };
+
+  const toggleViewMode = () => {
+    setViewMode((prev) => {
+      if (prev === "scroll") {
+        setScrollY(0);
+        return "two-page";
+      }
+      if (prev === "two-page") {
+        setScrollY(0);
+        return "single-page";
+      }
+      if (prev === "single-page") {
+        // 跳回 scroll mode 時跳轉到對應頁數
+        setTimeout(() => {
+          jumpToPage(sliderValue - 1);
+        }, 0);
+        return "scroll";
+      }
+      return "scroll";
+    });
+  };
+
+  const handleLeftButtonClick = () => {
+    console.log("Left button clicked");
+    const nextPage = Math.min(sliderValue + 1, totalPages); // Ensure it doesn't exceed totalPages
+    setSliderValue(nextPage);
+    jumpToPage(nextPage - 1); // Map sliderValue to image index (nextPage - 1)
+  };
+
+  const handleCenterButtonClick = () => {
+    togglePopup();
+  };
+
+  const handleRightButtonClick = () => {
+    console.log("Right button clicked");
+    const prevPage = Math.max(sliderValue - 1, 1); // Ensure it doesn't go below 1
+    setSliderValue(prevPage);
+    jumpToPage(prevPage - 1); // Map sliderValue to image index (prevPage - 1)
+  };
 
   const jumpToPage = async (pageNumber) => {
     console.log(`Attempting to jump to page ${pageNumber}`);
@@ -190,7 +191,7 @@ export default function BookReadPage() {
   useEffect(() => {
     const handleScroll = () => {
       if (parentRef.current) {
-        setScrollY(parentRef.current.scrollTop); // 修改為 scrollTop
+        setScrollY(parentRef.current.scrollTop);
       }
     };
 
@@ -220,31 +221,12 @@ export default function BookReadPage() {
         position: "relative", // Ensure absolute children are positioned correctly
       }}
     >
-      <Box
-        sx={{
-          position: "absolute",
-          top: scrollY, // 將 scrollY 值應用到 top
-          left: 0,
-          width: "100%",
-          height: "100%",
-          zIndex: 10,
-          display: "flex",
-          pointerEvents: "none", // 讓內層可點擊，其餘透明
-        }}
-      >
-        <Box
-          onClick={handleLeftButtonClick}
-          sx={{ width: "20%", height: "100%", pointerEvents: "auto" }}
-        />
-        <Box
-          onClick={handleCenterButtonClick}
-          sx={{ width: "60%", height: "100%", pointerEvents: "auto" }}
-        />
-        <Box
-          onClick={handleRightButtonClick}
-          sx={{ width: "20%", height: "100%", pointerEvents: "auto" }}
-        />
-      </Box>
+      <OverlayButtons
+        scrollY={scrollY}
+        handleLeftButtonClick={handleLeftButtonClick}
+        handleCenterButtonClick={handleCenterButtonClick}
+        handleRightButtonClick={handleRightButtonClick}
+      />
       {viewMode === "scroll" ? (
         <ScrollView
           pages={pages}
@@ -268,78 +250,14 @@ export default function BookReadPage() {
       )}
       {/* Bottom Popup */}
       {isPopupVisible && (
-        <Box
-          sx={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            width: "100%",
-            backgroundColor: "rgba(51, 51, 51, 0.8)",
-            color: "#fff",
-            padding: "20px",
-            boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            zIndex: 1000,
-          }}
-        >
-          {/* Page Slider */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              width: "80%",
-              justifyContent: "space-between",
-            }}
-          >
-            <Slider
-              value={sliderValue} // Keep sliderValue as is since it starts from 1
-              min={1} // Minimum value starts from 1
-              max={totalPages} // Maximum value matches totalPages
-              onChange={(e, val) => setSliderValue(val)} // Update sliderValue directly
-              onChangeCommitted={(e, val) => jumpToPage(val - 1)} // Map sliderValue to image index (val - 1)
-              valueLabelDisplay="auto"
-              sx={{
-                width: "10%",
-                flexGrow: 1,
-                color: "#fff",
-                "& .MuiSlider-thumb": { backgroundColor: "#fff" },
-                "& .MuiSlider-track": { backgroundColor: "#fff" },
-                "& .MuiSlider-rail": { backgroundColor: "#111" },
-              }}
-            />
-            <Box
-              sx={{
-                marginLeft: "16px",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
-              <span>
-                {sliderValue} / {totalPages}
-              </span>
-              <Tooltip title="閱讀模式">
-                <Button
-                  onClick={toggleViewMode}
-                  sx={{
-                    color: "#fff",
-                    borderColor: "#fff",
-                    "&:hover": { backgroundColor: "#444" },
-                    fontSize: "0.8rem",
-                    padding: "4px 8px",
-                  }}
-                >
-                  {viewMode === "scroll" && <SwapVertIcon />}
-                  {viewMode === "two-page" && <LooksTwoIcon />}
-                  {viewMode === "single-page" && <LooksOneIcon />}
-                </Button>
-              </Tooltip>
-            </Box>
-          </Box>
-          <span>Popup Content</span>
-        </Box>
+        <BottomPopup
+          sliderValue={sliderValue}
+          setSliderValue={setSliderValue}
+          totalPages={totalPages}
+          jumpToPage={jumpToPage}
+          toggleViewMode={toggleViewMode}
+          viewMode={viewMode}
+        />
       )}
     </Box>
   );

@@ -25,12 +25,16 @@ export default function BookInfoPage() {
   const navigate = useNavigate();
   const { bookname, booknumber } = useParams();
 
-  const [bookCover, setBookCover] = useState(null);
-  const [Thumbnails, setThumbnails] = useState([]);
+  // 此頁資訊
   const [bookinfo, setBookinfo] = useState(null);
+  const [bookCover, setBookCover] = useState(null);
+  const [thumbnails, setThumbnails] = useState([]);
+  const isFirstRender = useRef(true);
+
   const [openSettings, setOpenSettings] = useState(false); // Added state for Dialog
   const [editableMetadata, setEditableMetadata] = useState(null); // Added state for editable metadata
-  const isFirstRender = useRef(true);
+
+  /////
 
   const handleSwitchMode = async () => {
     try {
@@ -45,11 +49,11 @@ export default function BookInfoPage() {
   useEffect(() => {
     const fetchBookInfo = async () => {
       try {
-        const bookInfoTemp = await GetBookinfoByAndConditions({
+        const info = await GetBookinfoByAndConditions({
           "metadata.series": bookname,
           "metadata.number": booknumber,
         });
-        setBookinfo(bookInfoTemp);
+        setBookinfo(info);
       } catch (error) {
         console.error("Error fetching book info:", error);
       }
@@ -57,26 +61,21 @@ export default function BookInfoPage() {
 
     if (isFirstRender.current) {
       console.log("First render, fetching book info...");
+      fetchBookInfo();
       isFirstRender.current = false; // Set to false after the first render
     } else {
-      console.log("Effect: fetch bookinfo triggered", { bookname, booknumber });
-      fetchBookInfo();
+      console.log("Subsequent render, skipping fetch book info.");
     }
   }, []);
 
   useEffect(() => {
     if (!bookinfo) return;
-    console.log("Effect: fetch cover/thumbnails/metadata triggered", {
-      bookinfo,
-    });
 
     const fetchDetails = async () => {
       try {
-        // 取得封面
         const img = await GetBookCoverByBookinfo(bookinfo);
         setBookCover(`data:image/png;base64,${img.FileBitmap}`);
 
-        // 取得縮圖
         const size = bookinfo.ImageData?.length || 0;
         let thumbnailsArr = [];
         for (let page = 0; page < size / 100; page++) {
@@ -86,8 +85,8 @@ export default function BookInfoPage() {
         setThumbnails(thumbnailsArr);
 
         // 設定可編輯 metadata
-        if (bookinfo?.metadata) {
-          setEditableMetadata({ ...bookinfo.metadata });
+        if (bookinfo?.Metadata) {
+          setEditableMetadata({ ...bookinfo.Metadata });
         }
       } catch (error) {
         console.error("Error fetching book details:", error);
@@ -376,7 +375,7 @@ export default function BookInfoPage() {
           padding: 2,
         }}
       >
-        {Thumbnails.map((thumbnail, index) => (
+        {thumbnails.map((thumbnail, index) => (
           <Box
             key={index}
             sx={{

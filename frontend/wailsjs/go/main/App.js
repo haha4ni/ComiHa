@@ -50,6 +50,10 @@ export function NowPath() {
   return window['go']['main']['App']['NowPath']();
 }
 
+export function SaveBookInfo(arg1) {
+  return window['go']['main']['App']['SaveBookInfo'](arg1);
+}
+
 export function ScanBookAll() {
   return window['go']['main']['App']['ScanBookAll']();
 }

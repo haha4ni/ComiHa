@@ -26,6 +26,8 @@ export function Greet(arg1:string):Promise<string>;
 
 export function NowPath():Promise<string>;
 
+export function SaveBookInfo(arg1:backend.BookInfo):Promise<void>;
+
 export function ScanBookAll():Promise<void>;
 
 export function ScraperInfo(arg1:string,arg2:string):Promise<backend.BookInfo>;

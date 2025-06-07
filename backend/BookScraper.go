@@ -227,9 +227,12 @@ func (a *App) ScraperInfo(title string, volume string) (*BookInfo, error) {
 	bookInfo.Metadata = Metadata{} // 初始化 Metadata 結構
 
 	// 先嘗試從 BoltDB 讀取
-	existingBook, err := GetBookInfoByKey(title + "_" + volume)
+	existingBook, err := GetBookinfoByAndConditions(comicDB, map[string]interface{}{
+			"metadata.series": title,
+			"metadata.number": volume,
+		})
 	if err == nil {
-		debug.DebugInfo("從 BoltDB 快取讀取:", existingBook)
+		debug.DebugInfo("從DB快取讀取:", existingBook)
 		// 保留快取資料
 		bookInfo = *existingBook
 	}
@@ -294,8 +297,6 @@ func (a *App) ScraperInfo(title string, volume string) (*BookInfo, error) {
 	}
 
 	WriteComicInfo(bookInfo)
-
-
 	return &bookInfo, nil
 }
 

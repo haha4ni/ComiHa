@@ -2,6 +2,7 @@ package backend
 
 import (
 	"archive/zip"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
@@ -15,8 +16,8 @@ import (
 	"ComiHa/backend/gadget"
 )
 
-// data\cache
 var cachePath = "./data/cache"
+var comitPath = "./comic"
 
 // Global database connection
 var comicDB *db.DB
@@ -42,6 +43,10 @@ func SaveSeriesInfo(book BookInfo) error {
 // 存入 BookInfo 到 BoltDB
 func SaveBookInfo(book BookInfo) error {
 	return db.SaveData(comicDB, &book)
+}
+
+func UpdateBookInfo(book BookInfo) error {
+	return db.UpdateData(comicDB, &book)
 }
 
 // 從 BoltDB 讀取 BookInfo
@@ -172,6 +177,7 @@ func AddBook(bookPath string) error {
 type BookImageData struct {
 	FileName   string
 	FileBitmap []byte
+	FileString string 
 }
 
 func (a *App) ScanBookAll() {
@@ -251,11 +257,20 @@ func (a *App) GetBookCoverByBookinfo(bookInfo *BookInfo) (*BookImageData, error)
 		return nil, err
 	}
 
+	mime := "image/png"
+    if strings.HasSuffix(f.Name, ".jpg") {
+        mime = "image/jpeg"
+    }
+
+    base64Data := base64.StdEncoding.EncodeToString(data)
+    fullDataURL := fmt.Sprintf("data:%s;base64,%s", mime, base64Data)
+
 	// 存入結果
 	image := &BookImageData{
 		FileName:   f.Name,
-		FileBitmap: data,
+		FileString: fullDataURL,
 	}
+
 	return image, nil
 }
 
@@ -370,4 +385,8 @@ func (a *App) GetSeriesInfoByKey(seriesKey string) (*SeriesInfo, error) {
 	// return &seriesInfo, nil
 
 	return nil, nil
+}
+
+func (a *App) SaveBookInfo(book BookInfo) error {
+	return SaveBookInfo(book)
 }

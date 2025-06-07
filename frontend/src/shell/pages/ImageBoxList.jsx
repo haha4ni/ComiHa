@@ -30,7 +30,8 @@ export default function ImageBoxList({ mode }) {
       booklist.forEach(async (bookinfo, index) => {
         try {
           const img = await GetBookCoverByBookinfo(bookinfo);
-          const newImage = `data:image/jpg;base64,${img.FileBitmap}`;
+          // const newImage = `data:image/jpg;base64,${img.FileBitmap}`;
+          const newImage = img.FileString;
           setImages((prevImages) => {
             const updatedImages = [...prevImages];
             updatedImages[index] = newImage; // Update the specific image

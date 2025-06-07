@@ -3,6 +3,7 @@ export namespace backend {
 	export class BookImageData {
 	    FileName: string;
 	    FileBitmap: number[];
+	    FileString: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new BookImageData(source);
@@ -12,6 +13,7 @@ export namespace backend {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.FileName = source["FileName"];
 	        this.FileBitmap = source["FileBitmap"];
+	        this.FileString = source["FileString"];
 	    }
 	}
 	export class Page {
@@ -72,6 +74,18 @@ export namespace backend {
 	    Locations: string;
 	    ScanInformation: string;
 	    Pages: Page[];
+	    Count: number;
+	    AlternateCount: number;
+	    Penciller: string;
+	    Inker: string;
+	    Colorist: string;
+	    Letterer: string;
+	    CoverArtist: string;
+	    Editor: string;
+	    BlackAndWhite: string;
+	    CommunityRating: number;
+	    MainCharacterOrTeam: string;
+	    Review: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Metadata(source);
@@ -110,6 +124,18 @@ export namespace backend {
 	        this.Locations = source["Locations"];
 	        this.ScanInformation = source["ScanInformation"];
 	        this.Pages = this.convertValues(source["Pages"], Page);
+	        this.Count = source["Count"];
+	        this.AlternateCount = source["AlternateCount"];
+	        this.Penciller = source["Penciller"];
+	        this.Inker = source["Inker"];
+	        this.Colorist = source["Colorist"];
+	        this.Letterer = source["Letterer"];
+	        this.CoverArtist = source["CoverArtist"];
+	        this.Editor = source["Editor"];
+	        this.BlackAndWhite = source["BlackAndWhite"];
+	        this.CommunityRating = source["CommunityRating"];
+	        this.MainCharacterOrTeam = source["MainCharacterOrTeam"];
+	        this.Review = source["Review"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

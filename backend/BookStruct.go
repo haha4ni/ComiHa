@@ -23,8 +23,8 @@ type ImageData struct {
 
 // ComicInfo XML structure
 type Metadata struct {
-	ID         uint   `gorm:"primaryKey"`
-	BookInfoID uint   // Foreign key to BookInfo
+	ID         uint   `gorm:"primaryKey" xml:"-"`      // <-- 加 xml:"-"
+	BookInfoID uint   `xml:"-"`                        // <-- 加 xml:"-"
 	XMLName    xml.Name `xml:"ComicInfo" gorm:"-"` // Ignore this field for GORM
 	Title           string   `xml:"Title"            `
 	Series          string   `xml:"Series"           `
@@ -54,7 +54,35 @@ type Metadata struct {
 	Locations       string   `xml:"Locations"        `
 	ScanInformation string   `xml:"ScanInformation"  `
 	Pages           []Page   `gorm:"foreignKey:MetadataID;constraint:OnDelete:CASCADE;"` // Define Pages as a separate table
+	Count               int      `xml:"Count"`
+	AlternateCount      int      `xml:"AlternateCount"`
+	Penciller           string   `xml:"Penciller"`
+	Inker               string   `xml:"Inker"`
+	Colorist            string   `xml:"Colorist"`
+	Letterer            string   `xml:"Letterer"`
+	CoverArtist         string   `xml:"CoverArtist"`
+	Editor              string   `xml:"Editor"`
+	BlackAndWhite       string   `xml:"BlackAndWhite"`
+	CommunityRating     float64  `xml:"CommunityRating"`
+	MainCharacterOrTeam string   `xml:"MainCharacterOrTeam"`
+	Review              string   `xml:"Review"`
 }
+
+	// AgeRatingUnknown          AgeRating = "Unknown"
+	// AgeRatingAdultsOnlyPlus18 AgeRating = "Adults Only 18+"
+	// AgeRatingEarlyChildhood   AgeRating = "Early Childhood"
+	// AgeRatingEveryone         AgeRating = "Everyone"
+	// AgeRatingEveryone10Plus   AgeRating = "Everyone 10+"
+	// AgeRatingG                AgeRating = "G"
+	// AgeRatingKidsToAdults     AgeRating = "Kids to Adults"
+	// AgeRatingM                AgeRating = "M"
+	// AgeRatingMAPlus15         AgeRating = "MA15+"
+	// AgeRatingMaturePlus17     AgeRating = "Mature 17+"
+	// AgeRatingPG               AgeRating = "PG"
+	// AgeRatingRPlus18          AgeRating = "R18+"
+	// AgeRatingPending          AgeRating = "Rating Pending"
+	// AgeRatingTeen             AgeRating = "Teen"
+	// AgeRatingXPlus18          AgeRating = "X18+"
 
 type Page struct {
 	ID          uint   `gorm:"primaryKey"`
@@ -73,3 +101,6 @@ type SeriesInfo struct {
 	Writer string `json:"serieswriter"`
 	BookInfoKeys []string `json:"bookinfokeys"`
 }
+
+
+//ref:https://pkg.go.dev/github.com/fmartingr/go-comicinfo/v2#section-readme

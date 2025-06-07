@@ -36,10 +36,9 @@ export default function BookInfoPage() {
 
   /////
 
-  const handleSwitchMode = async () => {
+  const handleScraper = async () => {
     try {
       const newBookInfo = await ScraperInfo(bookname, booknumber);
-      console.log("New bookinfo:", newBookInfo);
       setBookinfo(newBookInfo);
     } catch (error) {
       console.error("Error fetching book info:", error);
@@ -74,11 +73,11 @@ export default function BookInfoPage() {
     const fetchDetails = async () => {
       try {
         const img = await GetBookCoverByBookinfo(bookinfo);
-        setBookCover(`data:image/png;base64,${img.FileBitmap}`);
+        setBookCover(img.FileString);
 
         const size = bookinfo.ImageData?.length || 0;
         let thumbnailsArr = [];
-        for (let page = 0; page < size / 100; page++) {
+        for (let page = 0; page < 15; page++) {
           const result = await GetBookPageByBookinfo(bookinfo, page);
           thumbnailsArr[page] = result;
         }
@@ -359,6 +358,13 @@ export default function BookInfoPage() {
             color="primary"
           >
             儲存
+          </Button>
+          <Button
+            onClick={handleScraper}
+            variant="outlined"
+            color="secondary"
+          >
+            重新爬蟲
           </Button>
         </DialogActions>
       </Dialog>

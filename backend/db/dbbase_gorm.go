@@ -44,6 +44,11 @@ func SaveData(db *DB, data interface{}) error {
 	return db.conn.Create(data).Error
 }
 
+// 新增：更新資料的函數
+func UpdateData(db *DB, data interface{}) error {
+	return db.conn.Save(data).Error
+}
+
 func (db *DB) DeleteData(bucketName string, key string) error {
 	// return db.Update(func(tx *bbolt.Tx) error {
 	// 	bucket := tx.Bucket([]byte(bucketName))

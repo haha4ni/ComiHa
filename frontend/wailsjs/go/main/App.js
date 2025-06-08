@@ -66,6 +66,10 @@ export function Shutdown() {
   return window['go']['main']['App']['Shutdown']();
 }
 
+export function UpdateBookInfo(arg1) {
+  return window['go']['main']['App']['UpdateBookInfo'](arg1);
+}
+
 export function WriteComicInfo(arg1) {
   return window['go']['main']['App']['WriteComicInfo'](arg1);
 }

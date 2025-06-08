@@ -210,8 +210,6 @@ func (a *App) GetBookListAll() (bookList []BookInfo) {
 
 
 func (a *App) GetBookinfoByAndConditions(conditions map[string]interface{}) (*BookInfo, error) {
-	fmt.Println("GetBookinfoByA()")
-	fmt.Println("conditions:", conditions)
 	return GetBookinfoByAndConditions(comicDB, conditions)
 }
 
@@ -353,6 +351,12 @@ func GetBookInfoByKey(key string) (*BookInfo, error) {
 		return nil, fmt.Errorf("failed to load book info: %w", err)
 	}
 	return bookInfo, nil
+}
+
+
+func (a *App) UpdateBookInfo(book BookInfo) error {
+	err := UpdateBookInfo(book)
+	return err
 }
 
 func (a *App) GetSeriesListAll() (seriesinfoList []SeriesInfo) {

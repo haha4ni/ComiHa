@@ -287,15 +287,6 @@ func (a *App) ScraperInfo(title string, volume string) (*BookInfo, error) {
 	bookInfo.Metadata.Series = title
 	bookInfo.Metadata.Number = volume
 
-	// 存入 BoltDB
-	log.Println("💾 嘗試存入 BoltDB:", bookInfo.Metadata.Series, bookInfo.Metadata.Number)
-	err = SaveBookInfo(bookInfo)
-	if err != nil {
-		log.Println("❌ 存入 BoltDB 失敗:", err)
-	} else {
-		log.Println("✅ 成功存入 BoltDB 快取:", bookInfo.Metadata.Series, bookInfo.Metadata.Number)
-	}
-
 	WriteComicInfo(bookInfo)
 	return &bookInfo, nil
 }

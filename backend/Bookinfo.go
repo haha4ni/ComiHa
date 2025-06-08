@@ -40,7 +40,6 @@ func WriteComicInfo(bookInfo BookInfo) error {
 	return nil
 }
 
-// WriteComicInfoToZip reads the ComicInfo.xml file and writes it to the zip file with atomic replacement and hash verification
 func WriteComicInfoToZip(bookInfo BookInfo) error {
 	fmt.Printf("WriteComicInfoToZip\n")
 	xmlPath := bookInfo.FileName + ".ComicInfo.xml"

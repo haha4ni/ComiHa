@@ -46,10 +46,11 @@ func SaveData(db *DB, data interface{}) error {
 
 // 新增：更新資料的函數
 func UpdateData(db *DB, data interface{}) error {
-	return db.conn.Save(data).Error
+    fmt.Printf("[UpdateData] data: %+v\n", data)
+	return db.conn.Session(&gorm.Session{FullSaveAssociations: true}).Save(data).Error
 }
 
-func (db *DB) DeleteData(bucketName string, key string) error {
+func DeleteData(db *DB, data interface{}) error {
 	// return db.Update(func(tx *bbolt.Tx) error {
 	// 	bucket := tx.Bucket([]byte(bucketName))
 	// 	if bucket == nil {

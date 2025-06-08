@@ -17,6 +17,7 @@ import {
   GetBookCoverByBookinfo,
   GetBookPageByBookinfo,
   WriteComicInfo,
+  UpdateBookInfo,
 } from "../../../wailsjs/go/main/App";
 import SettingsIcon from "@mui/icons-material/Settings";
 import bookwalker from "../../assets/images/bookwalker.jpg";
@@ -40,6 +41,7 @@ export default function BookInfoPage() {
     try {
       const newBookInfo = await ScraperInfo(bookname, booknumber);
       setBookinfo(newBookInfo);
+      UpdateBookInfo(newBookInfo); // Update bookinfo state with new data
     } catch (error) {
       console.error("Error fetching book info:", error);
     }
@@ -77,7 +79,7 @@ export default function BookInfoPage() {
 
         const size = bookinfo.ImageData?.length || 0;
         let thumbnailsArr = [];
-        for (let page = 0; page < 15; page++) {
+        for (let page = 0; page < 0; page++) {
           const result = await GetBookPageByBookinfo(bookinfo, page);
           thumbnailsArr[page] = result;
         }

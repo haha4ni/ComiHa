@@ -14,35 +14,35 @@ import {
 } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import {
-  GetBookInfoByKey,
-  GetSeriesInfoByKey,
   GetBookCoverByBookinfo,
+  GetBookinfoByAndConditions,
+  GetBookinfosByAndConditions,
 } from "../../../wailsjs/go/main/App";
 
 export default function SeriesInfoInfoPage() {
+  const navigate = useNavigate();
+  const { seriesname, bookname, booknumber } = useParams();
+
   const [bookCover, setBookCover] = useState(null);
   const [Thumbnails, setThumbnails] = useState([]);
   const [bookinfo, setBookinfo] = useState(null);
   const [seriesinfo, setSeriesinfo] = useState(null);
   const [tabValue, setTabValue] = useState(0);
   const [openSettings, setOpenSettings] = useState(false); // Added state for Dialog
-  const navigate = useNavigate();
-  const { seriesname, bookname, booknumber } = useParams();
+
 
   useEffect(() => {
     const fetchSeriesInfo = async () => {
       try {
-        const seriesinfo = await GetSeriesInfoByKey(seriesname);
-        const seriesInfoResult = await GetBookInfoByKey(
-          seriesinfo.bookinfokeys[0]
-        );
-        setBookinfo(seriesInfoResult);
-        if (seriesInfoResult?.filename) {
-          const img = await GetBookCoverByBookinfo(seriesInfoResult);
-          const cover = img.map(
-            (item) => `data:image/png;base64,${item.FileBitmap}`
-          );
-          setBookCover(cover[0]); // Assuming only one cover image is returned
+        const seriesinfo = await GetBookinfoByAndConditions({
+          "metadata.series": seriesname,
+        });
+        setBookinfo(seriesinfo);
+        console.log("seriesinfo:", seriesinfo);
+
+        if (seriesinfo?.FileName) {
+          const img  = await GetBookCoverByBookinfo(seriesinfo);
+          setBookCover(img.FileString); // Assuming only one cover image is returned
         }
       } catch (error) {
         console.error("Error fetching series info:", error);
@@ -51,14 +51,15 @@ export default function SeriesInfoInfoPage() {
 
     const fetchBookPages = async () => {
       try {
-        const fetchedSeriesInfo = await GetSeriesInfoByKey(seriesname);
-        setSeriesinfo(fetchedSeriesInfo);
+        const fetchedSeriesInfo = await GetBookinfosByAndConditions({
+          "metadata.series": seriesname,
+        });
+        // setSeriesinfo(fetchedSeriesInfo);
 
         const thumbnails = [];
-        for (const key of fetchedSeriesInfo.bookinfokeys) {
-          const bookinfo = await GetBookInfoByKey(key);
+        for (const bookinfo of fetchedSeriesInfo) {
           const img = await GetBookCoverByBookinfo(bookinfo);
-          thumbnails.push(img);
+          thumbnails.push(img.FileString);
         }
         setThumbnails(thumbnails);
       } catch (error) {
@@ -87,13 +88,11 @@ export default function SeriesInfoInfoPage() {
         }}
       >
         <Avatar
-          src={`data:image/png;base64,${thumbnail.FileBitmap}`}
+          src={thumbnail}
           alt={`${index + 1}`}
           onClick={() => {
             const handleNavigation = async () => {
-              const book = await GetBookInfoByKey(
-                seriesinfo.bookinfokeys[index]
-              );
+              const book = seriesinfo
               navigate(
                 `/bookinfo/${encodeURIComponent(
                   book.bookname
@@ -202,7 +201,7 @@ export default function SeriesInfoInfoPage() {
             >
               <Box>
                 <Typography variant="h5">
-                  {bookinfo.metadata?.series || bookinfo.bookname}
+                  {bookinfo.Metadata?.Series || bookinfo.bookname}
                 </Typography>
                 <Typography variant="body1">
                   {bookinfo.metadata?.writer}
@@ -225,7 +224,7 @@ export default function SeriesInfoInfoPage() {
                   overflow: "auto", // 超過範圍會顯示滾動條
                 }}
               >
-                {bookinfo.metadata?.summary || ""}
+                {bookinfo.Metadata?.Summary || ""}
               </Typography>
               <Box
                 sx={{

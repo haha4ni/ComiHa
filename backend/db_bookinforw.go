@@ -96,6 +96,24 @@ func GetBookinfoByAndConditions(db *db.DB, conditions map[string]interface{}) (*
 	return &book, nil
 }
 
+func GetBookinfosByAndConditions(db *db.DB, conditions map[string]interface{}) ([]BookInfo, error) {
+	var books []BookInfo
+	debug.DebugInfo("GetBookinfosByAndConditions()")
+	debug.DebugInfo("conditions:", conditions)
+	query := db.Conn().Preload("ImageData").Preload("Metadata").
+		Joins("JOIN metadata ON metadata.book_info_id = book_infos.id")
+
+	for key, value := range conditions {
+		query = query.Where(fmt.Sprintf("%s = ?", key), value)
+	}
+
+	err := query.Find(&books).Error
+	if err != nil {
+		return nil, err
+	}
+	return books, nil
+}
+
 func GetBookinfoByOrConditions(db *db.DB, conditions map[string]interface{}) (*BookInfo, error) {
 	var book BookInfo
 	query := db.Conn().Preload("ImageData").Preload("Metadata").
@@ -211,6 +229,10 @@ func (a *App) GetBookListAll() (bookList []BookInfo) {
 
 func (a *App) GetBookinfoByAndConditions(conditions map[string]interface{}) (*BookInfo, error) {
 	return GetBookinfoByAndConditions(comicDB, conditions)
+}
+
+func (a *App) GetBookinfosByAndConditions(conditions map[string]interface{}) ([]BookInfo, error) {
+	return GetBookinfosByAndConditions(comicDB, conditions)
 }
 
 func (a *App) GetBookCoverByBookinfo(bookInfo *BookInfo) (*BookImageData, error) {
@@ -359,25 +381,17 @@ func (a *App) UpdateBookInfo(book BookInfo) error {
 	return err
 }
 
-func (a *App) GetSeriesListAll() (seriesinfoList []SeriesInfo) {
-	// 讀取所有 BookInfo
-	// err := globalDB.GetAllData("seriesinfo", &seriesinfoList)
-	// if err != nil {
-	// 	log.Fatal("讀取所有 seriesinfo 失敗:", err)
-	// }
-	// return seriesinfoList
-
-	return nil
-}
-
-func (a *App) GetSeriesKeyListAll() (serieskeyList []string) {
-	// 讀取所有 BookInfo
-	// serieskeyList, err := globalDB.GetAllKeys("seriesinfo")
-	// if err != nil {
-	// 	log.Fatal("讀取所有 serieskey 失敗:", err)
-	// }
-	// return serieskeyList
-	return nil
+func (a *App) GetSeriesKeyListAll() (seriesList []string) {
+	// 直接用 SQL 查詢唯一 Series
+	var seriesArr []string
+	err := comicDB.Conn().Model(&Metadata{}).
+		Select("DISTINCT series").
+		Where("series != ''").
+		Pluck("series", &seriesArr).Error
+	if err != nil {
+		log.Fatal("查詢所有 Series 失敗:", err)
+	}
+	return seriesArr
 }
 
 func (a *App) GetSeriesInfoByKey(seriesKey string) (*SeriesInfo, error) {

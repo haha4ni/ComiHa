@@ -51,13 +51,6 @@ func UpdateData(db *DB, data interface{}) error {
 }
 
 func DeleteData(db *DB, data interface{}) error {
-	// return db.Update(func(tx *bbolt.Tx) error {
-	// 	bucket := tx.Bucket([]byte(bucketName))
-	// 	if bucket == nil {
-	// 		return fmt.Errorf("bucket not found")
-	// 	}
-	// 	return bucket.Delete([]byte(key))
-	// })
 	return nil
 }
 

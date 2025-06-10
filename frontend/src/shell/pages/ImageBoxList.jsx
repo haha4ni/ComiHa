@@ -6,22 +6,21 @@ import {
   GetBookInfoByKey,
   GetSeriesKeyListAll,
   GetSeriesInfoByKey,
+  GetBookinfoByAndConditions,
   GetBookCoverByBookinfo,
 } from "../../../wailsjs/go/main/App";
 
 export default function ImageBoxList({ mode }) {
   const navigate = useNavigate();
+  const isFirstRender = useRef(true);
 
   const [images, setImages] = useState([]);
   const [booklist, setBooklist] = useState([]);
   const [serieslist, setSerieslist] = useState([]);
 
-  const isFirstRender = useRef(true);
-
   const ShowBookinfoList = async () => {
     try {
       const booklist = await GetBookListAll();
-
       setBooklist(booklist);
 
       const placeholders = Array(booklist.length).fill(null); // Initialize placeholders
@@ -30,11 +29,10 @@ export default function ImageBoxList({ mode }) {
       booklist.forEach(async (bookinfo, index) => {
         try {
           const img = await GetBookCoverByBookinfo(bookinfo);
-          // const newImage = `data:image/jpg;base64,${img.FileBitmap}`;
-          const newImage = img.FileString;
+
           setImages((prevImages) => {
             const updatedImages = [...prevImages];
-            updatedImages[index] = newImage; // Update the specific image
+            updatedImages[index] = img.FileString; // Update the specific image
             return updatedImages;
           });
         } catch (error) {
@@ -49,30 +47,28 @@ export default function ImageBoxList({ mode }) {
   const ShowSeriesinfoList = async () => {
     try {
       const seriesList = await GetSeriesKeyListAll();
+      setSerieslist(seriesList);
+
       if (!seriesList || !Array.isArray(seriesList)) {
         console.error("Invalid series list received:", seriesList);
         return;
       }
 
-      const placeholders = Array(seriesList.length).fill(null); // Initialize placeholders
+      // 初始化imagebox空間，預先全部都填入null
+      const placeholders = Array(seriesList.length).fill(null);
       setImages(placeholders);
 
       seriesList.forEach(async (series, index) => {
         try {
-          const seriesInfo = await GetSeriesInfoByKey(series);
-          const bookinfo = await GetBookInfoByKey(seriesInfo.bookinfokeys[0]);
-          const img = await GetBookCoverByBookinfo(bookinfo);
-          const newImage = `data:image/png;base64,${img.FileBitmap}`;
-
-          setSerieslist((prevSerieslist) => {
-            const updatedSerieslist = [...prevSerieslist];
-            updatedSerieslist[index] = seriesInfo; // Update the specific series
-            return updatedSerieslist;
+          const bookinfo = await GetBookinfoByAndConditions({
+            "metadata.series": series,
           });
+          console.log("bookinfo:", bookinfo);
+          const img = await GetBookCoverByBookinfo(bookinfo);
 
           setImages((prevImages) => {
             const updatedImages = [...prevImages];
-            updatedImages[index] = newImage; // Update the specific image
+            updatedImages[index] = img.FileString; // Update the specific image
             return updatedImages;
           });
         } catch (error) {
@@ -110,7 +106,7 @@ export default function ImageBoxList({ mode }) {
         width: "100%",
         display: "grid", // 使用 grid 排版
         gap: 2, // 間距
-        gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
       }}
     >
       {images.map((image, index) => (
@@ -146,9 +142,7 @@ export default function ImageBoxList({ mode }) {
                 );
               } else if (mode === "series") {
                 const series = serieslist[index];
-                navigate(
-                  `/seriesinfo/${encodeURIComponent(series.seriesname)}`
-                );
+                navigate(`/seriesinfo/${encodeURIComponent(series)}`);
               }
             }}
           />
@@ -165,7 +159,7 @@ export default function ImageBoxList({ mode }) {
           >
             {mode === "bookinfo"
               ? `${booklist[index]?.Metadata.Series} ${booklist[index]?.Metadata.Number}`
-              : `${serieslist[index]?.seriesname}`}
+              : `${serieslist[index]}`}
           </Typography>
         </Box>
       ))}

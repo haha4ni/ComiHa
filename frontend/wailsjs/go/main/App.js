@@ -30,16 +30,16 @@ export function GetBookinfoByAndConditions(arg1) {
   return window['go']['main']['App']['GetBookinfoByAndConditions'](arg1);
 }
 
+export function GetBookinfosByAndConditions(arg1) {
+  return window['go']['main']['App']['GetBookinfosByAndConditions'](arg1);
+}
+
 export function GetSeriesInfoByKey(arg1) {
   return window['go']['main']['App']['GetSeriesInfoByKey'](arg1);
 }
 
 export function GetSeriesKeyListAll() {
   return window['go']['main']['App']['GetSeriesKeyListAll']();
-}
-
-export function GetSeriesListAll() {
-  return window['go']['main']['App']['GetSeriesListAll']();
 }
 
 export function Greet(arg1) {

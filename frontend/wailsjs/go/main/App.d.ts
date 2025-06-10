@@ -16,11 +16,11 @@ export function GetBookPagesByBookinfo(arg1:backend.BookInfo,arg2:Array<number>)
 
 export function GetBookinfoByAndConditions(arg1:{[key: string]: any}):Promise<backend.BookInfo>;
 
+export function GetBookinfosByAndConditions(arg1:{[key: string]: any}):Promise<Array<backend.BookInfo>>;
+
 export function GetSeriesInfoByKey(arg1:string):Promise<backend.SeriesInfo>;
 
 export function GetSeriesKeyListAll():Promise<Array<string>>;
-
-export function GetSeriesListAll():Promise<Array<backend.SeriesInfo>>;
 
 export function Greet(arg1:string):Promise<string>;
 

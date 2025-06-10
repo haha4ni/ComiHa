@@ -79,7 +79,7 @@ export default function BookInfoPage() {
 
         const size = bookinfo.ImageData?.length || 0;
         let thumbnailsArr = [];
-        for (let page = 0; page < 0; page++) {
+        for (let page = 0; page < 3; page++) {
           const result = await GetBookPageByBookinfo(bookinfo, page);
           thumbnailsArr[page] = result;
         }

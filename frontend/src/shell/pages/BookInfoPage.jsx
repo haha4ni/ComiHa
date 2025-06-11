@@ -142,7 +142,7 @@ export default function BookInfoPage() {
             p: 2,
             mx: 2,
             my: 2,
-            position: "relative", // Added for positioning the gear icon
+            position: "relative",
           }}
         >
           {/* 齒輪 */}

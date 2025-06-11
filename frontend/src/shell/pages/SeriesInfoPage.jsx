@@ -1,17 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  Avatar,
-  Tabs,
-  Tab,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from "@mui/material";
+import { Box, Typography, Avatar, Tabs, Tab, Button } from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import {
   GetBookCoverByBookinfo,
@@ -21,55 +11,66 @@ import {
 
 export default function SeriesInfoInfoPage() {
   const navigate = useNavigate();
-  const { seriesname, bookname, booknumber } = useParams();
+  const { seriesname } = useParams();
+  const isFirstRender = useRef(true);
 
-  const [bookCover, setBookCover] = useState(null);
-  const [Thumbnails, setThumbnails] = useState([]);
+  // Series related states
   const [bookinfo, setBookinfo] = useState(null);
-  const [seriesinfo, setSeriesinfo] = useState(null);
+  const [bookCover, setBookCover] = useState(null);
+
+  // Chapter related states
+  const [bookinfo_chapter, setBookinfoChapter] = useState([]);
+  const [Thumbnails, setThumbnails] = useState([]);
+
   const [tabValue, setTabValue] = useState(0);
   const [openSettings, setOpenSettings] = useState(false); // Added state for Dialog
-
+  const [hoveredIndex, setHoveredIndex] = useState(null);
 
   useEffect(() => {
-    const fetchSeriesInfo = async () => {
-      try {
-        const seriesinfo = await GetBookinfoByAndConditions({
-          "metadata.series": seriesname,
-        });
-        setBookinfo(seriesinfo);
-        console.log("seriesinfo:", seriesinfo);
+    if (isFirstRender.current) {
+      const fetchSeriesInfo = async () => {
+        try {
+          const seriesinfo = await GetBookinfoByAndConditions({
+            "metadata.series": seriesname,
+          });
+          setBookinfo(seriesinfo);
+          console.log("seriesinfo:", seriesinfo);
 
-        if (seriesinfo?.FileName) {
-          const img  = await GetBookCoverByBookinfo(seriesinfo);
-          setBookCover(img.FileString); // Assuming only one cover image is returned
+          if (seriesinfo?.FileName) {
+            const img = await GetBookCoverByBookinfo(seriesinfo);
+            setBookCover(img.FileString);
+          }
+        } catch (error) {
+          console.error("Error fetching series info:", error);
         }
-      } catch (error) {
-        console.error("Error fetching series info:", error);
-      }
-    };
+      };
 
-    const fetchBookPages = async () => {
-      try {
-        const fetchedSeriesInfo = await GetBookinfosByAndConditions({
-          "metadata.series": seriesname,
-        });
-        // setSeriesinfo(fetchedSeriesInfo);
+      const fetchBookPages = async () => {
+        try {
+          const bookinfos = await GetBookinfosByAndConditions({
+            "metadata.series": seriesname,
+          });
 
-        const thumbnails = [];
-        for (const bookinfo of fetchedSeriesInfo) {
-          const img = await GetBookCoverByBookinfo(bookinfo);
-          thumbnails.push(img.FileString);
+          const thumbnails = [];
+          for (const bookinfo of bookinfos) {
+            const img = await GetBookCoverByBookinfo(bookinfo);
+            thumbnails.push(img.FileString);
+          }
+          setBookinfoChapter(bookinfos);
+          setThumbnails(thumbnails);
+        } catch (error) {
+          console.error("Error fetching book pages:", error);
         }
-        setThumbnails(thumbnails);
-      } catch (error) {
-        console.error("Error fetching book pages:", error);
-      }
-    };
+      };
 
-    fetchSeriesInfo();
-    fetchBookPages();
-  }, [seriesname]);
+      console.log("First render, fetching series info...");
+      fetchSeriesInfo();
+      fetchBookPages();
+      isFirstRender.current = false;
+    } else {
+      console.log("Subsequent render, skipping fetch series info.");
+    }
+  }, []);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -84,29 +85,31 @@ export default function SeriesInfoInfoPage() {
           flexDirection: "column",
           alignItems: "center",
           gap: 1,
-          // backgroundColor: "lightblue"
         }}
       >
-        <Avatar
+        <img
           src={thumbnail}
           alt={`${index + 1}`}
           onClick={() => {
             const handleNavigation = async () => {
-              const book = seriesinfo
               navigate(
                 `/bookinfo/${encodeURIComponent(
-                  book.bookname
-                )}/${encodeURIComponent(book.booknumber)}`
+                  bookinfo_chapter[index].Metadata.Series
+                )}/${encodeURIComponent(bookinfo_chapter[index].Metadata.Number)}`
               );
             };
             handleNavigation();
           }}
-          sx={{
+          onMouseEnter={() => setHoveredIndex(index)}
+          // onMouseLeave={() => setHoveredIndex(null)}
+          style={{
             width: "100%",
             height: "auto",
             borderRadius: "8px",
             objectFit: "cover",
             cursor: "pointer",
+            boxShadow: hoveredIndex === index ? "0 0 0 2px #1976d2" : undefined,
+            transition: "box-shadow 0.2s",
           }}
         />
         <Typography variant="caption">{`卷 ${index + 1}`}</Typography>
@@ -121,70 +124,71 @@ export default function SeriesInfoInfoPage() {
         margin: "0 auto",
       }}
     >
-      {bookinfo && (
+      {/* 外框架永遠存在，內容根據 bookinfo 決定 */}
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          backgroundColor: "#f8f8f8",
+          borderRadius: "10px",
+          p: 2,
+          mx: 2,
+          my: 2,
+          position: "relative",
+        }}
+      >
+        {/* 齒輪 */}
         <Box
           sx={{
-            display: "flex",
-            alignItems: "flex-start", // 加這行
-            flexWrap: "wrap",
-            gap: 2,
-            backgroundColor: "#f8f8f8",
-            borderRadius: "10px",
-            padding: 2,
-            mx: 2,
-            mt: 1,
-            position: "relative", // Added for positioning the gear icon
+            position: "absolute",
+            mt: 2,
+            mr: 2,
+            top: 0,
+            right: 0,
+            cursor: "pointer",
           }}
+          onClick={() => setOpenSettings(true)}
         >
-          {/* 齒輪 */}
-          <Box
+          <SettingsIcon
+            fontSize="large"
             sx={{
-              position: "absolute",
-              mt: 2, // Top margin
-              mr: 2, // Right margin
-              top: 0,
-              right: 0,
-              cursor: "pointer",
+              fontSize: 24,
+              color: "#b0b0b0",
+              "&:hover": {
+                color: "#808080",
+              },
             }}
-            onClick={() => setOpenSettings(true)} // Modified onClick
-          >
-            <SettingsIcon
-              fontSize="large"
-              sx={{
-                fontSize: 24,
-                color: "#b0b0b0", // Darker default color
-                "&:hover": {
-                  color: "#808080", // Current lighter color on hover
-                },
-              }}
-            />
-          </Box>
+          />
+        </Box>
 
+        {/* 內容區塊 */}
+        {bookinfo ? (
           <Box
             sx={{
               display: "flex",
               flexDirection: "row",
               flexWrap: "wrap",
+              width: "100%",
               gap: 2,
             }}
           >
-            {bookCover && (
-              <Avatar
-                src={bookCover}
+            {(bookCover || hoveredIndex !== null) && (
+              <img
+                src={hoveredIndex !== null ? Thumbnails[hoveredIndex] : bookCover}
                 alt={`${bookinfo.bookname} cover`}
-                onClick={() =>
-                  navigate(`/bookinfo/${bookname}/${booknumber}/0`)
-                }
-                sx={{
+                onClick={() => navigate(`/bookinfo/${bookname}/${booknumber}/0`)}
+                style={{
                   width: "auto",
-                  height: "calc(56vh - 48px)",
-                  minHeight: "300px", // 不管怎樣最小高度是300px
-                  borderRadius: "10px",
+                  height: "50vh",
+                  borderRadius: "8px",
                   maxWidth: "100%",
                   aspectRatio: "215 / 320",
                   objectFit: "cover",
+                  margin: "5px",
                   flex: "0 0 auto",
                   cursor: "pointer",
+                  // transition: "box-shadow 0.2s",
+                  // boxShadow: hoveredIndex !== null ? "0 0 0 4px #1976d2" : undefined,
                 }}
               />
             )}
@@ -203,9 +207,7 @@ export default function SeriesInfoInfoPage() {
                 <Typography variant="h5">
                   {bookinfo.Metadata?.Series || bookinfo.bookname}
                 </Typography>
-                <Typography variant="body1">
-                  {bookinfo.metadata?.writer}
-                </Typography>
+                <Typography variant="body1">{bookinfo.metadata?.writer}</Typography>
               </Box>
               <Typography
                 variant="body1"
@@ -237,17 +239,22 @@ export default function SeriesInfoInfoPage() {
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={() =>
-                    navigate(`/bookinfo/${bookname}/${booknumber}/0`)
-                  }
+                  onClick={() => navigate(`/bookinfo/${bookname}/${booknumber}/0`)}
                 >
                   開始閱讀
                 </Button>
               </Box>
             </Box>
           </Box>
-        </Box>
-      )}
+        ) : (
+          // 載入中或無資料時顯示
+          <Box sx={{ width: "100%", textAlign: "center", py: 6 }}>
+            <Typography variant="body1" color="text.secondary">
+              載入中...
+            </Typography>
+          </Box>
+        )}
+      </Box>
 
       {/* Dialog for settings */}
       <Dialog open={openSettings} onClose={() => setOpenSettings(false)}>
@@ -267,7 +274,7 @@ export default function SeriesInfoInfoPage() {
           mt: 1,
           mx: 2,
           backgroundColor: "#f5f5f5",
-          borderRadius: "10px 10px 0 0", // Keep rounded corners for Tabs
+          borderRadius: "10px 10px 0 0",
         }}
       >
         <Tab label="卷" />
@@ -281,7 +288,7 @@ export default function SeriesInfoInfoPage() {
             gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
             gap: 1,
             backgroundColor: "#f5f5f5",
-            borderRadius: "0 0 10px 10px", // Sharp corners only at the bottom
+            borderRadius: "0 0 10px 10px",
             padding: 2,
           }}
         >
@@ -296,7 +303,7 @@ export default function SeriesInfoInfoPage() {
             flexDirection: "column",
             gap: 2,
             backgroundColor: "#f5f5f5",
-            borderRadius: "0 0 10px 10px", // Sharp corners only at the bottom
+            borderRadius: "0 0 10px 10px",
             padding: 2,
           }}
         >

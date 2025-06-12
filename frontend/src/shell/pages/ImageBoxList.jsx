@@ -3,9 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import {
   GetBookListAll,
-  GetBookInfoByKey,
   GetSeriesKeyListAll,
-  GetSeriesInfoByKey,
   GetBookinfoByAndConditions,
   GetBookCoverByBookinfo,
 } from "../../../wailsjs/go/main/App";

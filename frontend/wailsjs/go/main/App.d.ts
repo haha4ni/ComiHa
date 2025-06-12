@@ -4,8 +4,6 @@ import {backend} from '../models';
 
 export function GetBookCoverByBookinfo(arg1:backend.BookInfo):Promise<backend.BookImageData>;
 
-export function GetBookInfoByKey(arg1:string):Promise<backend.BookInfo>;
-
 export function GetBookListAll():Promise<Array<backend.BookInfo>>;
 
 export function GetBookPageByBookinfo(arg1:backend.BookInfo,arg2:number):Promise<backend.BookImageData>;
@@ -17,8 +15,6 @@ export function GetBookPagesByBookinfo(arg1:backend.BookInfo,arg2:Array<number>)
 export function GetBookinfoByAndConditions(arg1:{[key: string]: any}):Promise<backend.BookInfo>;
 
 export function GetBookinfosByAndConditions(arg1:{[key: string]: any}):Promise<Array<backend.BookInfo>>;
-
-export function GetSeriesInfoByKey(arg1:string):Promise<backend.SeriesInfo>;
 
 export function GetSeriesKeyListAll():Promise<Array<string>>;
 

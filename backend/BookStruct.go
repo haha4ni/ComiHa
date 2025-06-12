@@ -85,8 +85,8 @@ type Metadata struct {
 	// AgeRatingXPlus18          AgeRating = "X18+"
 
 type Page struct {
-	ID          uint   `gorm:"primaryKey"`
-	MetadataID  uint   // Foreign key to Metadata
+	ID          uint   `gorm:"primaryKey" xml:"-"`
+	MetadataID  uint   `xml:"-"`
 	Image       int    `xml:"Image,attr"`
 	ImageSize   int    `xml:"ImageSize,attr"`
 	ImageWidth  int    `xml:"ImageWidth,omitempty"`

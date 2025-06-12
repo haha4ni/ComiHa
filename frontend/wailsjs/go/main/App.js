@@ -6,10 +6,6 @@ export function GetBookCoverByBookinfo(arg1) {
   return window['go']['main']['App']['GetBookCoverByBookinfo'](arg1);
 }
 
-export function GetBookInfoByKey(arg1) {
-  return window['go']['main']['App']['GetBookInfoByKey'](arg1);
-}
-
 export function GetBookListAll() {
   return window['go']['main']['App']['GetBookListAll']();
 }
@@ -32,10 +28,6 @@ export function GetBookinfoByAndConditions(arg1) {
 
 export function GetBookinfosByAndConditions(arg1) {
   return window['go']['main']['App']['GetBookinfosByAndConditions'](arg1);
-}
-
-export function GetSeriesInfoByKey(arg1) {
-  return window['go']['main']['App']['GetSeriesInfoByKey'](arg1);
 }
 
 export function GetSeriesKeyListAll() {

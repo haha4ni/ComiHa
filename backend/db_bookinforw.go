@@ -19,7 +19,6 @@ import (
 var cachePath = "./data/cache"
 var comitPath = "./comic"
 
-// Global database connection
 var comicDB *db.DB
 
 func InitDB() error {
@@ -36,22 +35,12 @@ func CloseDB() error {
 	return nil
 }
 
-func SaveSeriesInfo(book BookInfo) error {
-	return nil //TODO
-}
-
-// 存入 BookInfo 到 BoltDB
 func SaveBookInfo(book BookInfo) error {
 	return db.SaveData(comicDB, &book)
 }
 
 func UpdateBookInfo(book BookInfo) error {
 	return db.UpdateData(comicDB, &book)
-}
-
-// 從 BoltDB 讀取 BookInfo
-func LoadBookInfo(bookname string) (*BookInfo, error) {
-	return nil, nil //TODO
 }
 
 // 根據 BookName 刪除 BookInfo
@@ -142,7 +131,7 @@ func AddBook(bookPath string) error {
 	if err != nil {
 		return fmt.Errorf("生成 SHA 失敗: %w", err)
 	}
-	// Attempt to retrieve ComicInfo.xml metadata
+
 	metadata, err := GetComicInfoFromZip(bookPath)
 	if err != nil {
 		fmt.Printf("讀取 ComicInfo.xml 失敗，將使用檔名解析: %v\n", err)
@@ -169,22 +158,26 @@ func AddBook(bookPath string) error {
 		return nil
 	}
 	
-	// Perform full ZIP analysis if the book is not found or SHA is different
 	bookInfo, err := AnalyzeZipFile(bookPath)
 	if err != nil {
 		return fmt.Errorf("解析失敗: %w", err)
 	}
-	
-	// Save BookInfo to BoltDB
-	err = SaveBookInfo(*bookInfo)
-	if err != nil {
-		return fmt.Errorf("存入 BoltDB 失敗: %w", err)
-	}
-	
-	// Save series info
-	err = SaveSeriesInfo(*bookInfo)
-	if err != nil {
-		return fmt.Errorf("存入系列資訊失敗: %w", err)
+
+	if dbBook != nil && dbBook.ID != 0 {
+		bookInfo.ID = dbBook.ID
+		bookInfo.SHA = sha
+		err = UpdateBookInfo(*bookInfo)
+		if err != nil {
+			return fmt.Errorf("更新 DB 失敗: %w", err)
+		}
+		fmt.Printf("成功更新書籍: %s\n", bookInfo.Metadata.Series)
+		return nil
+	} else {
+		bookInfo.SHA = sha
+		err = SaveBookInfo(*bookInfo)
+		if err != nil {
+			return fmt.Errorf("存入 DB 失敗: %w", err)
+		}
 	}
 
 	fmt.Printf("成功新增書籍: %s\n", bookInfo.Metadata.Series)
@@ -363,19 +356,6 @@ func (a *App) GetBookPagesByBookinfo(bookInfo *BookInfo, pages []int64) ([]BookI
 	return images, nil
 }
 
-func (a *App) GetBookInfoByKey(key string) (*BookInfo, error) {
-	return GetBookInfoByKey(key)
-}
-
-func GetBookInfoByKey(key string) (*BookInfo, error) {
-	bookInfo, err := LoadBookInfo(key)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load book info: %w", err)
-	}
-	return bookInfo, nil
-}
-
-
 func (a *App) UpdateBookInfo(book BookInfo) error {
 	err := UpdateBookInfo(book)
 	return err
@@ -392,17 +372,6 @@ func (a *App) GetSeriesKeyListAll() (seriesList []string) {
 		log.Fatal("查詢所有 Series 失敗:", err)
 	}
 	return seriesArr
-}
-
-func (a *App) GetSeriesInfoByKey(seriesKey string) (*SeriesInfo, error) {
-	// var seriesInfo SeriesInfo
-	// err := globalDB.LoadData("seriesinfo", seriesKey, &seriesInfo)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to load series info: %w", err)
-	// }
-	// return &seriesInfo, nil
-
-	return nil, nil
 }
 
 func (a *App) SaveBookInfo(book BookInfo) error {

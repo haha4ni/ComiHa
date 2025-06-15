@@ -73,7 +73,6 @@ export namespace backend {
 	    Teams: string;
 	    Locations: string;
 	    ScanInformation: string;
-	    Pages: Page[];
 	    Count: number;
 	    AlternateCount: number;
 	    Penciller: string;
@@ -86,6 +85,7 @@ export namespace backend {
 	    CommunityRating: number;
 	    MainCharacterOrTeam: string;
 	    Review: string;
+	    Pages: Page[];
 	
 	    static createFrom(source: any = {}) {
 	        return new Metadata(source);
@@ -123,7 +123,6 @@ export namespace backend {
 	        this.Teams = source["Teams"];
 	        this.Locations = source["Locations"];
 	        this.ScanInformation = source["ScanInformation"];
-	        this.Pages = this.convertValues(source["Pages"], Page);
 	        this.Count = source["Count"];
 	        this.AlternateCount = source["AlternateCount"];
 	        this.Penciller = source["Penciller"];
@@ -136,6 +135,7 @@ export namespace backend {
 	        this.CommunityRating = source["CommunityRating"];
 	        this.MainCharacterOrTeam = source["MainCharacterOrTeam"];
 	        this.Review = source["Review"];
+	        this.Pages = this.convertValues(source["Pages"], Page);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

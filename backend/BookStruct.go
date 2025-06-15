@@ -15,7 +15,7 @@ type BookInfo struct {
 
 type ImageData struct {
 	ID         uint   `gorm:"primaryKey"`
-	BookInfoID uint   // Foreign key to BookInfo
+	BookInfoID uint
 	FileName   string
 	FileIndex  int64
 	FileSize   int64
@@ -23,37 +23,36 @@ type ImageData struct {
 
 // ComicInfo XML structure
 type Metadata struct {
-	ID         uint   `gorm:"primaryKey" xml:"-"`      // <-- 加 xml:"-"
-	BookInfoID uint   `xml:"-"`                        // <-- 加 xml:"-"
-	XMLName    xml.Name `xml:"ComicInfo" gorm:"-"` // Ignore this field for GORM
-	Title           string   `xml:"Title"            `
-	Series          string   `xml:"Series"           `
-	Number          string   `xml:"Number"           `
-	Volume          string   `xml:"Volume"           `
-	AlternateSeries string   `xml:"AlternateSeries"  `
-	AlternateNumber string   `xml:"AlternateNumber"  `
-	StoryArc        string   `xml:"StoryArc"         `
-	Year            string   `xml:"Year"             `
-	Month           string   `xml:"Month"            `
-	Day             string   `xml:"Day"              `
-	SeriesGroup     string   `xml:"SeriesGroup"      `
-	Summary         string   `xml:"Summary"          `
-	Notes           string   `xml:"Notes"            `
-	Writer          string   `xml:"Writer"           `
-	Publisher       string   `xml:"Publisher"        `
-	Imprint         string   `xml:"Imprint"          `
-	Genre           string   `xml:"Genre"            `
-	Web             string   `xml:"Web"              `
-	PageCount       int      `xml:"PageCount"        `
-	LanguageISO     string   `xml:"LanguageISO"      `
-	Format          string   `xml:"Format"           `
-	AgeRating       string   `xml:"AgeRating"        `
-	Manga           string   `xml:"Manga"            `
-	Characters      string   `xml:"Characters"       `
-	Teams           string   `xml:"Teams"            `
-	Locations       string   `xml:"Locations"        `
-	ScanInformation string   `xml:"ScanInformation"  `
-	Pages           []Page   `gorm:"foreignKey:MetadataID;constraint:OnDelete:CASCADE;"` // Define Pages as a separate table
+	ID         			uint   `gorm:"primaryKey" xml:"-"`      // <-- 加 xml:"-"
+	BookInfoID 			uint   `xml:"-"`                        // <-- 加 xml:"-"
+	XMLName    			xml.Name `xml:"ComicInfo" gorm:"-"` // Ignore this field for GORM
+	Title           	string   `xml:"Title"            `
+	Series          	string   `xml:"Series"           `
+	Number          	string   `xml:"Number"           `
+	Volume          	string   `xml:"Volume"           `
+	AlternateSeries 	string   `xml:"AlternateSeries"  `
+	AlternateNumber 	string   `xml:"AlternateNumber"  `
+	StoryArc        	string   `xml:"StoryArc"         `
+	Year            	string   `xml:"Year"             `
+	Month           	string   `xml:"Month"            `
+	Day             	string   `xml:"Day"              `
+	SeriesGroup     	string   `xml:"SeriesGroup"      `
+	Summary         	string   `xml:"Summary"          `
+	Notes           	string   `xml:"Notes"            `
+	Writer          	string   `xml:"Writer"           `
+	Publisher       	string   `xml:"Publisher"        `
+	Imprint         	string   `xml:"Imprint"          `
+	Genre           	string   `xml:"Genre"            `
+	Web             	string   `xml:"Web"              `
+	PageCount       	int      `xml:"PageCount"        `
+	LanguageISO     	string   `xml:"LanguageISO"      `
+	Format          	string   `xml:"Format"           `
+	AgeRating       	string   `xml:"AgeRating"        `
+	Manga           	string   `xml:"Manga"            `
+	Characters      	string   `xml:"Characters"       `
+	Teams           	string   `xml:"Teams"            `
+	Locations       	string   `xml:"Locations"        `
+	ScanInformation 	string   `xml:"ScanInformation"  `
 	Count               int      `xml:"Count"`
 	AlternateCount      int      `xml:"AlternateCount"`
 	Penciller           string   `xml:"Penciller"`
@@ -66,6 +65,19 @@ type Metadata struct {
 	CommunityRating     float64  `xml:"CommunityRating"`
 	MainCharacterOrTeam string   `xml:"MainCharacterOrTeam"`
 	Review              string   `xml:"Review"`
+	Pages           []Page   `gorm:"foreignKey:MetadataID;constraint:OnDelete:CASCADE;"` // Define Pages as a separate table
+
+}
+
+type Page struct {
+	ID          uint   `gorm:"primaryKey" xml:"-"`
+	MetadataID  uint   `xml:"-"`
+	Image       int    `xml:"Image,attr"`
+	ImageSize   int    `xml:"ImageSize,attr"`
+	ImageWidth  int    `xml:"ImageWidth,omitempty"`
+	ImageHeight int    `xml:"ImageHeight,omitempty"`
+	Type        string `xml:"Type,attr,omitempty"`
+	Comment     string `xml:"Comment,attr,omitempty"`
 }
 
 	// AgeRatingUnknown          AgeRating = "Unknown"
@@ -83,24 +95,5 @@ type Metadata struct {
 	// AgeRatingPending          AgeRating = "Rating Pending"
 	// AgeRatingTeen             AgeRating = "Teen"
 	// AgeRatingXPlus18          AgeRating = "X18+"
-
-type Page struct {
-	ID          uint   `gorm:"primaryKey" xml:"-"`
-	MetadataID  uint   `xml:"-"`
-	Image       int    `xml:"Image,attr"`
-	ImageSize   int    `xml:"ImageSize,attr"`
-	ImageWidth  int    `xml:"ImageWidth,omitempty"`
-	ImageHeight int    `xml:"ImageHeight,omitempty"`
-	Type        string `xml:"Type,attr,omitempty"`
-	Comment     string `xml:"Comment,attr,omitempty"`
-}
-
-type SeriesInfo struct {
-	SeriesName string `json:"seriesname"`
-	Summary string `json:"seriessummary"`
-	Writer string `json:"serieswriter"`
-	BookInfoKeys []string `json:"bookinfokeys"`
-}
-
 
 //ref:https://pkg.go.dev/github.com/fmartingr/go-comicinfo/v2#section-readme

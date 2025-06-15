@@ -1,10 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Box, Typography, Avatar, Tabs, Tab, Button } from "@mui/material";
+import { Box, Typography, Tabs, Tab, Button } from "@mui/material";
 import { Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
+import Chip from "@mui/material/Chip";
+
 import {
   GetBookCoverByBookinfo,
+  GetBookPageByBookinfo,
   GetBookinfoByAndConditions,
   GetBookinfosByAndConditions,
 } from "../../../wailsjs/go/main/App";
@@ -19,8 +22,11 @@ export default function SeriesInfoInfoPage() {
   const [bookCover, setBookCover] = useState(null);
 
   // Chapter related states
-  const [bookinfo_chapter, setBookinfoChapter] = useState([]);
+  const [bookinfos_volume, setBookinfosVolume] = useState([]);
   const [Thumbnails, setThumbnails] = useState([]);
+
+  const [bookinfos_chapter, setBookinfosChapter] = useState([]);
+  const [Thumbnails_chapter, setThumbnailsChapter] = useState([]);
 
   const [tabValue, setTabValue] = useState(0);
   const [openSettings, setOpenSettings] = useState(false); // Added state for Dialog
@@ -56,7 +62,7 @@ export default function SeriesInfoInfoPage() {
             const img = await GetBookCoverByBookinfo(bookinfo);
             thumbnails.push(img.FileString);
           }
-          setBookinfoChapter(bookinfos);
+          setBookinfosVolume(bookinfos);
           setThumbnails(thumbnails);
         } catch (error) {
           console.error("Error fetching book pages:", error);
@@ -71,6 +77,48 @@ export default function SeriesInfoInfoPage() {
       console.log("Subsequent render, skipping fetch series info.");
     }
   }, []);
+
+  // 監聽 bookinfos_volume 變化，並 log chapters
+  useEffect(() => {
+    if (bookinfos_volume && bookinfos_volume.length > 0) {
+      const extractChaptersFromBookinfos = async (bookinfos_volume) => {
+        const chapters = [];
+        const thumbnails = [];
+        console.log("bookinfos_volume:", bookinfos_volume);
+        for (let bookIndex = 0; bookIndex < bookinfos_volume.length; bookIndex++) {
+          const bookinfo = bookinfos_volume[bookIndex];
+          const pages = bookinfo.Metadata?.Pages || [];
+          for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
+            const page = pages[pageIndex];
+            if (typeof page.Type === "string" && page.Type.startsWith("chapter")) {
+              const tokens = page.Type.split(" ");
+              if (tokens.length >= 3 && tokens[0] === "chapter") {
+                chapters.push({
+                  index: bookIndex,
+                  chapter: tokens[1],
+                  chapter_name: tokens.slice(2).join(" "),
+                  page: page.Image,
+                });
+                // 直接取得該章節的縮圖
+                try {
+                  const img = await GetBookPageByBookinfo(bookinfo, page.Image);
+                  thumbnails.push(img);
+                } catch (e) {
+                  thumbnails.push(null);
+                }
+              }
+            }
+          }
+        }
+        setThumbnailsChapter(thumbnails);
+        return chapters;
+      };
+      extractChaptersFromBookinfos(bookinfos_volume).then((chapters) => {
+        setBookinfosChapter(chapters);
+        console.log("chapters:", chapters);
+      });
+    }
+  }, [bookinfos_volume]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -94,8 +142,8 @@ export default function SeriesInfoInfoPage() {
             const handleNavigation = async () => {
               navigate(
                 `/bookinfo/${encodeURIComponent(
-                  bookinfo_chapter[index].Metadata.Series
-                )}/${encodeURIComponent(bookinfo_chapter[index].Metadata.Number)}`
+                  bookinfos_volume[index].Metadata.Series
+                )}/${encodeURIComponent(bookinfos_volume[index].Metadata.Number)}`
               );
             };
             handleNavigation();
@@ -194,31 +242,24 @@ export default function SeriesInfoInfoPage() {
             )}
             <Box
               sx={{
+                width: "100%",
                 textAlign: "left",
-                flex: 1, // 讓 Typography 占據剩餘空間
-                minWidth: 0,
+                flex: "1",
                 marginLeft: "10px",
-                display: "grid", // 加這行
-                flexDirection: "column", // 加這行
-                justifyContent: "space-between", // 加這行
+                position: "relative",
+                display: "flex",
+                flexDirection: "column",
+                height: "50vh", // 與圖片高度一致
+                minHeight: 0,
               }}
             >
               <Box>
                 <Typography variant="h5">
                   {bookinfo.Metadata?.Series || bookinfo.bookname}
                 </Typography>
+                <Box sx={{ height: "16px" }} />
                 <Typography variant="body1">{bookinfo.metadata?.writer}</Typography>
               </Box>
-              <Typography
-                variant="body1"
-                sx={{
-                  display: "flex",
-                  justifyContent: "flex-start", // Align to the left
-                  alignItems: "flex-end", // Align to the bottom
-                }}
-              >
-                內容簡介:
-              </Typography>
               <Typography
                 variant="body2"
                 sx={{
@@ -228,21 +269,101 @@ export default function SeriesInfoInfoPage() {
               >
                 {bookinfo.Metadata?.Summary || ""}
               </Typography>
+              <Box sx={{ height: "8px" }} /> {/* Add spacing here */}
               <Box
                 sx={{
-                  display: "flex",
-                  justifyContent: "flex-start", // Align to the left
-                  alignItems: "flex-end", // Align to the bottom
-                  mt: "auto", // Push to the bottom of the container
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", // Responsive columns
+                  gap: 2,
+                  mt: 2,
+                  width: "100%", // Ensure the grid spans 100% width
+                  textAlign: "center", // Horizontally center the text
+                  alignItems: "center", // Vertically center the text
+                  justifyContent: "center", // Optional: Center within a container
                 }}
               >
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => navigate(`/bookinfo/${bookname}/${booknumber}/0`)}
-                >
-                  開始閱讀
-                </Button>
+                <Box>
+                  <Typography variant="body2">
+                    <strong>作者</strong>
+                  </Typography>
+                  <Typography variant="body2">
+                    {bookinfo.Metadata?.Writer || "未知"}
+                  </Typography>
+                </Box>
+                {/* <Box>
+                  <Typography variant="body2">
+                    <strong>發行日</strong>
+                  </Typography>
+                  <Typography variant="body2">
+                    {`${bookinfo.Metadata?.Year || "未知"}-${
+                      bookinfo.Metadata?.Month || "未知"
+                    }-${bookinfo.Metadata?.Day || "未知"}`}
+                  </Typography>
+                </Box> */}
+                <Box>
+                  <Typography variant="body2">
+                    <strong>出版社</strong>
+                  </Typography>
+                  <Typography variant="body2">
+                    {bookinfo.Metadata?.Publisher || "未知"}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2">
+                    <strong>標籤</strong>
+                  </Typography>
+                  {bookinfo.Metadata?.Tags?.length > 0 ? (
+                    <Typography variant="body2">
+                      {bookinfo.Metadata.Tags.join(", ")}
+                    </Typography>
+                  ) : (
+                    <Chip
+                      label="Comic"
+                      color="warning"
+                      size="small"
+                      variant="outlined"
+                      sx={{ borderRadius: "6px" }}
+                    />
+                  )}
+                </Box>
+              </Box>
+
+              <Box sx={{ height: "32px" }} /> {/* Add spacing here */}
+              <Typography variant="body2">
+                <strong>近期更新</strong>
+              </Typography>
+              {/* 新增：近期更新章節列表 */}
+              <Box
+                sx={{
+                  mt: 1,
+                  overflowY: "auto",
+                  pr: 1, // 避免滾動條遮住內容
+                }}
+              >
+                {bookinfos_chapter.map((chapter, idx) => {
+                  const bookinfo = bookinfos_volume[chapter.index];
+                  if (!bookinfo) return null;
+                  return (
+                    <Box
+                      key={idx}
+                      sx={{
+                        cursor: "pointer",
+                        "&:hover": { textDecoration: "underline", color: "#1976d2" },
+                        mb: 0.5,
+                        width: "fit-content",
+                      }}
+                      onClick={() =>
+                        navigate(
+                          `/bookinfo/${encodeURIComponent(bookinfo.Metadata.Series)}/${encodeURIComponent(bookinfo.Metadata.Number)}/${chapter.page}`
+                        )
+                      }
+                    >
+                      <Typography variant="body2">
+                        {`第${chapter.chapter}話 - ${chapter.chapter_name}`}
+                      </Typography>
+                    </Box>
+                  );
+                })}
               </Box>
             </Box>
           </Box>
@@ -278,7 +399,7 @@ export default function SeriesInfoInfoPage() {
         }}
       >
         <Tab label="卷" />
-        <Tab label="章" />
+        <Tab label="話" />
       </Tabs>
       {tabValue === 0 && (
         <Box
@@ -299,15 +420,61 @@ export default function SeriesInfoInfoPage() {
         <Box
           sx={{
             mx: 2,
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
+            gap: 1,
             backgroundColor: "#f5f5f5",
             borderRadius: "0 0 10px 10px",
             padding: 2,
           }}
         >
-          <Typography variant="body1">章內容待實作</Typography>
+          {/* 章節縮圖顯示 */}
+          {Thumbnails_chapter.map((thumbnail, index) => (
+            <Box
+              key={index}
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              {thumbnail && thumbnail.FileBitmap ? (
+                <img
+                  src={`data:image/png;base64,${thumbnail.FileBitmap}`}
+                  alt={`Chapter ${index + 1}`}
+                  onClick={() => {
+                    const chapter = bookinfos_chapter[index];
+                    if (chapter) {
+                      const bookinfo = bookinfos_volume[chapter.index];
+                      if (bookinfo) {
+                        navigate(
+                          `/bookinfo/${encodeURIComponent(bookinfo.Metadata.Series)}/${encodeURIComponent(bookinfo.Metadata.Number)}/${chapter.page}`
+                        );
+                      }
+                    }
+                  }}
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    borderRadius: "8px",
+                    objectFit: "cover",
+                    cursor: "pointer", // 新增這行
+                  }}
+                />
+              ) : (
+                <Box
+                  sx={{
+                    width: "100%",
+                    height: "120px",
+                    backgroundColor: "#eee",
+                    borderRadius: "8px",
+                  }}
+                />
+              )}
+              <Typography variant="caption">{`第${bookinfos_chapter[index]?.chapter}話 ${bookinfos_chapter[index]?.chapter_name}`}</Typography>
+            </Box>
+          ))}
         </Box>
       )}
     </Box>

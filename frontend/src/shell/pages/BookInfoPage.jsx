@@ -211,7 +211,7 @@ export default function BookInfoPage() {
                 {bookinfo.metadata?.series || bookinfo.Metadata.Series}{" "}
                 {bookinfo.metadata?.volume || bookinfo.Metadata.Number}
               </Typography>
-              <Box sx={{ height: "16px" }} /> {/* Add spacing here */}
+              <Box sx={{ height: "16px" }} /> 
               <Typography
                 variant="body2"
                 sx={{

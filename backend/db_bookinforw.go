@@ -89,7 +89,10 @@ func GetBookinfosByAndConditions(db *db.DB, conditions map[string]interface{}) (
 	var books []BookInfo
 	debug.DebugInfo("GetBookinfosByAndConditions()")
 	debug.DebugInfo("conditions:", conditions)
-	query := db.Conn().Preload("ImageData").Preload("Metadata").
+	query := db.Conn().
+		Preload("ImageData").
+		Preload("Metadata").
+		Preload("Metadata.Pages"). // 新增這行
 		Joins("JOIN metadata ON metadata.book_info_id = book_infos.id")
 
 	for key, value := range conditions {

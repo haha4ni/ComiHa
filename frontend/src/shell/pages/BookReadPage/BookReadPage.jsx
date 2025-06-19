@@ -105,7 +105,7 @@ export default function BookReadPage() {
       if (prev === "single-page") {
         // 跳回 scroll mode 時跳轉到對應頁數
         setTimeout(() => {
-          jumpToPage(sliderValue - 1);
+          jumpToPage(sliderValue - 1, true);
         }, 0);
         return "scroll";
       }
@@ -115,9 +115,17 @@ export default function BookReadPage() {
 
   const handleLeftButtonClick = () => {
     console.log("Left button clicked");
-    const nextPage = Math.min(sliderValue + 1, totalPages); // Ensure it doesn't exceed totalPages
-    setSliderValue(nextPage);
-    jumpToPage(nextPage - 1); // Map sliderValue to image index (nextPage - 1)
+    if (viewMode === "two-page") {
+      // two-page 模式下，若在第0頁只翻一頁，其餘翻兩頁
+      let increment = sliderValue === 1 ? 1 : 2;
+      const nextPage = Math.min(sliderValue + increment, totalPages);
+      setSliderValue(nextPage);
+      jumpToPage(nextPage - 1);
+    } else {
+      const nextPage = Math.min(sliderValue + 1, totalPages); // Ensure it doesn't exceed totalPages
+      setSliderValue(nextPage);
+      jumpToPage(nextPage - 1); // Map sliderValue to image index (nextPage - 1)
+    }
   };
 
   const handleCenterButtonClick = () => {
@@ -126,12 +134,20 @@ export default function BookReadPage() {
 
   const handleRightButtonClick = () => {
     console.log("Right button clicked");
-    const prevPage = Math.max(sliderValue - 1, 1); // Ensure it doesn't go below 1
-    setSliderValue(prevPage);
-    jumpToPage(prevPage - 1); // Map sliderValue to image index (prevPage - 1)
+    if (viewMode === "two-page") {
+      // two-page 模式下，若在第0頁只翻一頁，其餘翻兩頁
+      let decrement = sliderValue === 1 ? 1 : 2;
+      const prevPage = Math.max(sliderValue - decrement, 1);
+      setSliderValue(prevPage);
+      jumpToPage(prevPage - 1);
+    } else {
+      const prevPage = Math.max(sliderValue - 1, 1); // Ensure it doesn't go below 1
+      setSliderValue(prevPage);
+      jumpToPage(prevPage - 1); // Map sliderValue to image index (prevPage - 1)
+    }
   };
 
-  const jumpToPage = async (pageNumber) => {
+  const jumpToPage = async (pageNumber, disableSmooth = false) => {
     console.log(`Attempting to jump to page ${pageNumber}`);
     setIsJumping(true); // 開始跳轉，禁用 IntersectionObserver 的更新
 
@@ -139,7 +155,7 @@ export default function BookReadPage() {
     if (pageElement) {
       console.log(`Page ${pageNumber} found, scrolling into view.`);
       await loadPages(pageNumber, 2);
-      pageElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      pageElement.scrollIntoView({ behavior: disableSmooth ? "auto" : "smooth", block: "center" });
     } else {
       console.log(`Page ${pageNumber} not found, loading page.`);
       await loadPages(pageNumber, 2);
@@ -150,7 +166,7 @@ export default function BookReadPage() {
       pageElement = document.querySelector(`[data-page="${pageNumber}"]`);
       if (pageElement) {
         console.log(`Page ${pageNumber} loaded, scrolling into view.`);
-        pageElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        pageElement.scrollIntoView({ behavior: disableSmooth ? "auto" : "smooth", block: "center" });
       } else {
         console.error(`Page ${pageNumber} could not be loaded.`);
       }
@@ -213,7 +229,7 @@ export default function BookReadPage() {
       sx={{
         width: "100%",
         maxHeight: "calc(100vh - 40px)",
-        backgroundColor: "#123456",
+        backgroundColor: "#222222",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",

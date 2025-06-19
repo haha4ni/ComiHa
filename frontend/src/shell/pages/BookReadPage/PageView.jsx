@@ -19,7 +19,7 @@ export default function PageView({ pages, pageRefs, sliderValue, mode }) {
             alignItems: 'center', // Vertically center content
             flexWrap: "nowrap",
             position: "relative",
-            backgroundColor: '#11119a',
+            backgroundColor: '#222222',
             height: '100vh', // Ensure the container takes full viewport height
           }}
         >

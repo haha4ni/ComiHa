@@ -278,7 +278,7 @@ export default function SeriesInfoInfoPage() {
                   mt: 2,
                   width: "100%", // Ensure the grid spans 100% width
                   textAlign: "center", // Horizontally center the text
-                  alignItems: "center", // Vertically center the text
+                  alignItems: "start", // Vertically center the text
                   justifyContent: "center", // Optional: Center within a container
                 }}
               >
@@ -313,9 +313,56 @@ export default function SeriesInfoInfoPage() {
                     <strong>標籤</strong>
                   </Typography>
                   {bookinfo.Metadata?.Tags?.length > 0 ? (
-                    <Typography variant="body2">
-                      {bookinfo.Metadata.Tags.join(", ")}
-                    </Typography>
+                    (() => {
+                      const tagColorMap = {
+                        comic: { label: "Comic", color: "warning" },
+                        doujinshi: { label: "Doujinshi", color: "error" },
+                        // 可擴充更多標籤
+                      };
+                      // 支援陣列或字串
+                      const tagsArr = Array.isArray(bookinfo.Metadata.Tags)
+                        ? bookinfo.Metadata.Tags
+                        : bookinfo.Metadata.Tags.split(",").map(tag => tag.trim());
+                      return (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: 1,
+                            justifyContent: "center",
+                            alignItems: "center",
+                            width: "100%",
+                            minHeight: 32,
+                          }}
+                        >
+                          {tagsArr.map((tag, idx) => {
+                            const key = tag.toLowerCase();
+                            if (tagColorMap[key]) {
+                              return (
+                                <Chip
+                                  key={idx}
+                                  label={tagColorMap[key].label}
+                                  color={tagColorMap[key].color}
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{ borderRadius: "6px" }}
+                                />
+                              );
+                            }
+                            return (
+                              <Chip
+                                key={idx}
+                                label={tag}
+                                color="default"
+                                size="small"
+                                variant="outlined"
+                                sx={{ borderRadius: "6px" }}
+                              />
+                            );
+                          })}
+                        </Box>
+                      );
+                    })()
                   ) : (
                     <Chip
                       label="Comic"

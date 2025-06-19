@@ -6,13 +6,14 @@ import BookReadPage from "./shell/pages/BookReadPage/BookReadPage";
 import ImageBoxList from "./shell/pages/ImageBoxList";
 import SeriesInfoPage from './shell/pages/SeriesInfoPage';
 import SettingPage from "./shell/pages/SettingPage";
+import HomePage from "./shell/pages/HomePage";
 
 export default function App() {
     return (
         <Router>
             <Routes>
                 <Route path="/" element={<MainMode />}>
-                    <Route index element={<div>Welcome to MainMode!</div>} />
+                    <Route index element={<HomePage />} />
                     <Route path="series" element={<ImageBoxList mode="series" />} />
                     <Route path="seriesinfo/:seriesname" element={<SeriesInfoPage />} />
                     <Route path="bookinfo" element={<ImageBoxList mode="bookinfo" />} />

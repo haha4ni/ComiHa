@@ -33,6 +33,7 @@ type Metadata struct {
 	AlternateSeries 	string   `xml:"AlternateSeries"  `
 	AlternateNumber 	string   `xml:"AlternateNumber"  `
 	StoryArc        	string   `xml:"StoryArc"         `
+	Tags				string   `xml:"Tags"             `
 	Year            	string   `xml:"Year"             `
 	Month           	string   `xml:"Month"            `
 	Day             	string   `xml:"Day"              `

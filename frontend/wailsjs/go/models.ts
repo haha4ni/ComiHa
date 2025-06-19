@@ -53,6 +53,7 @@ export namespace backend {
 	    AlternateSeries: string;
 	    AlternateNumber: string;
 	    StoryArc: string;
+	    Tags: string;
 	    Year: string;
 	    Month: string;
 	    Day: string;
@@ -103,6 +104,7 @@ export namespace backend {
 	        this.AlternateSeries = source["AlternateSeries"];
 	        this.AlternateNumber = source["AlternateNumber"];
 	        this.StoryArc = source["StoryArc"];
+	        this.Tags = source["Tags"];
 	        this.Year = source["Year"];
 	        this.Month = source["Month"];
 	        this.Day = source["Day"];

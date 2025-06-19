@@ -55,6 +55,29 @@ export default function BookInfoPage() {
           "metadata.number": booknumber,
         });
         setBookinfo(info);
+
+        // fetchDetails merged here
+        if (info) {
+          try {
+            const img = await GetBookCoverByBookinfo(info);
+            setBookCover(img.FileString);
+
+            const size = info.ImageData?.length || 0;
+            let thumbnailsArr = [];
+            for (let page = 0; page < 30; page++) {
+              const result = await GetBookPageByBookinfo(info, page);
+              thumbnailsArr[page] = result;
+            }
+            setThumbnails(thumbnailsArr);
+
+            // 設定可編輯 metadata
+            if (info?.Metadata) {
+              setEditableMetadata({ ...info.Metadata });
+            }
+          } catch (error) {
+            console.error("Error fetching book details:", error);
+          }
+        }
       } catch (error) {
         console.error("Error fetching book info:", error);
       }
@@ -69,34 +92,6 @@ export default function BookInfoPage() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!bookinfo) return;
-
-    const fetchDetails = async () => {
-      try {
-        const img = await GetBookCoverByBookinfo(bookinfo);
-        setBookCover(img.FileString);
-
-        const size = bookinfo.ImageData?.length || 0;
-        let thumbnailsArr = [];
-        for (let page = 0; page < 30; page++) {
-          const result = await GetBookPageByBookinfo(bookinfo, page);
-          thumbnailsArr[page] = result;
-        }
-        setThumbnails(thumbnailsArr);
-
-        // 設定可編輯 metadata
-        if (bookinfo?.Metadata) {
-          setEditableMetadata({ ...bookinfo.Metadata });
-        }
-      } catch (error) {
-        console.error("Error fetching book details:", error);
-      }
-    };
-
-    fetchDetails();
-  }, [bookinfo]);
-
   const handleMetadataChange = (field, value) => {
     setEditableMetadata((prev) => ({
       ...prev,
@@ -107,17 +102,15 @@ export default function BookInfoPage() {
   const saveMetadataChanges = async () => {
     const updatedBookinfo = {
       ...bookinfo,
-      metadata: { ...editableMetadata },
+      Metadata: { ...editableMetadata },
     };
-
     setBookinfo(updatedBookinfo); // Update bookinfo state
-
     setOpenSettings(false); // Close dialog after saving
-
     // Wait for state update to complete
     await new Promise((resolve) => setTimeout(resolve, 0));
-
+    console.log("~~1updatedBookinfo:", bookinfo);
     try {
+      await UpdateBookInfo(updatedBookinfo); // Update bookinfo state with new data
       await WriteComicInfo(updatedBookinfo); // Call WriteComicInfo with updated bookinfo
       console.log("Metadata saved successfully.");
     } catch (error) {
@@ -242,7 +235,7 @@ export default function BookInfoPage() {
                   mt: 2,
                   width: "100%", // Ensure the grid spans 100% width
                   textAlign: "center", // Horizontally center the text
-                  alignItems: "center", // Vertically center the text
+                  alignItems: "start", // <-- 物件靠上對齊
                   justifyContent: "center", // Optional: Center within a container
                 }}
               >
@@ -277,17 +270,56 @@ export default function BookInfoPage() {
                     <strong>標籤</strong>
                   </Typography>
                   {bookinfo.Metadata?.Tags?.length > 0 ? (
-                    <Typography variant="body2">
-                      {bookinfo.Metadata.Tags.join(", ")}
-                    </Typography>
+                    (() => {
+                      const tagColorMap = {
+                        comic: { label: "Comic", color: "warning" },
+                        doujinshi: { label: "Doujinshi", color: "error" },
+                        // 可擴充更多標籤
+                      };
+                      const tagsArr = bookinfo.Metadata.Tags.split(",").map(tag => tag.trim());
+                      return (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: 1,
+                            justifyContent: "center",
+                            alignItems: "center",
+                            width: "100%",
+                            minHeight: 32,
+                          }}
+                        >
+                          {tagsArr.map((tag, idx) => {
+                            const key = tag.toLowerCase();
+                            if (tagColorMap[key]) {
+                              return (
+                                <Chip
+                                  key={idx}
+                                  label={tagColorMap[key].label}
+                                  color={tagColorMap[key].color}
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{ borderRadius: "6px" }}
+                                />
+                              );
+                            }
+                            return (
+                              <Chip
+                                key={idx}
+                                label={tag}
+                                color="default"
+                                size="small"
+                                variant="outlined"
+                                sx={{ borderRadius: "6px" }}
+                              />
+                            );
+                          })}
+                        </Box>
+                      );
+                    })()
                   ) : (
-                    <Chip
-                      label="Comic"
-                      color="warning"
-                      size="small"
-                      variant="outlined"
-                      sx={{ borderRadius: "6px" }}
-                    />
+                    // 預設不顯示 Chip
+                    <Typography variant="body2">無</Typography>
                   )}
                 </Box>
               </Box>

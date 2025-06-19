@@ -297,11 +297,7 @@ func (a *App) GetBookPageThumbnailByBookinfo(bookInfo *BookInfo, page int64) (*B
 }
 
 func (a *App) GetBookPageByBookinfo(bookInfo *BookInfo, page int64) (*BookImageData, error) {
-	debug.DebugInfo("GetBookPageByBookinfo()")
-
 	path := bookInfo.FileName
-	debug.DebugInfo("path:", path)
-	debug.DebugInfo("page:", page)
 
 	r, err := zip.OpenReader(path)
 	if err != nil {

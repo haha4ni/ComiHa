@@ -92,6 +92,13 @@ export default function BookInfoPage() {
     }
   }, []);
 
+  // 新增 effect：監聽 bookinfo 變化並更新 editableMetadata
+  useEffect(() => {
+    if (bookinfo?.Metadata) {
+      setEditableMetadata({ ...bookinfo.Metadata });
+    }
+  }, [bookinfo]);
+
   const handleMetadataChange = (field, value) => {
     setEditableMetadata((prev) => ({
       ...prev,

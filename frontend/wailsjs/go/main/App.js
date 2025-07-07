@@ -30,6 +30,10 @@ export function GetBookinfosByAndConditions(arg1) {
   return window['go']['main']['App']['GetBookinfosByAndConditions'](arg1);
 }
 
+export function GetBookinfosByComplexConditions(arg1) {
+  return window['go']['main']['App']['GetBookinfosByComplexConditions'](arg1);
+}
+
 export function GetSeriesKeyListAll() {
   return window['go']['main']['App']['GetSeriesKeyListAll']();
 }

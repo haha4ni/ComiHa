@@ -220,6 +220,25 @@ export namespace backend {
 	}
 	
 	
+	
+	export class QueryCondition {
+	    field: string;
+	    operator: string;
+	    value: any;
+	    logic: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new QueryCondition(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.field = source["field"];
+	        this.operator = source["operator"];
+	        this.value = source["value"];
+	        this.logic = source["logic"];
+	    }
+	}
 
 }
 

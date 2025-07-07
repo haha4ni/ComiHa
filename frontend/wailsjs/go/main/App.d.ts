@@ -16,6 +16,8 @@ export function GetBookinfoByAndConditions(arg1:{[key: string]: any}):Promise<ba
 
 export function GetBookinfosByAndConditions(arg1:{[key: string]: any}):Promise<Array<backend.BookInfo>>;
 
+export function GetBookinfosByComplexConditions(arg1:Array<backend.QueryCondition>):Promise<Array<backend.BookInfo>>;
+
 export function GetSeriesKeyListAll():Promise<Array<string>>;
 
 export function Greet(arg1:string):Promise<string>;

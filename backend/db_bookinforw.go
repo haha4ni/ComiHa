@@ -231,6 +231,10 @@ func (a *App) GetBookinfosByAndConditions(conditions map[string]interface{}) ([]
 	return GetBookinfosByAndConditions(comicDB, conditions)
 }
 
+func (a *App) GetBookinfosByComplexConditions(conditions []QueryCondition) ([]BookInfo, error) {
+	return GetBookinfosByComplexConditions(comicDB, conditions)
+}
+
 func (a *App) GetBookCoverByBookinfo(bookInfo *BookInfo) (*BookImageData, error) {
 	zipPath := bookInfo.FileName
 	r, err := zip.OpenReader(zipPath)
@@ -375,4 +379,79 @@ func (a *App) GetSeriesKeyListAll() (seriesList []string) {
 
 func (a *App) SaveBookInfo(book BookInfo) error {
 	return SaveBookInfo(book)
+}
+
+func GetBookinfosByComplexConditions(db *db.DB, conditions []QueryCondition) ([]BookInfo, error) {
+	var books []BookInfo
+	debug.DebugInfo("GetBookinfosByComplexConditions()")
+	debug.DebugInfo("conditions:", conditions)
+	
+	query := db.Conn().
+		Preload("ImageData").
+		Preload("Metadata").
+		Preload("Metadata.Pages").
+		Joins("JOIN metadata ON metadata.book_info_id = book_infos.id")
+
+	if len(conditions) == 0 {
+		err := query.Find(&books).Error
+		return books, err
+	}
+
+	// 構建 WHERE 條件
+	var whereClause strings.Builder
+	var values []interface{}
+	
+	for i, condition := range conditions {
+		if i > 0 {
+			// 添加邏輯操作符 (AND/OR)
+			prevLogic := conditions[i-1].Logic
+			if prevLogic == "OR" {
+				whereClause.WriteString(" OR ")
+			} else {
+				whereClause.WriteString(" AND ")
+			}
+		}
+		
+		switch condition.Operator {
+		case "=":
+			whereClause.WriteString(fmt.Sprintf("%s = ?", condition.Field))
+			values = append(values, condition.Value)
+		case "!=":
+			whereClause.WriteString(fmt.Sprintf("%s != ?", condition.Field))
+			values = append(values, condition.Value)
+		case "IS NULL":
+			whereClause.WriteString(fmt.Sprintf("(%s IS NULL OR %s = '')", condition.Field, condition.Field))
+		case "IS NOT NULL":
+			whereClause.WriteString(fmt.Sprintf("(%s IS NOT NULL AND %s != '')", condition.Field, condition.Field))
+		case "LIKE":
+			whereClause.WriteString(fmt.Sprintf("%s LIKE ?", condition.Field))
+			values = append(values, condition.Value)
+		case "IN":
+			if valueSlice, ok := condition.Value.([]interface{}); ok && len(valueSlice) > 0 {
+				placeholders := strings.Repeat("?,", len(valueSlice))
+				placeholders = placeholders[:len(placeholders)-1] // 移除最後的逗號
+				whereClause.WriteString(fmt.Sprintf("%s IN (%s)", condition.Field, placeholders))
+				values = append(values, valueSlice...)
+			}
+		case "NOT IN":
+			if valueSlice, ok := condition.Value.([]interface{}); ok && len(valueSlice) > 0 {
+				placeholders := strings.Repeat("?,", len(valueSlice))
+				placeholders = placeholders[:len(placeholders)-1] // 移除最後的逗號
+				whereClause.WriteString(fmt.Sprintf("%s NOT IN (%s)", condition.Field, placeholders))
+				values = append(values, valueSlice...)
+			}
+		default:
+			return nil, fmt.Errorf("不支援的操作符: %s", condition.Operator)
+		}
+	}
+	
+	if whereClause.Len() > 0 {
+		query = query.Where(whereClause.String(), values...)
+	}
+	
+	err := query.Find(&books).Error
+	if err != nil {
+		return nil, err
+	}
+	return books, nil
 }

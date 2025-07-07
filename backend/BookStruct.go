@@ -4,6 +4,14 @@ import (
 	"encoding/xml"
 )
 
+// 複雜查詢條件結構
+type QueryCondition struct {
+	Field    string      `json:"field"`
+	Operator string      `json:"operator"` // "=", "!=", "IS NULL", "IS NOT NULL", "LIKE", "IN", "NOT IN"
+	Value    interface{} `json:"value"`
+	Logic    string      `json:"logic"`    // "AND", "OR" (用於連接下一個條件)
+}
+
 type BookInfo struct {
 	ID         uint   `gorm:"primaryKey"`
 	FileName   string

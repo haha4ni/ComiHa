@@ -169,13 +169,13 @@ export default function ImageBoxList({ type = "default", mode = "none", boxlist:
                   display: "block",
                 }}
                 onClick={() => {
-                  if (mode === "bookinfo" && item.bookinfo) {
+                  if (item.type === "bookinfo" && item.bookinfo) {
                     navigate(
                       `/bookinfo/${encodeURIComponent(
                         item.bookinfo.Metadata.Series
                       )}/${encodeURIComponent(item.bookinfo.Metadata.Number)}`
                     );
-                  } else if (mode === "series" && item.bookinfo) {
+                  } else if (item.type === "series" && item.bookinfo) {
                     navigate(
                       `/seriesinfo/${encodeURIComponent(
                         item.bookinfo.Metadata.Series
@@ -241,13 +241,13 @@ export default function ImageBoxList({ type = "default", mode = "none", boxlist:
                 display: "block",
               }}
               onClick={() => {
-                if (mode === "bookinfo" && item.bookinfo) {
+                if (item.type === "bookinfo" && item.bookinfo) {
                   navigate(
                     `/bookinfo/${encodeURIComponent(
                       item.bookinfo.Metadata.Series
                     )}/${encodeURIComponent(item.bookinfo.Metadata.Number)}`
                   );
-                } else if (mode === "series" && item.bookinfo) {
+                } else if (item.type === "series" && item.bookinfo) {
                   navigate(
                     `/seriesinfo/${encodeURIComponent(
                       item.bookinfo.Metadata.Series

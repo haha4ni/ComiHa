@@ -2,6 +2,7 @@ import React from "react";
 import { Box, AppBar, Toolbar, Typography, IconButton, Avatar } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack"; // Import ArrowBackIcon
+import RefreshIcon from "@mui/icons-material/Refresh"; // Import RefreshIcon
 import logo from "../assets/images/appicon.png";
 
 
@@ -30,10 +31,18 @@ export default function Appbar({ onMenuClick }) {
           <IconButton
             edge="start"
             aria-label="back"
-            sx={{ mr: 2 }}
+            sx={{ mr: 1 }}
             onClick={() => window.history.back()} // Navigate back to the previous page
           >
             <ArrowBackIcon />
+          </IconButton>
+          <IconButton
+            edge="start"
+            aria-label="refresh"
+            sx={{ mr: 2 }}
+            onClick={() => window.location.reload()} // Refresh the current page
+          >
+            <RefreshIcon />
           </IconButton>
           <Typography
             variant="h7"

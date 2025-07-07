@@ -8,30 +8,42 @@ import {
   GetBookCoverByBookinfo,
 } from "../../../wailsjs/go/main/App";
 
-export default function ImageBoxList({ mode }) {
+export default function ImageBoxList({ type = "default", mode = "none", boxlist: externalBoxlist = null }) {
   const navigate = useNavigate();
   const isFirstRender = useRef(true);
 
-  const [images, setImages] = useState([]);
-  const [booklist, setBooklist] = useState([]);
-  const [serieslist, setSerieslist] = useState([]);
+  const imagePlaceholder = {
+    bookinfo: null,
+    image_cover: null,
+    type: null,
+  };
+
+  const [boxlist, setBoxlist] = useState([]);
 
   const ShowBookinfoList = async () => {
     try {
       const booklist = await GetBookListAll();
-      setBooklist(booklist);
 
-      const placeholders = Array(booklist.length).fill(null); // Initialize placeholders
-      setImages(placeholders);
+      // 建立空結構
+      const placeholders = Array(booklist.length)
+        .fill(null)
+        .map(() => ({
+          ...imagePlaceholder,
+        }));
+      setBoxlist(placeholders);
 
       booklist.forEach(async (bookinfo, index) => {
         try {
           const img = await GetBookCoverByBookinfo(bookinfo);
 
-          setImages((prevImages) => {
-            const updatedImages = [...prevImages];
-            updatedImages[index] = img.FileString; // Update the specific image
-            return updatedImages;
+          setBoxlist((prevBoxlist) => {
+            const updatedBoxlist = [...prevBoxlist];
+            updatedBoxlist[index] = {
+              bookinfo: bookinfo,
+              image_cover: img.FileString,
+              type: "bookinfo",
+            };
+            return updatedBoxlist;
           });
         } catch (error) {
           console.error("Failed to process image:", error);
@@ -45,29 +57,35 @@ export default function ImageBoxList({ mode }) {
   const ShowSeriesinfoList = async () => {
     try {
       const seriesList = await GetSeriesKeyListAll();
-      setSerieslist(seriesList);
 
       if (!seriesList || !Array.isArray(seriesList)) {
         console.error("Invalid series list received:", seriesList);
         return;
       }
 
-      // 初始化imagebox空間，預先全部都填入null
-      const placeholders = Array(seriesList.length).fill(null);
-      setImages(placeholders);
+      // 先建立空結構
+      const placeholders = Array(seriesList.length)
+        .fill(null)
+        .map(() => ({
+          ...imagePlaceholder,
+        }));
+      setBoxlist(placeholders);
 
       seriesList.forEach(async (series, index) => {
         try {
           const bookinfo = await GetBookinfoByAndConditions({
             "metadata.series": series,
           });
-          console.log("bookinfo:", bookinfo);
           const img = await GetBookCoverByBookinfo(bookinfo);
 
-          setImages((prevImages) => {
-            const updatedImages = [...prevImages];
-            updatedImages[index] = img.FileString; // Update the specific image
-            return updatedImages;
+          setBoxlist((prevBoxlist) => {
+            const updatedBoxlist = [...prevBoxlist];
+            updatedBoxlist[index] = {
+              bookinfo: bookinfo,
+              image_cover: img.FileString,
+              type: "series",
+            };
+            return updatedBoxlist;
           });
         } catch (error) {
           console.error("Failed to process series:", error);
@@ -79,9 +97,12 @@ export default function ImageBoxList({ mode }) {
   };
 
   useEffect(() => {
+    if (mode === "none") {
+      setBoxlist(externalBoxlist || []);
+      return;
+    }
     const handleModeChange = async () => {
-      console.log("Effect triggered due to mode change");
-      setImages([]); // Reset images when mode changes
+      setBoxlist([]); // Reset boxlist when mode changes
       if (mode === "series") {
         await ShowSeriesinfoList();
       } else if (mode === "bookinfo") {
@@ -90,77 +111,171 @@ export default function ImageBoxList({ mode }) {
     };
 
     if (isFirstRender.current) {
-      console.log("Effect triggered when mode changes");
       isFirstRender.current = false; // Mark as rendered
     } else {
       handleModeChange();
     }
-  }, [mode]);
+  }, [mode, externalBoxlist]);
 
   return (
-    <Box
-      sx={{
-        padding: 2,
-        width: "100%",
-        display: "grid", // 使用 grid 排版
-        gap: 2, // 間距
-        gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
-      }}
-    >
-      {images.map((image, index) => (
+    type === "row" ? (
+      <Box
+        sx={{
+          padding: 2,
+          width: "100%",
+          overflowX: "auto",
+          overflowY: "hidden",
+          whiteSpace: "nowrap",
+          display: "block",
+          bgcolor: "#f5f5f5", // TODO
+          textAlign: "left",
+        }}
+        onWheel={e => {
+          if (e.deltaY !== 0) {
+            e.currentTarget.scrollLeft += e.deltaY;
+            e.preventDefault();
+          }
+        }}
+      >
         <Box
-          key={index}
           sx={{
-            width: "100%",
-            textAlign: "center",
-            bgcolor: "#f5f5f5",
-            borderRadius: "8px",
-            display: "flex",
-            flexDirection: "column", // Stack image and text vertically
-            alignItems: "center", // Center align content
+            display: "inline-flex",
+            gap: 2,
           }}
         >
-          <img
-            src={image}
-            alt={`Drawer Image ${index}`}
-            style={{
-              width: "100%",
-              aspectRatio: "15 / 21", // Maintain a 16:9 aspect ratio
-              borderRadius: "8px 8px 0 0",
-              objectFit: "cover",
-              cursor: "pointer",
-              display: "block",
-            }}
-            onClick={() => {
-              if (mode === "bookinfo") {
-                navigate(
-                  `/bookinfo/${encodeURIComponent(
-                    booklist[index].Metadata.Series
-                  )}/${encodeURIComponent(booklist[index].Metadata.Number)}`
-                );
-              } else if (mode === "series") {
-                const series = serieslist[index];
-                navigate(`/seriesinfo/${encodeURIComponent(series)}`);
-              }
-            }}
-          />
-          <Typography
-            variant="caption"
+          {boxlist.map((item, index) => (
+            <Box
+              key={index}
+              sx={{
+                minWidth: "120px",
+                maxWidth: "120px",
+                textAlign: "center",
+                bgcolor: "#f5f5f5",
+                borderRadius: "8px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <img
+                src={item?.image_cover}
+                alt={`Drawer Image ${index}`}
+                style={{
+                  width: "100%",
+                  aspectRatio: "15 / 21",
+                  borderRadius: "8px 8px 0 0",
+                  objectFit: "cover",
+                  cursor: "pointer",
+                  display: "block",
+                }}
+                onClick={() => {
+                  if (mode === "bookinfo" && item.bookinfo) {
+                    navigate(
+                      `/bookinfo/${encodeURIComponent(
+                        item.bookinfo.Metadata.Series
+                      )}/${encodeURIComponent(item.bookinfo.Metadata.Number)}`
+                    );
+                  } else if (mode === "series" && item.bookinfo) {
+                    navigate(
+                      `/seriesinfo/${encodeURIComponent(
+                        item.bookinfo.Metadata.Series
+                      )}`
+                    );
+                  }
+                }}
+              />
+              <Typography
+                variant="caption"
+                sx={{
+                  px: 1,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  display: "block",
+                  maxWidth: "100%",
+                }}
+              >
+                {item.type === "bookinfo"
+                  ? `${item.bookinfo?.Metadata?.Series ?? ""} ${item.bookinfo?.Metadata?.Number ?? ""}`
+                  : item.type === "series"
+                    ? `${item.bookinfo?.Metadata?.Series ?? ""}`
+                    : ""}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      </Box>
+    ) : (
+      <Box
+        sx={{
+          padding: 2,
+          width: "100%",
+          display: "grid",
+          gap: 2,
+          gridTemplateColumns: "repeat(auto-fill, minmax(120px, 120px))",
+          justifyContent: "start",
+        }}
+      >
+        {boxlist.map((item, index) => (
+          <Box
+            key={index}
             sx={{
-              px: 1,
-              whiteSpace: "nowrap", // 強制單行顯示
-              overflow: "hidden", // 隱藏超出部分
-              textOverflow: "ellipsis", // 用點點點表示超出部分
-              display: "block", // 確保是塊級元素
-              maxWidth: "100%", // 限制寬度
+              width: "100%",
+              textAlign: "center",
+              bgcolor: "#f5f5f5",
+              borderRadius: "8px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
             }}
           >
-            {mode === "bookinfo"
-              ? `${booklist[index]?.Metadata.Series} ${booklist[index]?.Metadata.Number}`
-              : `${serieslist[index]}`}
-          </Typography>
-        </Box>
-      ))}
-    </Box>
+            <img
+              src={item?.image_cover}
+              alt={`Drawer Image ${index}`}
+              style={{
+                width: "100%",
+                aspectRatio: "15 / 21",
+                borderRadius: "8px 8px 0 0",
+                objectFit: "cover",
+                cursor: "pointer",
+                display: "block",
+              }}
+              onClick={() => {
+                if (mode === "bookinfo" && item.bookinfo) {
+                  navigate(
+                    `/bookinfo/${encodeURIComponent(
+                      item.bookinfo.Metadata.Series
+                    )}/${encodeURIComponent(item.bookinfo.Metadata.Number)}`
+                  );
+                } else if (mode === "series" && item.bookinfo) {
+                  navigate(
+                    `/seriesinfo/${encodeURIComponent(
+                      item.bookinfo.Metadata.Series
+                    )}`
+                  );
+                }
+              }}
+            />
+            <Typography
+              variant="caption"
+              sx={{
+                px: 1,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                display: "block",
+                maxWidth: "100%",
+              }}
+            >
+              {item.type === "bookinfo"
+                ? `${item.bookinfo?.Metadata?.Series ?? ""} ${item.bookinfo?.Metadata?.Number ?? ""}`
+                : item.type === "series"
+                  ? `${item.bookinfo?.Metadata?.Series ?? ""}`
+                  : ""}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+    )
   );
 }

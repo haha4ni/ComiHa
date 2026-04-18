@@ -20,14 +20,13 @@ func WriteComicInfo(bookInfo BookInfo) error {
 	// Log the entire bookInfo.Metadata
 	log.Printf("BookInfo Metadata: %+v", bookInfo.Metadata)
 
+	bookInfo.Metadata.XmlnsXsd = "http://www.w3.org/2001/XMLSchema"
+	bookInfo.Metadata.XmlnsXsi = "http://www.w3.org/2001/XMLSchema-instance"
 	// Marshal the XML
 	xmlData, err := xml.MarshalIndent(bookInfo.Metadata, "", "  ")
 	if err != nil {
 		return err
 	}
-
-	// Add XML header
-	xmlData = append([]byte(xml.Header), xmlData...)
 
 	// Write to file
 	filename := bookInfo.FileName + ".ComicInfo.xml"
@@ -36,6 +35,8 @@ func WriteComicInfo(bookInfo BookInfo) error {
 	if err != nil {
 		return err
 	}
+
+	WriteComicInfoToZip(bookInfo)
 
 	return nil
 }

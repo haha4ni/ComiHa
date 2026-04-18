@@ -31,9 +31,13 @@ type ImageData struct {
 
 // ComicInfo XML structure
 type Metadata struct {
-	ID         			uint   `gorm:"primaryKey" xml:"-"`      // <-- 加 xml:"-"
-	BookInfoID 			uint   `xml:"-"`                        // <-- 加 xml:"-"
-	XMLName    			xml.Name `xml:"ComicInfo" gorm:"-"` // Ignore this field for GORM
+	ID          uint     `gorm:"primaryKey" xml:"-"`
+	BookInfoID  uint     `xml:"-"`
+	XMLName     xml.Name `xml:"ComicInfo" gorm:"-"`
+
+	XmlnsXsd string `xml:"xmlns:xsd,attr"`
+	XmlnsXsi string `xml:"xmlns:xsi,attr"`
+	
 	Title           	string   `xml:"Title"            `
 	Series          	string   `xml:"Series"           `
 	Number          	string   `xml:"Number"           `

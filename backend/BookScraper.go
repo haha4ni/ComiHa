@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -15,6 +16,11 @@ import (
 
 func FindBookURL(bookName string) (string, error) {
 	c := colly.NewCollector()
+
+	c.SetCookies("https://www.bookwalker.com.tw/", []*http.Cookie{
+		{Name: "session", Value: "fake_session_value"},
+		{Name: "lang", Value: "zh-TW"},
+	})
 
 	// 設定 User-Agent 和 Referer
 	c.OnRequest(func(r *colly.Request) {

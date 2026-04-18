@@ -12,9 +12,9 @@ export function GetBookPageThumbnailByBookinfo(arg1:backend.BookInfo,arg2:number
 
 export function GetBookPagesByBookinfo(arg1:backend.BookInfo,arg2:Array<number>):Promise<Array<backend.BookImageData>>;
 
-export function GetBookinfoByAndConditions(arg1:{[key: string]: any}):Promise<backend.BookInfo>;
+export function GetBookinfoByAndConditions(arg1:Record<string, any>):Promise<backend.BookInfo>;
 
-export function GetBookinfosByAndConditions(arg1:{[key: string]: any}):Promise<Array<backend.BookInfo>>;
+export function GetBookinfosByAndConditions(arg1:Record<string, any>):Promise<Array<backend.BookInfo>>;
 
 export function GetBookinfosByComplexConditions(arg1:Array<backend.QueryCondition>):Promise<Array<backend.BookInfo>>;
 

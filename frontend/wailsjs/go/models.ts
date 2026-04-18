@@ -46,6 +46,8 @@ export namespace backend {
 	    ID: number;
 	    BookInfoID: number;
 	    XMLName: xml.Name;
+	    XmlnsXsd: string;
+	    XmlnsXsi: string;
 	    Title: string;
 	    Series: string;
 	    Number: string;
@@ -97,6 +99,8 @@ export namespace backend {
 	        this.ID = source["ID"];
 	        this.BookInfoID = source["BookInfoID"];
 	        this.XMLName = this.convertValues(source["XMLName"], xml.Name);
+	        this.XmlnsXsd = source["XmlnsXsd"];
+	        this.XmlnsXsi = source["XmlnsXsi"];
 	        this.Title = source["Title"];
 	        this.Series = source["Series"];
 	        this.Number = source["Number"];

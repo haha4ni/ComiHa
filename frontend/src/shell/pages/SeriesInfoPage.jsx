@@ -143,7 +143,7 @@ export default function SeriesInfoInfoPage() {
               navigate(
                 `/bookinfo/${encodeURIComponent(
                   bookinfos_volume[index].Metadata.Series
-                )}/${encodeURIComponent(bookinfos_volume[index].Metadata.Number)}`
+                )}/${encodeURIComponent(bookinfos_volume[index].Metadata.Volume || bookinfos_volume[index].Metadata.Number)}`
               );
             };
             handleNavigation();
@@ -401,7 +401,7 @@ export default function SeriesInfoInfoPage() {
                       }}
                       onClick={() =>
                         navigate(
-                          `/bookinfo/${encodeURIComponent(bookinfo.Metadata.Series)}/${encodeURIComponent(bookinfo.Metadata.Number)}/${chapter.page}`
+                          `/bookinfo/${encodeURIComponent(bookinfo.Metadata.Series)}/${encodeURIComponent(bookinfo.Metadata.Volume || bookinfo.Metadata.Number)}/${chapter.page}`
                         )
                       }
                     >
@@ -496,7 +496,7 @@ export default function SeriesInfoInfoPage() {
                       const bookinfo = bookinfos_volume[chapter.index];
                       if (bookinfo) {
                         navigate(
-                          `/bookinfo/${encodeURIComponent(bookinfo.Metadata.Series)}/${encodeURIComponent(bookinfo.Metadata.Number)}/${chapter.page}`
+                          `/bookinfo/${encodeURIComponent(bookinfo.Metadata.Series)}/${encodeURIComponent(bookinfo.Metadata.Volume || bookinfo.Metadata.Number)}/${chapter.page}`
                         );
                       }
                     }

@@ -79,10 +79,34 @@ func GetBookinfoByAndConditions(db *db.DB, conditions map[string]interface{}) (*
 	}
 
 	err := query.First(&book).Error
-	if err != nil {
-		return nil, err
+	if err == nil {
+		return &book, nil
 	}
-	return &book, nil
+
+	// 如果是以 metadata.volume 查詢但沒結果，嘗試用 metadata.number 作為 fallback
+	if _, hasVolume := conditions["metadata.volume"]; hasVolume {
+		altConditions := map[string]interface{}{}
+		for k, v := range conditions {
+			if k == "metadata.volume" {
+				altConditions["metadata.number"] = v
+			} else {
+				altConditions[k] = v
+			}
+		}
+		debug.DebugInfo("Retrying with metadata.number fallback:", altConditions)
+		// build new query
+		var book2 BookInfo
+		q2 := db.Conn().Preload("ImageData").Preload("Metadata").
+			Joins("JOIN metadata ON metadata.book_info_id = book_infos.id")
+		for k, v := range altConditions {
+			q2 = q2.Where(fmt.Sprintf("%s = ?", k), v)
+		}
+		if err2 := q2.First(&book2).Error; err2 == nil {
+			return &book2, nil
+		}
+	}
+
+	return nil, err
 }
 
 func GetBookinfosByAndConditions(db *db.DB, conditions map[string]interface{}) ([]BookInfo, error) {
@@ -100,10 +124,35 @@ func GetBookinfosByAndConditions(db *db.DB, conditions map[string]interface{}) (
 	}
 
 	err := query.Find(&books).Error
-	if err != nil {
-		return nil, err
+	if err == nil && len(books) > 0 {
+		return books, nil
 	}
-	return books, nil
+
+	// fallback: if searched by metadata.volume, try metadata.number
+	if _, hasVolume := conditions["metadata.volume"]; hasVolume {
+		altConditions := map[string]interface{}{}
+		for k, v := range conditions {
+			if k == "metadata.volume" {
+				altConditions["metadata.number"] = v
+			} else {
+				altConditions[k] = v
+			}
+		}
+		debug.DebugInfo("Retrying list query with metadata.number fallback:", altConditions)
+		q2 := db.Conn().
+			Preload("ImageData").
+			Preload("Metadata").
+			Preload("Metadata.Pages").
+			Joins("JOIN metadata ON metadata.book_info_id = book_infos.id")
+		for k, v := range altConditions {
+			q2 = q2.Where(fmt.Sprintf("%s = ?", k), v)
+		}
+		if err2 := q2.Find(&books).Error; err2 == nil {
+			return books, nil
+		}
+	}
+
+	return nil, err
 }
 
 func GetBookinfoByOrConditions(db *db.DB, conditions map[string]interface{}) (*BookInfo, error) {

@@ -57,7 +57,7 @@ type Metadata struct {
 	Imprint         	string   `xml:"Imprint"          `
 	Genre           	string   `xml:"Genre"            `
 	Web             	string   `xml:"Web"              `
-	PageCount       	int      `xml:"PageCount"        `
+	PageCount       	int      `xml:"PageCount" json:"PageCount"        `
 	LanguageISO     	string   `xml:"LanguageISO"      `
 	Format          	string   `xml:"Format"           `
 	AgeRating       	string   `xml:"AgeRating"        `
@@ -66,8 +66,8 @@ type Metadata struct {
 	Teams           	string   `xml:"Teams"            `
 	Locations       	string   `xml:"Locations"        `
 	ScanInformation 	string   `xml:"ScanInformation"  `
-	Count               int      `xml:"Count"`
-	AlternateCount      int      `xml:"AlternateCount"`
+	Count               int      `xml:"Count" json:"Count,string"`
+	AlternateCount      int      `xml:"AlternateCount" json:"AlternateCount,string"`
 	Penciller           string   `xml:"Penciller"`
 	Inker               string   `xml:"Inker"`
 	Colorist            string   `xml:"Colorist"`

@@ -35,7 +35,7 @@ export default function BookReadPage() {
         console.log("Fetching book info for:", bookname, booknumber);
         const info = await GetBookinfoByAndConditions({
           "metadata.series": bookname,
-          "metadata.number": booknumber,
+          "metadata.volume": booknumber,
         });
         setBookinfo(info);
         const size = info?.ImageData?.length || 0;

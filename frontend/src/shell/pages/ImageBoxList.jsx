@@ -173,7 +173,7 @@ export default function ImageBoxList({ type = "default", mode = "none", boxlist:
                     navigate(
                       `/bookinfo/${encodeURIComponent(
                         item.bookinfo.Metadata.Series
-                      )}/${encodeURIComponent(item.bookinfo.Metadata.Number)}`
+                      )}/${encodeURIComponent(item.bookinfo.Metadata.Volume || item.bookinfo.Metadata.Number)}`
                     );
                   } else if (item.type === "series" && item.bookinfo) {
                     navigate(
@@ -196,7 +196,7 @@ export default function ImageBoxList({ type = "default", mode = "none", boxlist:
                 }}
               >
                 {item.type === "bookinfo"
-                  ? `${item.bookinfo?.Metadata?.Series ?? ""} ${item.bookinfo?.Metadata?.Number ?? ""}`
+                  ? `${item.bookinfo?.Metadata?.Series ?? ""} ${item.bookinfo?.Metadata?.Volume ?? item.bookinfo?.Metadata?.Number ?? ""}`
                   : item.type === "series"
                     ? `${item.bookinfo?.Metadata?.Series ?? ""}`
                     : ""}
@@ -245,7 +245,7 @@ export default function ImageBoxList({ type = "default", mode = "none", boxlist:
                   navigate(
                     `/bookinfo/${encodeURIComponent(
                       item.bookinfo.Metadata.Series
-                    )}/${encodeURIComponent(item.bookinfo.Metadata.Number)}`
+                    )}/${encodeURIComponent(item.bookinfo.Metadata.Volume || item.bookinfo.Metadata.Number)}`
                   );
                 } else if (item.type === "series" && item.bookinfo) {
                   navigate(
@@ -267,8 +267,8 @@ export default function ImageBoxList({ type = "default", mode = "none", boxlist:
                 maxWidth: "100%",
               }}
             >
-              {item.type === "bookinfo"
-                ? `${item.bookinfo?.Metadata?.Series ?? ""} ${item.bookinfo?.Metadata?.Number ?? ""}`
+                {item.type === "bookinfo"
+                ? `${item.bookinfo?.Metadata?.Series ?? ""} ${item.bookinfo?.Metadata?.Volume ?? item.bookinfo?.Metadata?.Number ?? ""}`
                 : item.type === "series"
                   ? `${item.bookinfo?.Metadata?.Series ?? ""}`
                   : ""}

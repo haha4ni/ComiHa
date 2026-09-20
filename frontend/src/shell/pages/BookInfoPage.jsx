@@ -52,7 +52,7 @@ export default function BookInfoPage() {
       try {
         const info = await GetBookinfoByAndConditions({
           "metadata.series": bookname,
-          "metadata.number": booknumber,
+          "metadata.volume": booknumber,
         });
         setBookinfo(info);
 
@@ -209,7 +209,7 @@ export default function BookInfoPage() {
             >
               <Typography variant="h6">
                 {bookinfo.metadata?.series || bookinfo.Metadata.Series}{" "}
-                {bookinfo.metadata?.volume || bookinfo.Metadata.Number}
+                {bookinfo.metadata?.volume || bookinfo.Metadata.Volume || bookinfo.Metadata.Number}
               </Typography>
               <Box sx={{ height: "16px" }} /> 
               <Typography
